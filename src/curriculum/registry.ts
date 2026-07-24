@@ -215,6 +215,22 @@ export const curriculum: Curriculum = {
               ],
             },
             {
+              slug: "circuit-breakers",
+              moduleSlug: "distributed",
+              title: "Circuit Breakers & Retry Storms",
+              tagline:
+                "A dependency browns out — your retries finish it off. Fail fast, shed load, probe for recovery.",
+              difficulty: "intermediate",
+              estimatedMinutes: 14,
+              prerequisites: ["message-queues"],
+              status: "available",
+              sections: [
+                { id: "the-instinct", title: "The retry instinct", kind: "concept" },
+                { id: "watch-the-storm", title: "Watch the storm", kind: "interactive" },
+                { id: "how-breakers-work", title: "Closed → open → half-open", kind: "concept" },
+              ],
+            },
+            {
               slug: "cap-theorem",
               moduleSlug: "distributed",
               title: "The CAP Theorem",

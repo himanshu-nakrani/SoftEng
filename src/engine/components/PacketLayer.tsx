@@ -14,6 +14,7 @@ const packetColor: Record<PacketType, string> = {
   miss: "var(--color-glow-cyan)",
   write: "var(--color-glow-violet)",
   replication: "var(--color-glow-violet)",
+  heartbeat: "var(--color-glow-violet)",
   drop: "var(--color-glow-red)",
   limited: "var(--color-glow-red)",
 };

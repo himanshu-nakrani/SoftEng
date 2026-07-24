@@ -51,6 +51,7 @@ export type PacketType =
   | "miss"
   | "write"
   | "replication"
+  | "heartbeat"
   | "drop"
   | "limited";
 
