@@ -3,14 +3,7 @@
 import type { Accent } from "@/curriculum/types";
 import type { LessonState } from "@/hooks/use-lesson-progress";
 import { cn } from "@/lib/cn";
-
-const accentVar: Record<Accent, string> = {
-  cyan: "var(--color-glow-cyan)",
-  violet: "var(--color-glow-violet)",
-  amber: "var(--color-glow-amber)",
-  green: "var(--color-glow-green)",
-  red: "var(--color-glow-red)",
-};
+import { accentCssVar } from "@/lib/accent";
 
 interface ProgressRingProps {
   fraction: number; // 0..1
@@ -31,7 +24,7 @@ export function ProgressRing({
   size = 20,
   className,
 }: ProgressRingProps) {
-  const color = accentVar[accent];
+  const color = accentCssVar[accent];
   const r = size / 2 - 2;
   const c = 2 * Math.PI * r;
 

@@ -6,6 +6,7 @@ import type { Difficulty, LessonMeta, Module } from "@/curriculum/types";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { useLessonProgress } from "@/hooks/use-lesson-progress";
 import { cn } from "@/lib/cn";
+import { accentCssVar } from "@/lib/accent";
 import { getLesson, lessonPath, modules } from "@/lib/curriculum";
 import { useProgress } from "@/stores/progress";
 import { ArrowRight } from "lucide-react";
@@ -15,14 +16,6 @@ const difficultyColor: Record<Difficulty, string> = {
   foundational: "text-glow-green",
   intermediate: "text-glow-orange",
   advanced: "text-glow-violet",
-};
-
-const accentVar: Record<Module["accent"], string> = {
-  cyan: "var(--color-glow-cyan)",
-  violet: "var(--color-glow-violet)",
-  amber: "var(--color-glow-amber)",
-  green: "var(--color-glow-green)",
-  red: "var(--color-glow-red)",
 };
 
 /** "Continue where you left off" card, from persisted lastVisited. */
@@ -141,8 +134,8 @@ export function LessonMap() {
             <span
               className="size-1.5 rounded-full"
               style={{
-                background: accentVar[mod.accent],
-                boxShadow: `0 0 8px ${accentVar[mod.accent]}`,
+                background: accentCssVar[mod.accent],
+                boxShadow: `0 0 8px ${accentCssVar[mod.accent]}`,
               }}
             />
             <span className="tech-num text-xs text-fg-faint">

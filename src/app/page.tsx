@@ -1,18 +1,10 @@
 import { HeroSim } from "@/components/landing/HeroSim";
 import { Vignettes } from "@/components/landing/Vignettes";
 import { CornerTicks } from "@/components/ui/CornerTicks";
-import type { Accent } from "@/curriculum/types";
+import { accentCssVar } from "@/lib/accent";
 import { modules, track } from "@/lib/curriculum";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-
-const accentVar: Record<Accent, string> = {
-  cyan: "var(--color-accent)",
-  violet: "var(--color-glow-violet)",
-  amber: "var(--color-glow-amber)",
-  green: "var(--color-glow-green)",
-  red: "var(--color-glow-red)",
-};
 
 function SiteHeader() {
   return (
@@ -150,14 +142,14 @@ export default function Home() {
               >
                 <span
                   className="absolute top-0 bottom-0 left-0 w-0.5 opacity-0 transition-opacity group-hover:opacity-100"
-                  style={{ background: accentVar[mod.accent] }}
+                  style={{ background: accentCssVar[mod.accent] }}
                 />
                 <span className="tech-num pl-4 text-xs text-fg-faint md:pl-0">
                   <span
                     className="mr-2 inline-block size-1.5 rounded-full align-middle"
                     style={{
-                      background: accentVar[mod.accent],
-                      boxShadow: `0 0 6px ${accentVar[mod.accent]}`,
+                      background: accentCssVar[mod.accent],
+                      boxShadow: `0 0 6px ${accentCssVar[mod.accent]}`,
                     }}
                   />
                   mod.{String(i + 1).padStart(2, "0")}

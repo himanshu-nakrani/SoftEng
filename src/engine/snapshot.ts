@@ -36,7 +36,7 @@ export function createSnapshotStore(
     const s = stateRef.current;
     const nodes: Record<string, NodeRuntime> = {};
     for (const [id, n] of Object.entries(s.nodes)) {
-      nodes[id] = { ...n };
+      nodes[id] = { ...n, meta: n.meta ? structuredClone(n.meta) : undefined };
     }
     return { t: s.t, metrics: { ...s.metrics }, nodes, caption: lastCaption };
   };
