@@ -1,0 +1,210 @@
+import {
+  advancePackets,
+  approach,
+  clamp01,
+  shouldSpawn,
+  spawnPacket,
+} from "@/engine/sim-helpers";
+import type { LessonSim } from "@/engine/types";
+
+/**
+ * Lesson 1 — Client & Server. The reference LessonDef: proves the whole
+ * pipeline (packets, meters, params, timeline, prediction quiz).
+ *
+ * Model (believable, not queueing theory): requests arrive at `rate`,
+ * the server works through a bounded queue at `capacity` req/s; the
+ * overflow is shed as drops.
+ */
+
+interface CSState {
+  /** Requests waiting + in service at the server. */
+  queue: number;
+  /** Fractional service accumulator. */
+  serviceAcc: number;
+  droppedTotal: number;
+  /** Smoothed completions/sec for the throughput meter. */
+  throughput: number;
+  /** Scripted traffic spike window (set by timeline). */
+  burstUntil: number;
+}
+
+const MAX_QUEUE = 24;
+const BURST_EXTRA = 18; // req/s added during the scripted spike
+
+export const clientServerSim: LessonSim<CSState> = {
+  id: "client-server",
+
+  topology: {
+    nodes: [
+      { id: "client", kind: "client", label: "browser", x: 160, y: 225 },
+      { id: "server", kind: "server", label: "api-1", x: 640, y: 225 },
+    ],
+    edges: [{ id: "wire", from: "client", to: "server" }],
+  },
+
+  params: [
+    {
+      key: "rate",
+      label: "arrival rate",
+      kind: "slider",
+      min: 1,
+      max: 30,
+      step: 1,
+      unit: " req/s",
+      defaultValue: 6,
+    },
+    {
+      key: "capacity",
+      label: "server speed",
+      kind: "slider",
+      min: 2,
+      max: 25,
+      step: 1,
+      unit: " req/s",
+      defaultValue: 12,
+    },
+    {
+      key: "latency",
+      label: "network latency",
+      kind: "slider",
+      min: 40,
+      max: 400,
+      step: 20,
+      unit: "ms",
+      defaultValue: 120,
+    },
+  ],
+
+  init: () => ({
+    queue: 0,
+    serviceAcc: 0,
+    droppedTotal: 0,
+    throughput: 0,
+    burstUntil: 0,
+  }),
+
+  step: (state, dt, params) => {
+    const L = state.lesson;
+    const rate = Number(params.rate);
+    const capacity = Number(params.capacity);
+    const oneWaySec = Number(params.latency) / 1000;
+    const packetSpeed = 1 / oneWaySec;
+
+    // 1. Arrivals (timeline may have opened a burst window).
+    const burst = state.t < L.burstUntil ? BURST_EXTRA : 0;
+    const spawns = shouldSpawn(state, rate + burst, dt);
+    for (let i = 0; i < spawns; i++) {
+      spawnPacket(state, "wire", "request", { speed: packetSpeed });
+    }
+
+    // 2. Deliveries.
+    let completedNow = 0;
+    for (const p of advancePackets(state, dt)) {
+      if (p.type === "request") {
+        if (L.queue >= MAX_QUEUE) {
+          // Shed load: bounce a fading red drop back toward the client.
+          L.droppedTotal += 1;
+          spawnPacket(state, "wire", "drop", {
+            speed: packetSpeed * 1.4,
+            reverse: true,
+            size: 3,
+          });
+        } else {
+          L.queue += 1;
+        }
+      } else if (p.type === "response") {
+        completedNow += 1;
+      }
+      // drops just fade out on arrival
+    }
+
+    // 3. Service: the server works through its queue.
+    L.serviceAcc += capacity * dt;
+    while (L.serviceAcc >= 1 && L.queue > 0) {
+      L.serviceAcc -= 1;
+      L.queue -= 1;
+      spawnPacket(state, "wire", "response", {
+        speed: packetSpeed,
+        reverse: true,
+      });
+    }
+    if (L.queue === 0) L.serviceAcc = Math.min(L.serviceAcc, 1);
+
+    // 4. Readouts.
+    L.throughput = approach(L.throughput, completedNow / dt, 1.5, dt);
+    const queueWaitMs = (L.queue / capacity) * 1000;
+    state.metrics.latency = 2 * Number(params.latency) + queueWaitMs;
+    state.metrics.throughput = L.throughput;
+    state.metrics.queue = L.queue;
+    state.metrics.dropped = L.droppedTotal;
+
+    state.nodes.server.load = approach(
+      state.nodes.server.load,
+      clamp01(L.queue / MAX_QUEUE),
+      6,
+      dt,
+    );
+  },
+
+  timeline: [
+    { at: 1.5, caption: "Cyan dots → requests. Green dots ← responses." },
+    {
+      at: 8,
+      caption: "Try it: drag ARRIVAL RATE past SERVER SPEED and watch the queue.",
+    },
+    {
+      at: 14,
+      caption: "⚡ A traffic spike hits — 3× normal traffic.",
+      apply: (s) => {
+        s.lesson.burstUntil = s.t + 6;
+      },
+    },
+    { at: 21.5, caption: "The spike passes. The backlog drains." },
+  ],
+
+  quiz: [
+    {
+      id: "cs-queue-growth",
+      at: 16.5,
+      question:
+        "The spike is pushing arrivals past the server's capacity and the queue is growing. If this keeps up, what happens?",
+      choices: [
+        { id: "a", label: "Latency climbs, then requests start getting dropped" },
+        { id: "b", label: "The server automatically speeds up to match" },
+        { id: "c", label: "Nothing — queues can absorb any amount of traffic" },
+      ],
+      correctChoiceId: "a",
+      explain:
+        "Every request in the queue waits behind the ones before it, so latency grows with queue depth. The queue is bounded (memory isn't free) — once it fills, the only option left is shedding load: drops.",
+    },
+  ],
+
+  meters: [
+    {
+      metricKey: "throughput",
+      label: "throughput",
+      kind: "counter",
+      unit: "req/s",
+    },
+    {
+      metricKey: "latency",
+      label: "p50 latency",
+      kind: "counter",
+      unit: "ms",
+      dangerAbove: 900,
+    },
+    {
+      metricKey: "queue",
+      label: "server queue",
+      kind: "bar",
+      max: MAX_QUEUE,
+      dangerAbove: MAX_QUEUE * 0.8,
+    },
+    {
+      metricKey: "dropped",
+      label: "dropped",
+      kind: "counter",
+      dangerAbove: 0,
+    },
+  ],
+};
