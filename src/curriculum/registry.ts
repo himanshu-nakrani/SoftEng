@@ -231,6 +231,22 @@ export const curriculum: Curriculum = {
               ],
             },
             {
+              slug: "idempotency",
+              moduleSlug: "distributed",
+              title: "Idempotency",
+              tagline:
+                "The confirmation died on the wire. Retry — and without idempotency keys, charge twice.",
+              difficulty: "intermediate",
+              estimatedMinutes: 11,
+              prerequisites: ["circuit-breakers"],
+              status: "available",
+              sections: [
+                { id: "the-ambiguity", title: "Did it go through?", kind: "concept" },
+                { id: "double-charge", title: "The double charge", kind: "interactive" },
+                { id: "the-mechanism", title: "Keys: f(f(x)) = f(x)", kind: "concept" },
+              ],
+            },
+            {
               slug: "cap-theorem",
               moduleSlug: "distributed",
               title: "The CAP Theorem",
