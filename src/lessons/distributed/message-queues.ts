@@ -81,7 +81,8 @@ export const messageQueuesSim: LessonSim<MQState> = {
 
     // 1. Producer never stops.
     let producedNow = 0;
-    for (let i = 0; i < shouldSpawn(state, Number(params.produce), dt); i++) {
+    const spawns = shouldSpawn(state, Number(params.produce), dt);
+    for (let i = 0; i < spawns; i++) {
       producedNow += 1;
       spawnPacket(state, "in", "write", { speed: 1.6 });
     }

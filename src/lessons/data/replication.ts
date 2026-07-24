@@ -103,12 +103,14 @@ export const replicationSim: LessonSim<ReplState> = {
     const lag = Number(params.lag);
 
     // 1. Writes → leader, each touching a random key.
-    for (let i = 0; i < shouldSpawn(state, Number(params.writeRate), dt); i++) {
+    const writeSpawns = shouldSpawn(state, Number(params.writeRate), dt);
+    for (let i = 0; i < writeSpawns; i++) {
       const key = Math.floor(state.rng() * KEYSPACE);
       spawnPacket(state, "write", "write", { speed: 1.5, payload: { key } });
     }
     // 2. Reads → followers, round-robin.
-    for (let i = 0; i < shouldSpawn(state, Number(params.readRate), dt); i++) {
+    const readSpawns = shouldSpawn(state, Number(params.readRate), dt);
+    for (let i = 0; i < readSpawns; i++) {
       const target = FOLLOWERS[L.rrRead++ % FOLLOWERS.length];
       spawnPacket(state, `read-${target}`, "request", { speed: 1.6 });
     }

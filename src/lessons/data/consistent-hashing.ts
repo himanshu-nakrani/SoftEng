@@ -153,7 +153,8 @@ export const consistentHashingSim: LessonSim<CHState> = {
     }
 
     // Lookups route to each key's ring owner.
-    for (let i = 0; i < shouldSpawn(state, Number(params.rate), dt); i++) {
+    const spawns = shouldSpawn(state, Number(params.rate), dt);
+    for (let i = 0; i < spawns; i++) {
       const key = Math.floor(state.rng() * KEYSPACE);
       const owner = ownerOf(key, active);
       if (owner) {

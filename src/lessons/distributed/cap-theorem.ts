@@ -96,11 +96,13 @@ export const capTheoremSim: LessonSim<CAPState> = {
       }
     }
 
-    // Writes arrive on both coasts.
-    for (let i = 0; i < shouldSpawn(state, Number(params.rate), dt); i++) {
+    // Writes arrive on both coasts (independent draws — the coasts don't sync).
+    const westSpawns = shouldSpawn(state, Number(params.rate), dt);
+    for (let i = 0; i < westSpawns; i++) {
       spawnPacket(state, "in-w", "write", { speed: 1.6 });
     }
-    for (let i = 0; i < shouldSpawn(state, Number(params.rate), dt); i++) {
+    const eastSpawns = shouldSpawn(state, Number(params.rate), dt);
+    for (let i = 0; i < eastSpawns; i++) {
       spawnPacket(state, "in-e", "write", { speed: 1.6 });
     }
 

@@ -99,7 +99,8 @@ export const cachingSim: LessonSim<CachingState> = {
     const ttl = Number(params.ttl);
 
     // 1. Reads arrive, each for a key. rng² biases toward hot low keys.
-    for (let i = 0; i < shouldSpawn(state, Number(params.rate), dt); i++) {
+    const spawns = shouldSpawn(state, Number(params.rate), dt);
+    for (let i = 0; i < spawns; i++) {
       const key = Math.floor(Math.pow(state.rng(), 2) * KEYSPACE);
       spawnPacket(state, "front", "request", { speed: 1.6, payload: { key } });
     }

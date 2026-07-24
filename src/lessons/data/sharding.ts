@@ -105,7 +105,8 @@ export const shardingSim: LessonSim<ShardingState> = {
     }
 
     // Queries arrive with keys; router sends each to hash(key) % n.
-    for (let i = 0; i < shouldSpawn(state, Number(params.rate), dt); i++) {
+    const spawns = shouldSpawn(state, Number(params.rate), dt);
+    for (let i = 0; i < spawns; i++) {
       const key = Math.floor(state.rng() * KEYSPACE);
       spawnPacket(state, "in", "request", { speed: 1.7, payload: { key } });
     }
