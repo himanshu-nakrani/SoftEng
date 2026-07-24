@@ -2,6 +2,8 @@ import {
   advancePackets,
   approach,
   clamp01,
+  drainQueue,
+  emaEvent,
   shouldSpawn,
   spawnPacket,
 } from "@/engine/sim-helpers";
@@ -34,6 +36,8 @@ interface CachingState {
 const KEYSPACE = 16;
 const HIT_MS = 60;
 const MISS_MS = 60 + 340;
+/** The database is deliberately the slow part: 5 req/s. */
+const DB_CAPACITY = 5;
 
 export const cachingSim: LessonSim<CachingState> = {
   id: "caching",
@@ -116,13 +120,13 @@ export const cachingSim: LessonSim<CachingState> = {
         if (entry) {
           entry.lastUsed = state.t;
           L.hits += 1;
-          L.hitEma = approach(L.hitEma, 1, 1.2, 1);
-          L.latencyEma = approach(L.latencyEma, HIT_MS, 0.8, 1);
+          L.hitEma = emaEvent(L.hitEma, true);
+          L.latencyEma = emaEvent(L.latencyEma, HIT_MS, 0.8);
           spawnPacket(state, "front", "hit", { speed: 1.6, reverse: true });
         } else {
           L.misses += 1;
-          L.hitEma = approach(L.hitEma, 0, 1.2, 1);
-          L.latencyEma = approach(L.latencyEma, MISS_MS, 0.8, 1);
+          L.hitEma = emaEvent(L.hitEma, false);
+          L.latencyEma = emaEvent(L.latencyEma, MISS_MS, 0.8);
           spawnPacket(state, "back", "miss", { speed: 1.4, payload: { key } });
         }
       } else if (p.edgeId === "back" && p.type === "miss") {
@@ -140,18 +144,19 @@ export const cachingSim: LessonSim<CachingState> = {
       }
     }
 
-    // 3. The DB is slow: capacity 5 req/s.
-    L.dbAcc += 5 * dt;
-    while (L.dbAcc >= 1 && L.pendingKeys.length > 0) {
-      L.dbAcc -= 1;
+    // 3. The DB is slow: capacity 5 req/s. The queue here is the pendingKeys
+    //    FIFO itself, so drainQueue drives a depth mirror and each serve pops
+    //    the matching key.
+    const db = { depth: L.pendingKeys.length, acc: L.dbAcc };
+    drainQueue(db, DB_CAPACITY, dt, () => {
       const servedKey = L.pendingKeys.shift()!;
       spawnPacket(state, "back", "response", {
         speed: 1.4,
         reverse: true,
         payload: { key: servedKey },
       });
-    }
-    if (L.pendingKeys.length === 0) L.dbAcc = Math.min(L.dbAcc, 1);
+    });
+    L.dbAcc = db.acc;
 
     // 4. Readouts.
     L.entries = L.entries.filter((e) => e.expiresAt > state.t);

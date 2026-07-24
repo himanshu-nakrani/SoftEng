@@ -1,7 +1,9 @@
 import {
   advancePackets,
   approach,
+  bounceDrop,
   clamp01,
+  isAlive,
   shouldSpawn,
   spawnPacket,
 } from "@/engine/sim-helpers";
@@ -125,9 +127,7 @@ export const consistentHashingSim: LessonSim<CHState> = {
   step: (state, dt, params) => {
     const L = state.lesson;
     const count = Number(params.nodes);
-    const dead = new Set(
-      NODE_IDS.filter((id) => state.nodes[id].health === "dead"),
-    );
+    const dead = new Set(NODE_IDS.filter((id) => !isAlive(state, id)));
     const active = activeNodes(count, dead);
 
     // Membership change (slider OR kill/revive) → compute keys that moved.
@@ -168,12 +168,8 @@ export const consistentHashingSim: LessonSim<CHState> = {
     for (const p of advancePackets(state, dt)) {
       if (p.type === "request") {
         const id = p.edgeId.slice(3);
-        if (state.nodes[id].health === "dead" || state.nodes[id].ghost) {
-          spawnPacket(state, p.edgeId, "drop", {
-            speed: 1.8,
-            reverse: true,
-            size: 3,
-          });
+        if (!isAlive(state, id) || state.nodes[id].ghost) {
+          bounceDrop(state, p.edgeId);
         } else {
           state.nodes[id].load = clamp01(state.nodes[id].load + 0.15);
           spawnPacket(state, p.edgeId, "hit", { speed: 1.5, reverse: true });

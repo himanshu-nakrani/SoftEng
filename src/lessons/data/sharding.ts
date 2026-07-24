@@ -2,6 +2,7 @@ import {
   advancePackets,
   approach,
   clamp01,
+  emaEvent,
   shouldSpawn,
   spawnPacket,
 } from "@/engine/sim-helpers";
@@ -122,7 +123,7 @@ export const shardingSim: LessonSim<ShardingState> = {
       } else if (p.type === "request") {
         // Arrived at a shard: answer.
         const id = p.edgeId.slice(3);
-        L.perShard[id] = approach(L.perShard[id], 1, 1.5, 1);
+        L.perShard[id] = emaEvent(L.perShard[id], true, 1.5);
         spawnPacket(state, p.edgeId, "response", { speed: 1.5, reverse: true });
       } else if (p.type === "response" && p.edgeId !== "in") {
         spawnPacket(state, "in", "response", { speed: 1.7, reverse: true });

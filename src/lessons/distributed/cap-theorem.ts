@@ -1,6 +1,7 @@
 import {
   advancePackets,
-  approach,
+  bounceDrop,
+  emaRate,
   shouldSpawn,
   spawnPacket,
 } from "@/engine/sim-helpers";
@@ -113,11 +114,7 @@ export const capTheoremSim: LessonSim<CAPState> = {
         if (partitioned && cp && !west) {
           // CP: the minority (east) side refuses — consistency over availability.
           L.rejectedTotal += 1;
-          spawnPacket(state, p.edgeId, "limited", {
-            speed: 1.9,
-            reverse: true,
-            size: 3,
-          });
+          bounceDrop(state, p.edgeId, { type: "limited", speed: 1.9 });
           continue;
         }
         acceptedNow += 1;
@@ -148,17 +145,14 @@ export const capTheoremSim: LessonSim<CAPState> = {
       if (crossing.length > 0) {
         state.packets = state.packets.filter((p) => p.edgeId !== "sync");
         for (const p of crossing) {
-          spawnPacket(state, "sync", "drop", {
-            speed: 1.6,
-            reverse: p.reverse,
-            size: 3,
-          });
+          // Not a bounce: a severed link drops the packet where it was headed.
+          bounceDrop(state, "sync", { speed: 1.6, reverse: p.reverse });
         }
       }
     }
 
     // Readouts.
-    L.acceptEma = approach(L.acceptEma, acceptedNow / dt, 1.5, dt);
+    L.acceptEma = emaRate(L.acceptEma, acceptedNow, dt);
     const maxRate = Number(params.rate) * 2;
     state.nodes.rw.queueDepth = L.vWest;
     state.nodes.re.queueDepth = L.vEast;

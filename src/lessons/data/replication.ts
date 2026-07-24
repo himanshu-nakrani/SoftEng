@@ -1,6 +1,7 @@
 import {
   advancePackets,
   approach,
+  emaEvent,
   shouldSpawn,
   spawnPacket,
 } from "@/engine/sim-helpers";
@@ -141,12 +142,12 @@ export const replicationSim: LessonSim<ReplState> = {
         const stale = L.followerV[f][key] < L.leaderV[key];
         if (stale) {
           L.staleReads += 1;
-          L.staleEma = approach(L.staleEma, 1, 1.2, 1);
+          L.staleEma = emaEvent(L.staleEma, true);
           // amber response = stale data served
           spawnPacket(state, p.edgeId, "miss", { speed: 1.6, reverse: true });
         } else {
           L.freshReads += 1;
-          L.staleEma = approach(L.staleEma, 0, 1.2, 1);
+          L.staleEma = emaEvent(L.staleEma, false);
           spawnPacket(state, p.edgeId, "response", {
             speed: 1.6,
             reverse: true,

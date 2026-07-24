@@ -1,9 +1,14 @@
 import {
   advancePackets,
   approach,
+  bounceDrop,
   clamp01,
+  drainQueue,
+  emaRate,
+  isAlive,
   shouldSpawn,
   spawnPacket,
+  type ServiceQueue,
 } from "@/engine/sim-helpers";
 import type { LessonSim } from "@/engine/types";
 
@@ -14,13 +19,8 @@ import type { LessonSim } from "@/engine/types";
  * capacity — completely different blast radius when a machine dies.
  */
 
-interface ServerSim {
-  queue: number;
-  serviceAcc: number;
-}
-
 interface ScalingState {
-  servers: Record<string, ServerSim>;
+  servers: Record<string, ServiceQueue>;
   rr: number;
   droppedTotal: number;
   throughput: number;
@@ -107,11 +107,11 @@ export const scalingStrategiesSim: LessonSim<ScalingState> = {
 
   init: () => ({
     servers: {
-      xl: { queue: 0, serviceAcc: 0 },
-      h1: { queue: 0, serviceAcc: 0 },
-      h2: { queue: 0, serviceAcc: 0 },
-      h3: { queue: 0, serviceAcc: 0 },
-      h4: { queue: 0, serviceAcc: 0 },
+      xl: { depth: 0, acc: 0 },
+      h1: { depth: 0, acc: 0 },
+      h2: { depth: 0, acc: 0 },
+      h3: { depth: 0, acc: 0 },
+      h4: { depth: 0, acc: 0 },
     },
     rr: 0,
     droppedTotal: 0,
@@ -130,7 +130,7 @@ export const scalingStrategiesSim: LessonSim<ScalingState> = {
       state.nodes[id].ghost = !ids.includes(id);
     }
 
-    const alive = ids.filter((id) => state.nodes[id].health !== "dead");
+    const alive = ids.filter((id) => isAlive(state, id));
 
     // 1. Arrivals — spread evenly across alive servers (the naive
     //    "even spread"; the real traffic cop arrives next lesson).
@@ -139,8 +139,7 @@ export const scalingStrategiesSim: LessonSim<ScalingState> = {
       if (alive.length === 0) {
         // Total outage: everything bounces.
         L.droppedTotal += 1;
-        const edge = `e-${ids[0] ?? "xl"}`;
-        spawnPacket(state, edge, "drop", { speed: 1.6, reverse: true, size: 3 });
+        bounceDrop(state, `e-${ids[0] ?? "xl"}`, { speed: 1.6 });
         continue;
       }
       const target = alive[L.rr++ % alive.length];
@@ -153,16 +152,11 @@ export const scalingStrategiesSim: LessonSim<ScalingState> = {
       const serverId = p.edgeId.slice(2); // "e-h1" → "h1"
       if (p.type === "request") {
         const server = L.servers[serverId];
-        const dead = state.nodes[serverId].health === "dead";
-        if (dead || server.queue >= maxQueue(serverId)) {
+        if (!isAlive(state, serverId) || server.depth >= maxQueue(serverId)) {
           L.droppedTotal += 1;
-          spawnPacket(state, p.edgeId, "drop", {
-            speed: 1.6,
-            reverse: true,
-            size: 3,
-          });
+          bounceDrop(state, p.edgeId, { speed: 1.6 });
         } else {
-          server.queue += 1;
+          server.depth += 1;
         }
       } else if (p.type === "response") {
         completedNow += 1;
@@ -172,20 +166,16 @@ export const scalingStrategiesSim: LessonSim<ScalingState> = {
     // 3. Service on every active, alive server.
     for (const id of ids) {
       const server = L.servers[id];
-      if (state.nodes[id].health === "dead") {
-        server.queue = 0; // work in a dead box is gone
+      if (!isAlive(state, id)) {
+        server.depth = 0; // work in a dead box is gone
         continue;
       }
-      server.serviceAcc += capacity(id) * dt;
-      while (server.serviceAcc >= 1 && server.queue > 0) {
-        server.serviceAcc -= 1;
-        server.queue -= 1;
+      drainQueue(server, capacity(id), dt, () => {
         spawnPacket(state, `e-${id}`, "response", { speed: 1.1, reverse: true });
-      }
-      if (server.queue === 0) server.serviceAcc = Math.min(server.serviceAcc, 1);
+      });
       state.nodes[id].load = approach(
         state.nodes[id].load,
-        clamp01(server.queue / maxQueue(id)),
+        clamp01(server.depth / maxQueue(id)),
         6,
         dt,
       );
@@ -193,7 +183,7 @@ export const scalingStrategiesSim: LessonSim<ScalingState> = {
 
     // 4. Readouts.
     const scale = Number(params.scale);
-    L.throughput = approach(L.throughput, completedNow / dt, 1.5, dt);
+    L.throughput = emaRate(L.throughput, completedNow, dt);
     state.metrics.throughput = L.throughput;
     state.metrics.capacity = alive.reduce((acc, id) => acc + capacity(id), 0);
     state.metrics.dropped = L.droppedTotal;

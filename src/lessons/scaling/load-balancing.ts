@@ -1,9 +1,15 @@
 import {
   advancePackets,
   approach,
+  bounceDrop,
   clamp01,
+  drainQueue,
+  emaRate,
+  isAlive,
+  killNode,
   shouldSpawn,
   spawnPacket,
+  type ServiceQueue,
 } from "@/engine/sim-helpers";
 import type { LessonSim, SimState } from "@/engine/types";
 
@@ -18,13 +24,8 @@ import type { LessonSim, SimState } from "@/engine/types";
 const SERVERS = ["s1", "s2", "s3"] as const;
 type ServerId = (typeof SERVERS)[number];
 
-interface ServerSim {
-  queue: number;
-  serviceAcc: number;
-}
-
 interface LBState {
-  servers: Record<ServerId, ServerSim>;
+  servers: Record<ServerId, ServiceQueue>;
   rr: number;
   /** LB's belief about liveness — lags reality by the health-check window. */
   believedAlive: Record<ServerId, boolean>;
@@ -44,7 +45,7 @@ function connections(state: SimState<LBState>, id: ServerId): number {
   for (const p of state.packets) {
     if (p.edgeId === `to-${id}` && p.type === "request") inFlight += 1;
   }
-  return state.lesson.servers[id].queue + inFlight;
+  return state.lesson.servers[id].depth + inFlight;
 }
 
 function pickTarget(
@@ -111,9 +112,9 @@ export const loadBalancingSim: LessonSim<LBState> = {
 
   init: () => ({
     servers: {
-      s1: { queue: 0, serviceAcc: 0 },
-      s2: { queue: 0, serviceAcc: 0 },
-      s3: { queue: 0, serviceAcc: 0 },
+      s1: { depth: 0, acc: 0 },
+      s2: { depth: 0, acc: 0 },
+      s3: { depth: 0, acc: 0 },
     },
     rr: 0,
     believedAlive: { s1: true, s2: true, s3: true },
@@ -127,7 +128,7 @@ export const loadBalancingSim: LessonSim<LBState> = {
 
     // 0. Health checks: the LB's belief lags reality.
     for (const id of SERVERS) {
-      const actuallyAlive = state.nodes[id].health !== "dead";
+      const actuallyAlive = isAlive(state, id);
       if (actuallyAlive === L.believedAlive[id]) {
         L.checkTimer[id] = 0;
       } else {
@@ -154,7 +155,7 @@ export const loadBalancingSim: LessonSim<LBState> = {
           const target = pickTarget(state, String(params.strategy));
           if (target === null) {
             L.droppedTotal += 1;
-            spawnPacket(state, "in", "drop", { speed: 2, reverse: true, size: 3 });
+            bounceDrop(state, "in", { speed: 2 });
           } else {
             spawnPacket(state, `to-${target}`, "request", {
               speed: 1.4,
@@ -168,23 +169,15 @@ export const loadBalancingSim: LessonSim<LBState> = {
         const serverId = p.edgeId.slice(3) as ServerId; // "to-s1" → "s1"
         if (p.type === "request") {
           const server = L.servers[serverId];
-          if (state.nodes[serverId].health === "dead") {
+          if (!isAlive(state, serverId)) {
             // In-flight into a corpse: the error burst.
             L.droppedTotal += 1;
-            spawnPacket(state, p.edgeId, "drop", {
-              speed: 1.8,
-              reverse: true,
-              size: 3,
-            });
-          } else if (server.queue >= MAX_QUEUE) {
+            bounceDrop(state, p.edgeId);
+          } else if (server.depth >= MAX_QUEUE) {
             L.droppedTotal += 1;
-            spawnPacket(state, p.edgeId, "drop", {
-              speed: 1.8,
-              reverse: true,
-              size: 3,
-            });
+            bounceDrop(state, p.edgeId);
           } else {
-            server.queue += 1;
+            server.depth += 1;
           }
         } else if (p.type === "response") {
           // Response reached the LB — forward to the client.
@@ -196,33 +189,29 @@ export const loadBalancingSim: LessonSim<LBState> = {
     // 3. Service.
     for (const id of SERVERS) {
       const server = L.servers[id];
-      if (state.nodes[id].health === "dead") {
-        server.queue = 0;
+      if (!isAlive(state, id)) {
+        server.depth = 0;
         continue;
       }
-      server.serviceAcc += CAPACITY[id] * dt;
-      while (server.serviceAcc >= 1 && server.queue > 0) {
-        server.serviceAcc -= 1;
-        server.queue -= 1;
+      drainQueue(server, CAPACITY[id], dt, () => {
         spawnPacket(state, `to-${id}`, "response", { speed: 1.4, reverse: true });
-      }
-      if (server.queue === 0) server.serviceAcc = Math.min(server.serviceAcc, 1);
+      });
       state.nodes[id].load = approach(
         state.nodes[id].load,
-        clamp01(server.queue / MAX_QUEUE),
+        clamp01(server.depth / MAX_QUEUE),
         6,
         dt,
       );
-      state.nodes[id].queueDepth = server.queue;
+      state.nodes[id].queueDepth = server.depth;
     }
 
     // 4. Readouts.
-    L.throughput = approach(L.throughput, completedNow / dt, 1.5, dt);
-    const aliveIds = SERVERS.filter((id) => state.nodes[id].health !== "dead");
+    L.throughput = emaRate(L.throughput, completedNow, dt);
+    const aliveIds = SERVERS.filter((id) => isAlive(state, id));
     const avgWait =
       aliveIds.length > 0
         ? aliveIds.reduce(
-            (acc, id) => acc + L.servers[id].queue / CAPACITY[id],
+            (acc, id) => acc + L.servers[id].depth / CAPACITY[id],
             0,
           ) / aliveIds.length
         : 4;
@@ -248,10 +237,7 @@ export const loadBalancingSim: LessonSim<LBState> = {
     {
       at: 12,
       caption: "☠ api-3 just died. The health checks take a beat to notice…",
-      apply: (s) => {
-        s.nodes.s3.health = "dead";
-        s.nodes.s3.load = 0;
-      },
+      apply: (s) => killNode(s, "s3"),
     },
     {
       at: 17,

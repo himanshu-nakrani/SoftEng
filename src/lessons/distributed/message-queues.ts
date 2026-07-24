@@ -1,9 +1,13 @@
 import {
   advancePackets,
   approach,
+  bounceDrop,
   clamp01,
+  drainQueue,
+  emaRate,
   shouldSpawn,
   spawnPacket,
+  type ServiceQueue,
 } from "@/engine/sim-helpers";
 import type { LessonSim } from "@/engine/types";
 
@@ -14,8 +18,8 @@ import type { LessonSim } from "@/engine/types";
  */
 
 interface MQState {
-  depth: number;
-  consumeAcc: number;
+  /** The buffer between producer and consumer — the whole lesson. */
+  queue: ServiceQueue;
   inEma: number;
   outEma: number;
   droppedTotal: number;
@@ -68,8 +72,7 @@ export const messageQueuesSim: LessonSim<MQState> = {
   ],
 
   init: () => ({
-    depth: 0,
-    consumeAcc: 0,
+    queue: { depth: 0, acc: 0 },
     inEma: 0,
     outEma: 0,
     droppedTotal: 0,
@@ -91,12 +94,12 @@ export const messageQueuesSim: LessonSim<MQState> = {
     let consumedNow = 0;
     for (const p of advancePackets(state, dt)) {
       if (p.edgeId === "in" && p.type === "write") {
-        if (L.depth >= MAX_DEPTH) {
+        if (L.queue.depth >= MAX_DEPTH) {
           // Queue full — the backpressure moment.
           L.droppedTotal += 1;
-          spawnPacket(state, "in", "drop", { speed: 1.8, reverse: true, size: 3 });
+          bounceDrop(state, "in");
         } else {
-          L.depth += 1;
+          L.queue.depth += 1;
         }
       } else if (p.edgeId === "out" && p.type === "write") {
         consumedNow += 1;
@@ -110,30 +113,27 @@ export const messageQueuesSim: LessonSim<MQState> = {
 
     // 3. Consumer pulls (unless deploying…).
     if (!paused) {
-      L.consumeAcc += Number(params.consume) * dt;
-      while (L.consumeAcc >= 1 && L.depth > 0) {
-        L.consumeAcc -= 1;
-        L.depth -= 1;
+      drainQueue(L.queue, Number(params.consume), dt, () => {
         spawnPacket(state, "out", "write", { speed: 1.4 });
-      }
-      if (L.depth === 0) L.consumeAcc = Math.min(L.consumeAcc, 1);
+      });
     }
 
     // 4. Readouts.
-    L.inEma = approach(L.inEma, producedNow / dt, 1.5, dt);
-    L.outEma = approach(L.outEma, consumedNow / dt, 1.5, dt);
-    state.nodes.queue.queueDepth = L.depth;
+    const depth = L.queue.depth;
+    L.inEma = emaRate(L.inEma, producedNow, dt);
+    L.outEma = emaRate(L.outEma, consumedNow, dt);
+    state.nodes.queue.queueDepth = depth;
     state.nodes.queue.load = approach(
       state.nodes.queue.load,
-      clamp01(L.depth / MAX_DEPTH),
+      clamp01(depth / MAX_DEPTH),
       6,
       dt,
     );
     state.nodes.consumer.health = paused ? "degraded" : "healthy";
-    state.metrics.depth = L.depth;
+    state.metrics.depth = depth;
     state.metrics.inRate = L.inEma;
     state.metrics.outRate = L.outEma;
-    state.metrics.lagSec = L.outEma > 0.5 ? L.depth / L.outEma : L.depth;
+    state.metrics.lagSec = L.outEma > 0.5 ? depth / L.outEma : depth;
     state.metrics.dropped = L.droppedTotal;
   },
 

@@ -1,7 +1,9 @@
 import {
   advancePackets,
   approach,
+  bounceDrop,
   clamp01,
+  emaRate,
   shouldSpawn,
   spawnPacket,
 } from "@/engine/sim-helpers";
@@ -113,11 +115,7 @@ export const rateLimitingSim: LessonSim<RLState> = {
           spawnPacket(state, "out", "request", { speed: 1.5 });
         } else {
           L.rejectedTotal += 1;
-          spawnPacket(state, "in", "limited", {
-            speed: 1.9,
-            reverse: true,
-            size: 3,
-          });
+          bounceDrop(state, "in", { type: "limited", speed: 1.9 });
         }
       } else if (p.edgeId === "out" && p.type === "request") {
         allowedNow += 1;
@@ -128,7 +126,7 @@ export const rateLimitingSim: LessonSim<RLState> = {
     }
 
     // 4. Readouts.
-    L.allowedEma = approach(L.allowedEma, allowedNow / dt, 1.5, dt);
+    L.allowedEma = emaRate(L.allowedEma, allowedNow, dt);
     state.nodes.limiter.queueDepth = Math.floor(L.tokens);
     state.nodes.limiter.load = approach(
       state.nodes.limiter.load,

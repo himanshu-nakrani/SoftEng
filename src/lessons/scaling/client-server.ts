@@ -1,9 +1,13 @@
 import {
   advancePackets,
   approach,
+  bounceDrop,
   clamp01,
+  drainQueue,
+  emaRate,
   shouldSpawn,
   spawnPacket,
+  type ServiceQueue,
 } from "@/engine/sim-helpers";
 import type { LessonSim } from "@/engine/types";
 
@@ -18,9 +22,7 @@ import type { LessonSim } from "@/engine/types";
 
 interface CSState {
   /** Requests waiting + in service at the server. */
-  queue: number;
-  /** Fractional service accumulator. */
-  serviceAcc: number;
+  server: ServiceQueue;
   droppedTotal: number;
   /** Smoothed completions/sec for the throughput meter. */
   throughput: number;
@@ -76,8 +78,7 @@ export const clientServerSim: LessonSim<CSState> = {
   ],
 
   init: () => ({
-    queue: 0,
-    serviceAcc: 0,
+    server: { depth: 0, acc: 0 },
     droppedTotal: 0,
     throughput: 0,
     burstUntil: 0,
@@ -101,16 +102,12 @@ export const clientServerSim: LessonSim<CSState> = {
     let completedNow = 0;
     for (const p of advancePackets(state, dt)) {
       if (p.type === "request") {
-        if (L.queue >= MAX_QUEUE) {
+        if (L.server.depth >= MAX_QUEUE) {
           // Shed load: bounce a fading red drop back toward the client.
           L.droppedTotal += 1;
-          spawnPacket(state, "wire", "drop", {
-            speed: packetSpeed * 1.4,
-            reverse: true,
-            size: 3,
-          });
+          bounceDrop(state, "wire", { speed: packetSpeed * 1.4 });
         } else {
-          L.queue += 1;
+          L.server.depth += 1;
         }
       } else if (p.type === "response") {
         completedNow += 1;
@@ -119,28 +116,24 @@ export const clientServerSim: LessonSim<CSState> = {
     }
 
     // 3. Service: the server works through its queue.
-    L.serviceAcc += capacity * dt;
-    while (L.serviceAcc >= 1 && L.queue > 0) {
-      L.serviceAcc -= 1;
-      L.queue -= 1;
+    drainQueue(L.server, capacity, dt, () => {
       spawnPacket(state, "wire", "response", {
         speed: packetSpeed,
         reverse: true,
       });
-    }
-    if (L.queue === 0) L.serviceAcc = Math.min(L.serviceAcc, 1);
+    });
 
     // 4. Readouts.
-    L.throughput = approach(L.throughput, completedNow / dt, 1.5, dt);
-    const queueWaitMs = (L.queue / capacity) * 1000;
+    L.throughput = emaRate(L.throughput, completedNow, dt);
+    const queueWaitMs = (L.server.depth / capacity) * 1000;
     state.metrics.latency = 2 * Number(params.latency) + queueWaitMs;
     state.metrics.throughput = L.throughput;
-    state.metrics.queue = L.queue;
+    state.metrics.queue = L.server.depth;
     state.metrics.dropped = L.droppedTotal;
 
     state.nodes.server.load = approach(
       state.nodes.server.load,
-      clamp01(L.queue / MAX_QUEUE),
+      clamp01(L.server.depth / MAX_QUEUE),
       6,
       dt,
     );
