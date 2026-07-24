@@ -111,6 +111,22 @@ export const curriculum: Curriculum = {
               ],
             },
             {
+              slug: "cdn",
+              moduleSlug: "data",
+              title: "CDN & Edge Caching",
+              tagline:
+                "Move the cache to the user: points of presence, origin shields, and why light speed is a latency budget.",
+              difficulty: "foundational",
+              estimatedMinutes: 13,
+              prerequisites: ["caching"],
+              status: "available",
+              sections: [
+                { id: "speed-of-light", title: "The speed of light is a budget", kind: "concept" },
+                { id: "hit-the-edge", title: "Hit the edge", kind: "interactive" },
+                { id: "what-it-really-is", title: "Invalidation at planet scale", kind: "concept" },
+              ],
+            },
+            {
               slug: "replication",
               moduleSlug: "data",
               title: "Database Replication",
