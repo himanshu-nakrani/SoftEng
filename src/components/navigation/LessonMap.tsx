@@ -6,7 +6,7 @@ import type { Difficulty, LessonMeta, Module } from "@/curriculum/types";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { useLessonProgress } from "@/hooks/use-lesson-progress";
 import { cn } from "@/lib/cn";
-import { getLesson, lessonPath, modules } from "@/lib/curriculum";
+import { getLesson, lessonPath, tracks } from "@/lib/curriculum";
 import { useProgress } from "@/stores/progress";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
@@ -128,43 +128,62 @@ function MapNode({
   );
 }
 
-/** The learning-path map: module clusters on a progress spine. */
+/** The learning-path map: tracks → module clusters on a progress spine. */
 export function LessonMap() {
   return (
     <div className="relative">
       <div className="dot-grid dot-grid-fade pointer-events-none absolute inset-0 -z-10" />
       <ContinueCard />
 
-      {modules.map((mod, i) => (
-        <section key={mod.slug} className="mb-12">
-          <div className="mb-5 flex items-center gap-3">
-            <span
-              className="size-1.5 rounded-full"
-              style={{
-                background: accentVar[mod.accent],
-                boxShadow: `0 0 8px ${accentVar[mod.accent]}`,
-              }}
-            />
-            <span className="tech-num text-xs text-fg-faint">
-              mod.{String(i + 1).padStart(2, "0")}
-            </span>
-            <h2 className="font-display text-xl font-bold">{mod.title}</h2>
-            <div className="tech-rule min-w-8 flex-1" />
-            <span className="hidden font-mono text-[11px] text-fg-faint sm:inline">
-              {mod.description}
-            </span>
+      {tracks.map((track, ti) => (
+        <section key={track.slug} className="mb-16">
+          <div className="mb-8">
+            <div className="mb-2 flex items-center gap-3">
+              <span className="tech-label text-accent">
+                track {String(ti + 1).padStart(2, "0")}
+              </span>
+              <div className="tech-rule flex-1" />
+            </div>
+            <h1 className="font-display mb-2 text-2xl font-bold tracking-tight">
+              {track.title}
+            </h1>
+            <p className="max-w-xl text-sm leading-relaxed text-fg-muted">
+              {track.description}
+            </p>
           </div>
 
-          <ul className="ml-1">
-            {mod.lessons.map((lesson, li) => (
-              <MapNode
-                key={lesson.slug}
-                lesson={lesson}
-                module={mod}
-                index={li + 1}
-              />
-            ))}
-          </ul>
+          {track.modules.map((mod, i) => (
+            <section key={mod.slug} className="mb-12">
+              <div className="mb-5 flex items-center gap-3">
+                <span
+                  className="size-1.5 rounded-full"
+                  style={{
+                    background: accentVar[mod.accent],
+                    boxShadow: `0 0 8px ${accentVar[mod.accent]}`,
+                  }}
+                />
+                <span className="tech-num text-xs text-fg-faint">
+                  mod.{String(i + 1).padStart(2, "0")}
+                </span>
+                <h2 className="font-display text-xl font-bold">{mod.title}</h2>
+                <div className="tech-rule min-w-8 flex-1" />
+                <span className="hidden font-mono text-[11px] text-fg-faint sm:inline">
+                  {mod.description}
+                </span>
+              </div>
+
+              <ul className="ml-1">
+                {mod.lessons.map((lesson, li) => (
+                  <MapNode
+                    key={lesson.slug}
+                    lesson={lesson}
+                    module={mod}
+                    index={li + 1}
+                  />
+                ))}
+              </ul>
+            </section>
+          ))}
         </section>
       ))}
     </div>

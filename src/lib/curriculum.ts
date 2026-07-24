@@ -1,12 +1,12 @@
 import { curriculum } from "@/curriculum/registry";
 import type { LessonMeta, Module, Track } from "@/curriculum/types";
 
-/** v1 has a single track; helpers assume it. */
-export const track: Track = curriculum.tracks[0];
+export const tracks: Track[] = curriculum.tracks;
 
-export const modules: Module[] = track.modules;
+/** All modules across every track, in curriculum order. */
+export const modules: Module[] = tracks.flatMap((t) => t.modules);
 
-/** All lessons in curriculum order (module order → lesson order). */
+/** All lessons in curriculum order (track → module → lesson). */
 export const allLessons: LessonMeta[] = modules.flatMap((m) => m.lessons);
 
 const bySlug = new Map(allLessons.map((l) => [l.slug, l]));
@@ -23,6 +23,10 @@ export function getModule(slug: string): Module | undefined {
 export function moduleOf(lesson: LessonMeta): Module {
   // Registry guarantees every lesson's moduleSlug resolves.
   return moduleBySlug.get(lesson.moduleSlug)!;
+}
+
+export function trackOf(module: Module): Track {
+  return tracks.find((t) => t.modules.includes(module))!;
 }
 
 /** Route path for a lesson page. */

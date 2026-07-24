@@ -2,7 +2,7 @@ import { HeroSim } from "@/components/landing/HeroSim";
 import { Vignettes } from "@/components/landing/Vignettes";
 import { CornerTicks } from "@/components/ui/CornerTicks";
 import type { Accent } from "@/curriculum/types";
-import { modules, track } from "@/lib/curriculum";
+import { allLessons, tracks } from "@/lib/curriculum";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
@@ -54,7 +54,6 @@ function SectionRule({ n, label }: { n: string; label: string }) {
 }
 
 export default function Home() {
-  const allLessons = modules.flatMap((m) => m.lessons);
   const availableCount = allLessons.filter(
     (l) => l.status === "available",
   ).length;
@@ -128,20 +127,25 @@ export default function Home() {
         <Vignettes />
       </section>
 
-      {/* ---- the track: a manifest, not a card grid ---- */}
-      <section className="mx-auto max-w-6xl px-6 pb-28">
-        <SectionRule n="02" label="track 01" />
+      {/* ---- the tracks: a manifest, not a card grid ---- */}
+      {tracks.map((track, ti) => (
+      <section key={track.slug} className="mx-auto max-w-6xl px-6 pb-28">
+        <SectionRule
+          n={String(ti + 2).padStart(2, "0")}
+          label={`track ${String(ti + 1).padStart(2, "0")}`}
+        />
         <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
           <h2 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
             {track.title}
           </h2>
           <p className="tech-num text-xs text-fg-faint">
-            {availableCount}/{allLessons.length} lessons live
+            {track.modules.flatMap((m) => m.lessons).filter((l) => l.status === "available").length}
+            /{track.modules.flatMap((m) => m.lessons).length} lessons live
           </p>
         </div>
 
         <div>
-          {modules.map((mod, i) => {
+          {track.modules.map((mod, i) => {
             const live = mod.lessons.filter(
               (l) => l.status === "available",
             ).length;
@@ -180,6 +184,7 @@ export default function Home() {
           })}
         </div>
       </section>
+      ))}
 
       <footer className="border-t border-border">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-6 py-8">

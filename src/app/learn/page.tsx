@@ -1,5 +1,4 @@
 import { LessonMap } from "@/components/navigation/LessonMap";
-import { track } from "@/lib/curriculum";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -10,15 +9,12 @@ export default function LearnPage() {
   return (
     <>
       <header className="mb-10">
-        <div className="mb-4 flex items-center gap-3">
-          <span className="tech-label text-accent">track 01</span>
-          <div className="tech-rule flex-1" />
-        </div>
-        <h1 className="font-display mb-3 text-3xl font-bold tracking-tight">
-          {track.title}
+        <h1 className="font-display mb-2 text-3xl font-bold tracking-tight">
+          Learning path
         </h1>
         <p className="max-w-xl leading-relaxed text-fg-muted">
-          {track.description}
+          Interactive tracks, learned in order or raided for the concept you
+          need today. Progress lives in your browser.
         </p>
       </header>
       <LessonMap />

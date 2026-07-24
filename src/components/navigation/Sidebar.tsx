@@ -4,7 +4,7 @@ import { ProgressRing } from "@/components/navigation/ProgressRing";
 import type { LessonMeta, Module } from "@/curriculum/types";
 import { useLessonProgress } from "@/hooks/use-lesson-progress";
 import { cn } from "@/lib/cn";
-import { lessonPath, modules } from "@/lib/curriculum";
+import { lessonPath, tracks } from "@/lib/curriculum";
 import { FlaskConical, Map as MapIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -90,19 +90,34 @@ export function Sidebar() {
         Playground
       </Link>
 
-      {modules.map((module) => (
-        <nav key={module.slug} className="mb-3" aria-label={module.title}>
-          <p className="tech-label mb-1.5 px-2.5">{module.title}</p>
-          <ul className="flex flex-col gap-0.5">
-            {module.lessons.map((lesson) => (
-              <SidebarLesson
-                key={lesson.slug}
-                lesson={lesson}
-                module={module}
-              />
-            ))}
-          </ul>
-        </nav>
+      {tracks.map((track, ti) => (
+        <div key={track.slug} className="mb-2">
+          {tracks.length > 1 && (
+            <div className="mb-2 flex items-center gap-2 px-2.5 pt-2">
+              <span className="tech-num text-[9px] text-fg-faint">
+                t{String(ti + 1).padStart(2, "0")}
+              </span>
+              <p className="font-display text-xs font-semibold text-fg">
+                {track.title}
+              </p>
+              <div className="tech-rule flex-1" />
+            </div>
+          )}
+          {track.modules.map((module) => (
+            <nav key={module.slug} className="mb-3" aria-label={module.title}>
+              <p className="tech-label mb-1.5 px-2.5">{module.title}</p>
+              <ul className="flex flex-col gap-0.5">
+                {module.lessons.map((lesson) => (
+                  <SidebarLesson
+                    key={lesson.slug}
+                    lesson={lesson}
+                    module={module}
+                  />
+                ))}
+              </ul>
+            </nav>
+          ))}
+        </div>
       ))}
 
       <p className="mt-auto px-2.5 pt-4 font-mono text-[9px] tracking-widest text-fg-faint/70 uppercase">
