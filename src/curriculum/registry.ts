@@ -262,6 +262,22 @@ export const curriculum: Curriculum = {
                 { id: "cp-vs-ap", title: "CP or AP — you decide", kind: "interactive" },
               ],
             },
+            {
+              slug: "leader-election",
+              moduleSlug: "distributed",
+              title: "Leader Election",
+              tagline:
+                "The leader dies. Five nodes, randomized timeouts, a majority vote — and no human in the loop.",
+              difficulty: "advanced",
+              estimatedMinutes: 15,
+              prerequisites: ["replication", "cap-theorem"],
+              status: "available",
+              sections: [
+                { id: "who-decides", title: "Who decides who decides?", kind: "concept" },
+                { id: "watch-an-election", title: "Watch an election", kind: "interactive" },
+                { id: "quorum", title: "Quorum: the arithmetic of safety", kind: "concept" },
+              ],
+            },
           ],
         },
       ],
