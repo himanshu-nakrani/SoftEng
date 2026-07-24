@@ -70,6 +70,22 @@ export const curriculum: Curriculum = {
                 { id: "health-checks", title: "Health checks", kind: "concept" },
               ],
             },
+            {
+              slug: "realtime",
+              moduleSlug: "scaling",
+              title: "WebSockets vs Polling",
+              tagline:
+                "The server has news — keep asking for it, or hold the wire open and get pushed?",
+              difficulty: "foundational",
+              estimatedMinutes: 12,
+              prerequisites: ["client-server"],
+              status: "available",
+              sections: [
+                { id: "the-question", title: "Who notices the news?", kind: "concept" },
+                { id: "race", title: "Ask vs push", kind: "interactive" },
+                { id: "tradeoffs", title: "The price of a held-open door", kind: "concept" },
+              ],
+            },
           ],
         },
         {
