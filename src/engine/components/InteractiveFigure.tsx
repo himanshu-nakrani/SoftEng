@@ -5,7 +5,12 @@ import { useReducedMotion } from "motion/react";
 import type { ReactNode } from "react";
 import { CornerTicks } from "@/components/ui/CornerTicks";
 import { buildPaths } from "../paths";
-import type { LessonSim, LessonSimView, NodeRuntime } from "../types";
+import type {
+  LessonSim,
+  LessonSimView,
+  NodeRuntime,
+  ParamValues,
+} from "../types";
 import { STAGE_H, STAGE_W } from "../types";
 import type { SimSnapshot } from "../snapshot";
 import { useSimulation, useSimSnapshot, type Simulation } from "../useSimulation";
@@ -31,6 +36,10 @@ interface InteractiveFigureProps<L> {
    * live snapshot so it can react to sim state.
    */
   stageOverlay?: (snapshot: SimSnapshot) => ReactNode;
+  /** Override default param values at init (playground share links). */
+  initialParams?: ParamValues;
+  /** Fires after every user param change (playground URL sync). */
+  onParamsChange?: (params: ParamValues) => void;
   /** First meaningful interaction (drives section completion). */
   onEngage?: () => void;
   onQuizResult?: (quizId: string, correct: boolean) => void;
@@ -164,6 +173,11 @@ function Clock({ simulation }: { simulation: Simulation }) {
   );
 }
 
+/* Keyboard transport coordination: many figures can share a page; the one
+   most recently scrolled into view claims the keys. */
+const visibleFigures = new Set<symbol>();
+let activeFigure: symbol | null = null;
+
 /**
  * THE single entry point for lesson visualizations: stage + meters +
  * controls + transport + quiz overlay. Lesson pages compose nothing else.
@@ -174,10 +188,18 @@ export function InteractiveFigure<L>({
   autoplay = true,
   seed,
   stageOverlay,
+  initialParams,
+  onParamsChange,
   onEngage,
   onQuizResult,
 }: InteractiveFigureProps<L>) {
-  const simulation = useSimulation(sim, { seed, onEngage, onQuizResult });
+  const simulation = useSimulation(sim, {
+    seed,
+    initialParams,
+    onParamsChange,
+    onEngage,
+    onQuizResult,
+  });
   const containerRef = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
 
@@ -186,6 +208,7 @@ export function InteractiveFigure<L>({
   controlsRef.current = simulation.controls;
   const statusRef = useRef(simulation.status);
   statusRef.current = simulation.status;
+  const keyToken = useRef(Symbol("figure")).current;
 
   useEffect(() => {
     const el = containerRef.current;
@@ -196,22 +219,74 @@ export function InteractiveFigure<L>({
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
+          // Claim keyboard transport (most recently visible wins).
+          visibleFigures.add(keyToken);
+          activeFigure = keyToken;
           const shouldAutoplay = autoplay && !reduced && !everPlayed;
           if (shouldAutoplay || pausedByScroll) {
             everPlayed = true;
             pausedByScroll = false;
             controlsRef.current.play();
           }
-        } else if (statusRef.current === "playing") {
-          pausedByScroll = true;
-          controlsRef.current.pause();
+        } else {
+          visibleFigures.delete(keyToken);
+          if (activeFigure === keyToken) {
+            activeFigure = visibleFigures.values().next().value ?? null;
+          }
+          if (statusRef.current === "playing") {
+            pausedByScroll = true;
+            controlsRef.current.pause();
+          }
         }
       },
       { threshold: 0.35 },
     );
     observer.observe(el);
-    return () => observer.disconnect();
-  }, [autoplay, reduced]);
+    return () => {
+      observer.disconnect();
+      visibleFigures.delete(keyToken);
+      if (activeFigure === keyToken) {
+        activeFigure = visibleFigures.values().next().value ?? null;
+      }
+    };
+  }, [autoplay, reduced, keyToken]);
+
+  // A1: keyboard transport — Space play/pause · "." step · R restart · 1/2/3 speed.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (activeFigure !== keyToken) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (statusRef.current === "quiz") return; // quiz overlay owns the moment
+      const target = e.target as HTMLElement | null;
+      if (target?.closest("input, textarea, select, [contenteditable]")) return;
+
+      const controls = controlsRef.current;
+      switch (e.key) {
+        case " ":
+          e.preventDefault(); // don't scroll the page
+          controls.toggle();
+          break;
+        case ".":
+          controls.stepOnce();
+          break;
+        case "r":
+        case "R":
+          controls.restart();
+          break;
+        case "1":
+          controls.setSpeed(0.5);
+          break;
+        case "2":
+          controls.setSpeed(1);
+          break;
+        case "3":
+          controls.setSpeed(2);
+          break;
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [keyToken]);
 
   return (
     <figure

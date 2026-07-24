@@ -93,9 +93,19 @@ const CAPTION_DURATION = 4; // sim-seconds a timeline caption stays up
  * rAF; lesson logic is a mutation-friendly reducer; React reads 10Hz
  * snapshots; PacketLayer reads the live ref per frame.
  */
+export interface SimulationOpts {
+  seed?: number;
+  /** Override default param values at init (playground share links). */
+  initialParams?: ParamValues;
+  onEngage?: () => void;
+  onQuizResult?: (quizId: string, correct: boolean) => void;
+  /** Fires after every user param change (playground URL sync). */
+  onParamsChange?: (params: ParamValues) => void;
+}
+
 export function useSimulation<L>(
   sim: LessonSim<L>,
-  opts: { seed?: number; onEngage?: () => void; onQuizResult?: (quizId: string, correct: boolean) => void } = {},
+  opts: SimulationOpts = {},
 ): Simulation {
   const { seed = 42 } = opts;
   // Engine treats lesson state opaquely; LessonSim is invariant in L, so
@@ -108,7 +118,10 @@ export function useSimulation<L>(
   }
   const liveRef = stateRef as { current: SimState<unknown> };
 
-  const paramsRef = useRef<ParamValues>(defaultParams(lesson.params));
+  const paramsRef = useRef<ParamValues>({
+    ...defaultParams(lesson.params),
+    ...opts.initialParams,
+  });
   const [params, setParamsState] = useState<ParamValues>(paramsRef.current);
   const [status, setStatus] = useState<SimStatus>("paused");
   const statusRef = useRef<SimStatus>("paused");
@@ -246,6 +259,7 @@ export function useSimulation<L>(
         engage();
         paramsRef.current = { ...paramsRef.current, [key]: value };
         setParamsState(paramsRef.current);
+        optsRef.current.onParamsChange?.(paramsRef.current);
       },
       pressButton: (key) => {
         engage();

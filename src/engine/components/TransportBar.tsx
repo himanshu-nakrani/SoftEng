@@ -1,5 +1,6 @@
 "use client";
 
+import { Kbd } from "@/components/ui/Kbd";
 import { cn } from "@/lib/cn";
 import { Pause, Play, RotateCcw, StepForward } from "lucide-react";
 import type { SimControls, SimStatus } from "../useSimulation";
@@ -23,6 +24,7 @@ export function TransportBar({ status, speed, t, controls }: TransportBarProps) 
         onClick={controls.toggle}
         disabled={status === "quiz"}
         aria-label={playing ? "Pause simulation" : "Play simulation"}
+        title={playing ? "Pause (Space)" : "Play (Space)"}
         className="flex size-8 cursor-pointer items-center justify-center rounded-lg bg-accent text-bg transition-all hover:brightness-110 disabled:opacity-40"
       >
         {playing ? (
@@ -36,7 +38,7 @@ export function TransportBar({ status, speed, t, controls }: TransportBarProps) 
         onClick={controls.stepOnce}
         disabled={playing || status === "quiz"}
         aria-label="Advance one tick"
-        title="Step one tick"
+        title="Step one tick (.)"
         className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-fg-muted transition-colors hover:bg-raised hover:text-fg disabled:pointer-events-none disabled:opacity-40"
       >
         <StepForward className="size-4" />
@@ -45,7 +47,7 @@ export function TransportBar({ status, speed, t, controls }: TransportBarProps) 
       <button
         onClick={controls.restart}
         aria-label="Restart simulation"
-        title="Restart (deterministic replay)"
+        title="Restart — deterministic replay (R)"
         className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-fg-muted transition-colors hover:bg-raised hover:text-fg"
       >
         <RotateCcw className="size-4" />
@@ -70,6 +72,14 @@ export function TransportBar({ status, speed, t, controls }: TransportBarProps) 
           </button>
         ))}
       </div>
+
+      {/* keyboard legend — desktop only, quiet until hovered */}
+      <span className="ml-4 hidden items-center gap-1.5 opacity-40 transition-opacity hover:opacity-90 lg:flex">
+        <Kbd>space</Kbd>
+        <Kbd>.</Kbd>
+        <Kbd>r</Kbd>
+        <Kbd>1–3</Kbd>
+      </span>
 
       <span className="tech-num ml-auto flex items-center gap-2 text-xs text-fg-muted">
         <span

@@ -5,7 +5,7 @@ import type { LessonMeta, Module } from "@/curriculum/types";
 import { useLessonProgress } from "@/hooks/use-lesson-progress";
 import { cn } from "@/lib/cn";
 import { lessonPath, modules } from "@/lib/curriculum";
-import { Map as MapIcon } from "lucide-react";
+import { FlaskConical, Map as MapIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -73,7 +73,7 @@ export function Sidebar() {
       <Link
         href="/learn"
         className={cn(
-          "mb-3 flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] transition-colors",
+          "flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] transition-colors",
           pathname === "/learn"
             ? "bg-raised text-fg"
             : "text-fg-muted hover:bg-surface hover:text-fg",
@@ -81,6 +81,13 @@ export function Sidebar() {
       >
         <MapIcon className="size-4" strokeWidth={1.75} />
         Learning path
+      </Link>
+      <Link
+        href="/playground"
+        className="mb-3 flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] text-fg-muted transition-colors hover:bg-surface hover:text-fg"
+      >
+        <FlaskConical className="size-4" strokeWidth={1.75} />
+        Playground
       </Link>
 
       {modules.map((module) => (

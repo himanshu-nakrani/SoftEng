@@ -31,6 +31,9 @@ function SiteHeader() {
         <Link href="/learn" className="transition-colors hover:text-fg">
           Learning path
         </Link>
+        <Link href="/playground" className="transition-colors hover:text-fg">
+          Playground
+        </Link>
         <Link href="/about" className="transition-colors hover:text-fg">
           About
         </Link>
@@ -188,6 +191,9 @@ export default function Home() {
           <nav className="ml-auto flex gap-5 text-xs text-fg-muted">
             <Link href="/learn" className="transition-colors hover:text-fg">
               Learning path
+            </Link>
+            <Link href="/playground" className="transition-colors hover:text-fg">
+              Playground
             </Link>
             <Link href="/about" className="transition-colors hover:text-fg">
               About
