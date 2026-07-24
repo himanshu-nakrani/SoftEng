@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSyncExternalStore } from "react";
-import { mulberry32 } from "./rng";
+import { createRunner, type SimRunner } from "./runner";
 import {
   createSnapshotStore,
   type SimSnapshot,
@@ -10,7 +10,6 @@ import {
 } from "./snapshot";
 import type {
   LessonSim,
-  NodeRuntime,
   ParamValue,
   ParamValues,
   QuizCheckpoint,
@@ -68,40 +67,11 @@ export interface Simulation {
   onEngage?: () => void;
 }
 
-function defaultParams(specs: LessonSim<unknown>["params"]): ParamValues {
-  return Object.fromEntries(specs.map((p) => [p.key, p.defaultValue]));
-}
-
-function buildInitialState(
-  sim: LessonSim<unknown>,
-  seed: number,
-): SimState<unknown> {
-  const rng = mulberry32(seed);
-  const nodes: Record<string, NodeRuntime> = {};
-  for (const spec of sim.topology.nodes) {
-    nodes[spec.id] = {
-      health: "healthy",
-      load: 0,
-      ...sim.initialNodes?.[spec.id],
-    };
-  }
-  return {
-    t: 0,
-    packets: [],
-    nodes,
-    metrics: {},
-    lesson: sim.init(rng),
-    rng,
-    nextPacketId: 1,
-  };
-}
-
-const CAPTION_DURATION = 4; // sim-seconds a timeline caption stays up
-
 /**
- * The engine core: fixed-timestep (30tps) accumulator loop inside a single
- * rAF; lesson logic is a mutation-friendly reducer; React reads 10Hz
- * snapshots; PacketLayer reads the live ref per frame.
+ * React binding over the headless `SimRunner` (see ./runner): fixed-timestep
+ * (30tps) accumulator loop inside a single rAF; the runner advances the world,
+ * this hook owns play/pause policy, React mirrors, and the 10Hz snapshot the
+ * structure layer renders from. PacketLayer reads the live ref per frame.
  */
 export function useSimulation<L>(
   sim: LessonSim<L>,
@@ -113,18 +83,22 @@ export function useSimulation<L>(
   } = {},
 ): Simulation {
   const { seed = 42 } = opts;
-  // Engine treats lesson state opaquely; LessonSim is invariant in L, so
-  // widen through unknown once here rather than infecting every component.
-  const lesson = sim as unknown as LessonSim<unknown>;
 
+  const runnerRef = useRef<SimRunner | null>(null);
+  if (runnerRef.current === null) {
+    runnerRef.current = createRunner(sim, { seed });
+  }
+  const runner = runnerRef.current;
+
+  // PacketLayer and the snapshot store read through a stable ref cell; the
+  // runner replaces its state object on restart, so re-point it there.
   const stateRef = useRef<SimState<unknown> | null>(null);
   if (stateRef.current === null) {
-    stateRef.current = buildInitialState(lesson, seed);
+    stateRef.current = runner.state;
   }
   const liveRef = stateRef as { current: SimState<unknown> };
 
-  const paramsRef = useRef<ParamValues>(defaultParams(lesson.params));
-  const [params, setParamsState] = useState<ParamValues>(paramsRef.current);
+  const [params, setParamsState] = useState<ParamValues>(runner.params);
   const [status, setStatus] = useState<SimStatus>("paused");
   const statusRef = useRef<SimStatus>("paused");
   statusRef.current = status;
@@ -133,10 +107,6 @@ export function useSimulation<L>(
 
   const [activeQuiz, setActiveQuiz] = useState<QuizCheckpoint | null>(null);
   const [quizAnswer, setQuizAnswer] = useState<string | null>(null);
-  const firedQuizzes = useRef<Set<string>>(new Set());
-  const firedEvents = useRef<Set<number>>(new Set());
-  const captionUntil = useRef(0);
-  const captionText = useRef<string | null>(null);
   const engaged = useRef(false);
 
   const store = useMemo(() => createSnapshotStore(liveRef), [liveRef]);
@@ -164,44 +134,19 @@ export function useSimulation<L>(
     optsRef.current.onSimEvent?.(ev);
   }, []);
 
-  /** Advance one logical tick: lesson step + timeline + quiz checkpoints. */
+  /** One logical tick, plus this layer's policy: a crossed quiz hard-pauses. */
   const tick = useCallback(() => {
-    const s = liveRef.current;
-    lesson.step(s, TICK, paramsRef.current);
-    s.t += TICK;
-
-    // Timeline events crossing t (indexed by array position for the Set).
-    lesson.timeline?.forEach((ev, i) => {
-      if (s.t >= ev.at && !firedEvents.current.has(i)) {
-        firedEvents.current.add(i);
-        ev.apply?.(s);
-        if (ev.caption) {
-          captionText.current = ev.caption;
-          captionUntil.current = s.t + CAPTION_DURATION;
-        }
-      }
-    });
-    if (captionText.current && s.t > captionUntil.current) {
-      captionText.current = null;
+    const { firedQuiz } = runner.tick();
+    if (firedQuiz) {
+      setActiveQuiz(firedQuiz);
+      setQuizAnswer(null);
+      setStatus("quiz");
+      // The accumulator loop reads statusRef, which otherwise only catches
+      // up on the next render — without this the sim overshoots `at` by
+      // however many ticks are still banked (up to ~11 at 2x).
+      statusRef.current = "quiz";
     }
-
-    // Quiz checkpoints: hard-pause exactly when t crosses.
-    if (lesson.quiz) {
-      for (const q of lesson.quiz) {
-        if (s.t >= q.at && !firedQuizzes.current.has(q.id)) {
-          firedQuizzes.current.add(q.id);
-          setActiveQuiz(q);
-          setQuizAnswer(null);
-          setStatus("quiz");
-          // The accumulator loop reads statusRef, which otherwise only catches
-          // up on the next render — without this the sim overshoots `at` by
-          // however many ticks are still banked (up to ~11 at 2x).
-          statusRef.current = "quiz";
-          return; // stop ticking this frame
-        }
-      }
-    }
-  }, [lesson, liveRef]);
+  }, [runner]);
 
   // The single rAF loop.
   useEffect(() => {
@@ -220,7 +165,7 @@ export function useSimulation<L>(
           tick();
           acc -= TICK;
         }
-        store.maybePublish(now, captionText.current);
+        store.maybePublish(now, runner.caption);
       } else {
         // Hard pause (quiz or user): drop banked wall time so resuming can't
         // spend it all in one frame.
@@ -235,7 +180,7 @@ export function useSimulation<L>(
 
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [tick, store]);
+  }, [tick, store, runner]);
 
   const controls = useMemo<SimControls>(
     () => ({
@@ -254,14 +199,11 @@ export function useSimulation<L>(
         engage();
         if (statusRef.current === "playing") return;
         tick();
-        store.publish(captionText.current);
+        store.publish(runner.caption);
       },
       restart: () => {
-        liveRef.current = buildInitialState(lesson, seed);
-        firedQuizzes.current.clear();
-        firedEvents.current.clear();
-        captionText.current = null;
-        captionUntil.current = 0;
+        runner.restart();
+        liveRef.current = runner.state;
         setActiveQuiz(null);
         setQuizAnswer(null);
         setStatus("paused");
@@ -273,13 +215,13 @@ export function useSimulation<L>(
       },
       setParam: (key, value) => {
         engage();
-        paramsRef.current = { ...paramsRef.current, [key]: value };
-        setParamsState(paramsRef.current);
+        runner.setParam(key, value);
+        setParamsState(runner.params);
         emit({ kind: "param-change", id: key });
       },
       pressButton: (key) => {
         engage();
-        paramsRef.current = { ...paramsRef.current, [key]: true };
+        runner.pressButton(key);
         // No React state mirror needed — momentary.
         emit({ kind: "button-press", id: key });
       },
@@ -293,7 +235,7 @@ export function useSimulation<L>(
         if (node.health === "dead") emit({ kind: "node-kill", id: nodeId });
       },
     }),
-    [emit, engage, lesson, liveRef, seed, store, tick],
+    [emit, engage, liveRef, runner, store, tick],
   );
 
   const answerQuiz = useCallback(
