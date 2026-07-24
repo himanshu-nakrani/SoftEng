@@ -282,5 +282,85 @@ export const curriculum: Curriculum = {
         },
       ],
     },
+    {
+      slug: "cs-fundamentals",
+      title: "CS Fundamentals",
+      description:
+        "Algorithms made visible — step through them, scrub them backward, and count every operation.",
+      modules: [
+        {
+          slug: "algorithms",
+          title: "Algorithms",
+          description: "Complexity, sorting, hashing — one step at a time.",
+          accent: "green",
+          lessons: [
+            {
+              slug: "big-o",
+              moduleSlug: "algorithms",
+              title: "Big-O, Felt",
+              tagline:
+                "Four algorithms, one n slider. Double the input and read each one's bill.",
+              difficulty: "foundational",
+              estimatedMinutes: 10,
+              prerequisites: [],
+              status: "available",
+              sections: [
+                { id: "growth", title: "The shape of growth", kind: "concept" },
+                { id: "race", title: "Race the curves", kind: "interactive" },
+                { id: "reading-curves", title: "Shapes beat constants", kind: "concept" },
+              ],
+            },
+            {
+              slug: "sorting-basics",
+              moduleSlug: "algorithms",
+              title: "Sorting I: Bubble & Insertion",
+              tagline:
+                "Compare, maybe swap — the two classic O(n²) sorts, steppable in both directions.",
+              difficulty: "foundational",
+              estimatedMinutes: 14,
+              prerequisites: ["big-o"],
+              status: "available",
+              sections: [
+                { id: "the-rules", title: "The currency of sorting", kind: "concept" },
+                { id: "bubble", title: "Bubble sort", kind: "interactive" },
+                { id: "insertion", title: "Insertion sort", kind: "interactive" },
+              ],
+            },
+            {
+              slug: "divide-and-conquer",
+              moduleSlug: "algorithms",
+              title: "Sorting II: Divide & Conquer",
+              tagline:
+                "Split, solve, combine: merge sort's discipline and quicksort's gamble, at n log n.",
+              difficulty: "intermediate",
+              estimatedMinutes: 15,
+              prerequisites: ["sorting-basics"],
+              status: "available",
+              sections: [
+                { id: "split-it", title: "Halving buys log n", kind: "concept" },
+                { id: "merge", title: "Merge sort", kind: "interactive" },
+                { id: "quick", title: "Quicksort", kind: "interactive" },
+              ],
+            },
+            {
+              slug: "hash-tables",
+              moduleSlug: "algorithms",
+              title: "Hash Tables",
+              tagline:
+                "Compute where the answer lives. Collisions chain, load factor climbs, resize rehashes the world.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["big-o"],
+              status: "available",
+              sections: [
+                { id: "the-trick", title: "Go straight there", kind: "concept" },
+                { id: "collisions", title: "Collisions & load factor", kind: "interactive" },
+                { id: "everywhere", title: "The table under everything", kind: "concept" },
+              ],
+            },
+          ],
+        },
+      ],
+    },
   ],
 };
