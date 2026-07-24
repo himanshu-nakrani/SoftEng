@@ -46,6 +46,8 @@ export function CapTheoremFigure() {
     <SectionFigure
       sim={capTheoremSim}
       stageOverlay={PartitionOverlay}
+      // "cp-vs-ap" has no figure — the mode switch is the choice it describes.
+      completes={[{ on: "param-change", id: "mode", section: "cp-vs-ap" }]}
       description="Two database replicas on opposite coasts, each serving local writers, connected by a replication link. A toggle severs the network between them; a mode switch chooses CP (the east side refuses writes, shown red) or AP (both sides accept and a divergence counter climbs). Healing the partition reconciles the replicas."
     />
   );

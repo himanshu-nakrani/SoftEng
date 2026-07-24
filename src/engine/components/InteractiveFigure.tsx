@@ -8,7 +8,12 @@ import { buildPaths } from "../paths";
 import type { LessonSim, LessonSimView, NodeRuntime } from "../types";
 import { STAGE_H, STAGE_W } from "../types";
 import type { SimSnapshot } from "../snapshot";
-import { useSimulation, useSimSnapshot, type Simulation } from "../useSimulation";
+import {
+  useSimulation,
+  useSimSnapshot,
+  type SimEvent,
+  type Simulation,
+} from "../useSimulation";
 import { CaptionOverlay } from "./CaptionOverlay";
 import { ControlPanel } from "./ControlPanel";
 import { EdgeLine } from "./EdgeLine";
@@ -33,7 +38,9 @@ interface InteractiveFigureProps<L> {
   stageOverlay?: (snapshot: SimSnapshot) => ReactNode;
   /** First meaningful interaction (drives section completion). */
   onEngage?: () => void;
-  onQuizResult?: (quizId: string, correct: boolean) => void;
+  onQuizResult?: (quizId: string, choiceId: string, correct: boolean) => void;
+  /** Every meaningful interaction, individually attributable. */
+  onSimEvent?: (ev: SimEvent) => void;
 }
 
 /** Structure layer: subscribes to 10Hz snapshots, renders nodes/edges/meters. */
@@ -176,8 +183,14 @@ export function InteractiveFigure<L>({
   stageOverlay,
   onEngage,
   onQuizResult,
+  onSimEvent,
 }: InteractiveFigureProps<L>) {
-  const simulation = useSimulation(sim, { seed, onEngage, onQuizResult });
+  const simulation = useSimulation(sim, {
+    seed,
+    onEngage,
+    onQuizResult,
+    onSimEvent,
+  });
   const containerRef = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
 
@@ -200,7 +213,7 @@ export function InteractiveFigure<L>({
           if (shouldAutoplay || pausedByScroll) {
             everPlayed = true;
             pausedByScroll = false;
-            controlsRef.current.play();
+            controlsRef.current.play({ system: true });
           }
         } else if (statusRef.current === "playing") {
           pausedByScroll = true;

@@ -21,3 +21,16 @@ export const SectionCompletionContext = createContext<() => void>(() => {});
 export function useSectionCompletion(): () => void {
   return useContext(SectionCompletionContext);
 }
+
+/**
+ * Provided by <Lesson>: complete ANY section of this lesson by id. Needed
+ * because some sections are about an interaction that happens in another
+ * section's figure (kill a server here, the "failure" section is elsewhere).
+ */
+export const LessonCompletionContext = createContext<
+  (sectionId: string) => void
+>(() => {});
+
+export function useLessonCompletion(): (sectionId: string) => void {
+  return useContext(LessonCompletionContext);
+}

@@ -20,8 +20,18 @@ import { TICK } from "./types";
 
 export type SimStatus = "paused" | "playing" | "quiz";
 
+/**
+ * Meaningful interactions with a running sim, reported outward so the lesson
+ * layer can attribute them (a kill, a slider, a quiz answer) without the
+ * engine knowing anything about progress or curriculum.
+ */
+export type SimEvent =
+  | { kind: "node-kill" | "param-change" | "button-press"; id: string }
+  | { kind: "quiz-answered"; id: string; correct: boolean };
+
 export interface SimControls {
-  play: () => void;
+  /** `system: true` marks a non-user play (scroll autoplay) — never engages. */
+  play: (opts?: { system?: boolean }) => void;
   pause: () => void;
   toggle: () => void;
   /** Advance exactly one logical tick while paused. */
@@ -95,7 +105,12 @@ const CAPTION_DURATION = 4; // sim-seconds a timeline caption stays up
  */
 export function useSimulation<L>(
   sim: LessonSim<L>,
-  opts: { seed?: number; onEngage?: () => void; onQuizResult?: (quizId: string, correct: boolean) => void } = {},
+  opts: {
+    seed?: number;
+    onEngage?: () => void;
+    onQuizResult?: (quizId: string, choiceId: string, correct: boolean) => void;
+    onSimEvent?: (ev: SimEvent) => void;
+  } = {},
 ): Simulation {
   const { seed = 42 } = opts;
   // Engine treats lesson state opaquely; LessonSim is invariant in L, so
@@ -145,6 +160,10 @@ export function useSimulation<L>(
     }
   }, []);
 
+  const emit = useCallback((ev: SimEvent) => {
+    optsRef.current.onSimEvent?.(ev);
+  }, []);
+
   /** Advance one logical tick: lesson step + timeline + quiz checkpoints. */
   const tick = useCallback(() => {
     const s = liveRef.current;
@@ -174,6 +193,10 @@ export function useSimulation<L>(
           setActiveQuiz(q);
           setQuizAnswer(null);
           setStatus("quiz");
+          // The accumulator loop reads statusRef, which otherwise only catches
+          // up on the next render — without this the sim overshoots `at` by
+          // however many ticks are still banked (up to ~11 at 2x).
+          statusRef.current = "quiz";
           return; // stop ticking this frame
         }
       }
@@ -198,6 +221,10 @@ export function useSimulation<L>(
           acc -= TICK;
         }
         store.maybePublish(now, captionText.current);
+      } else {
+        // Hard pause (quiz or user): drop banked wall time so resuming can't
+        // spend it all in one frame.
+        acc = 0;
       }
 
       // Packet layer syncs every frame (also covers restart-while-paused).
@@ -212,8 +239,10 @@ export function useSimulation<L>(
 
   const controls = useMemo<SimControls>(
     () => ({
-      play: () => {
-        engage();
+      play: (playOpts) => {
+        // Scroll autoplay is the engine's doing, not the learner's — it must
+        // not count as engagement (that would complete every section seen).
+        if (playOpts?.system !== true) engage();
         setStatus("playing");
       },
       pause: () => setStatus("paused"),
@@ -246,11 +275,13 @@ export function useSimulation<L>(
         engage();
         paramsRef.current = { ...paramsRef.current, [key]: value };
         setParamsState(paramsRef.current);
+        emit({ kind: "param-change", id: key });
       },
       pressButton: (key) => {
         engage();
         paramsRef.current = { ...paramsRef.current, [key]: true };
         // No React state mirror needed — momentary.
+        emit({ kind: "button-press", id: key });
       },
       toggleNodeHealth: (nodeId) => {
         engage();
@@ -259,22 +290,22 @@ export function useSimulation<L>(
         node.health = node.health === "dead" ? "healthy" : "dead";
         if (node.health === "dead") node.load = 0;
         store.publish();
+        if (node.health === "dead") emit({ kind: "node-kill", id: nodeId });
       },
     }),
-    [engage, lesson, liveRef, seed, store, tick],
+    [emit, engage, lesson, liveRef, seed, store, tick],
   );
 
   const answerQuiz = useCallback(
     (choiceId: string) => {
       setQuizAnswer(choiceId);
       if (activeQuiz) {
-        optsRef.current.onQuizResult?.(
-          activeQuiz.id,
-          choiceId === activeQuiz.correctChoiceId,
-        );
+        const correct = choiceId === activeQuiz.correctChoiceId;
+        optsRef.current.onQuizResult?.(activeQuiz.id, choiceId, correct);
+        emit({ kind: "quiz-answered", id: activeQuiz.id, correct });
       }
     },
-    [activeQuiz],
+    [activeQuiz, emit],
   );
 
   const resumeFromQuiz = useCallback(() => {

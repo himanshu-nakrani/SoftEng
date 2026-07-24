@@ -5,8 +5,8 @@ import { useHydrated } from "@/hooks/use-hydrated";
 import { cn } from "@/lib/cn";
 import { getLesson, moduleOf } from "@/lib/curriculum";
 import { useProgress } from "@/stores/progress";
-import type { ReactNode } from "react";
-import { LessonContext } from "./context";
+import { useCallback, type ReactNode } from "react";
+import { LessonCompletionContext, LessonContext } from "./context";
 import { NextLessonCard } from "./NextLessonCard";
 
 const difficultyColor: Record<Difficulty, string> = {
@@ -64,6 +64,12 @@ interface LessonProps {
  * pages never restate it.
  */
 export function Lesson({ slug, children }: LessonProps) {
+  const completeSection = useProgress((s) => s.completeSection);
+  const completeLessonSection = useCallback(
+    (sectionId: string) => completeSection(slug, sectionId),
+    [completeSection, slug],
+  );
+
   const meta = getLesson(slug);
   if (!meta) {
     throw new Error(`Lesson "${slug}" is not in curriculum/registry.ts`);
@@ -74,61 +80,63 @@ export function Lesson({ slug, children }: LessonProps) {
 
   return (
     <LessonContext.Provider value={meta}>
-      <article>
-        <header className="relative mb-14">
-          {/* ghost index numeral */}
-          <span
-            aria-hidden
-            className="font-display pointer-events-none absolute -top-8 -left-2 text-[8rem] leading-none font-bold text-fg/[0.04] select-none"
-          >
-            {nn}
-          </span>
+      <LessonCompletionContext.Provider value={completeLessonSection}>
+        <article>
+          <header className="relative mb-14">
+            {/* ghost index numeral */}
+            <span
+              aria-hidden
+              className="font-display pointer-events-none absolute -top-8 -left-2 text-[8rem] leading-none font-bold text-fg/[0.04] select-none"
+            >
+              {nn}
+            </span>
 
-          <div className="relative">
-            <div className="mb-4 flex items-center gap-3">
-              <span className="tech-label">{mod.title}</span>
-              <div className="tech-rule flex-1" />
-              <span className="tech-num text-xs text-fg-faint">
-                {nn} / {String(mod.lessons.length).padStart(2, "0")}
-              </span>
-            </div>
-
-            <h1 className="font-display mb-3 text-3xl font-bold tracking-tight sm:text-4xl">
-              {meta.title}
-            </h1>
-            <p className="mb-6 max-w-xl leading-relaxed text-fg-muted">
-              {meta.tagline}
-            </p>
-
-            {/* spec row — engineering drawing title block, not pill badges */}
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-1.5 border-y border-border py-2.5 font-mono text-[11px] tracking-wide text-fg-faint uppercase">
-              <span>
-                difficulty{" "}
-                <span className={difficultyColor[meta.difficulty]}>
-                  {meta.difficulty}
+            <div className="relative">
+              <div className="mb-4 flex items-center gap-3">
+                <span className="tech-label">{mod.title}</span>
+                <div className="tech-rule flex-1" />
+                <span className="tech-num text-xs text-fg-faint">
+                  {nn} / {String(mod.lessons.length).padStart(2, "0")}
                 </span>
-              </span>
-              <span>
-                est <span className="text-fg-muted">{meta.estimatedMinutes} min</span>
-              </span>
-              {meta.prerequisites.length > 0 && (
+              </div>
+
+              <h1 className="font-display mb-3 text-3xl font-bold tracking-tight sm:text-4xl">
+                {meta.title}
+              </h1>
+              <p className="mb-6 max-w-xl leading-relaxed text-fg-muted">
+                {meta.tagline}
+              </p>
+
+              {/* spec row — engineering drawing title block, not pill badges */}
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-1.5 border-y border-border py-2.5 font-mono text-[11px] tracking-wide text-fg-faint uppercase">
                 <span>
-                  after{" "}
-                  <span className="text-fg-muted normal-case">
-                    {meta.prerequisites
-                      .map((p) => getLesson(p)?.title ?? p)
-                      .join(", ")}
+                  difficulty{" "}
+                  <span className={difficultyColor[meta.difficulty]}>
+                    {meta.difficulty}
                   </span>
                 </span>
-              )}
+                <span>
+                  est <span className="text-fg-muted">{meta.estimatedMinutes} min</span>
+                </span>
+                {meta.prerequisites.length > 0 && (
+                  <span>
+                    after{" "}
+                    <span className="text-fg-muted normal-case">
+                      {meta.prerequisites
+                        .map((p) => getLesson(p)?.title ?? p)
+                        .join(", ")}
+                    </span>
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
-        </header>
+          </header>
 
-        <CheckpointRail slug={slug} />
-        {children}
-        <NextLessonCard />
-      </article>
+          <CheckpointRail slug={slug} />
+          {children}
+          <NextLessonCard />
+        </article>
+      </LessonCompletionContext.Provider>
     </LessonContext.Provider>
   );
 }
