@@ -1,9 +1,20 @@
+import { shareMetadata } from "@/lib/site";
 import { ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
+const description =
+  "Why syslab is a simulator instead of an article: you predict what a system will do, then watch it prove you right or wrong.";
+
 export const metadata: Metadata = {
   title: "About",
+  description,
+  ...shareMetadata({
+    title: "About syslab",
+    description,
+    path: "/about",
+    type: "article",
+  }),
 };
 
 export default function AboutPage() {
@@ -23,7 +34,7 @@ export default function AboutPage() {
         </nav>
       </header>
 
-      <main className="mx-auto max-w-2xl px-6 py-14">
+      <main id="main" className="mx-auto max-w-2xl px-6 py-14">
         <p className="tech-label mb-2">about</p>
         <h1 className="font-display mb-8 text-3xl font-bold tracking-tight">
           Learn by manipulating systems, not reading about them.

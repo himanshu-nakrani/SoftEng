@@ -1,9 +1,14 @@
 import {
   advancePackets,
   approach,
+  bounceDrop,
   clamp01,
+  drainQueue,
+  emaRate,
+  isAlive,
   shouldSpawn,
   spawnPacket,
+  type ServiceQueue,
 } from "@/engine/sim-helpers";
 import type { LessonSim } from "@/engine/types";
 
@@ -13,19 +18,24 @@ import type { LessonSim } from "@/engine/types";
  *
  * Model (believable, not queueing theory): requests arrive at `rate`,
  * the server works through a bounded queue at `capacity` req/s; the
- * overflow is shed as drops.
+ * overflow is shed as drops. Click the server to kill it: arrivals bounce,
+ * the queue freezes where it stood, and reviving drains the backlog.
  */
 
 interface CSState {
   /** Requests waiting + in service at the server. */
-  queue: number;
-  /** Fractional service accumulator. */
-  serviceAcc: number;
+  server: ServiceQueue;
   droppedTotal: number;
   /** Smoothed completions/sec for the throughput meter. */
   throughput: number;
   /** Scripted traffic spike window (set by timeline). */
   burstUntil: number;
+  /**
+   * Has the learner ever killed the server? Latches true — it gates the
+   * closing "click it" invitation, which shouldn't nag someone who already
+   * found the gesture.
+   */
+  everKilled: boolean;
 }
 
 const MAX_QUEUE = 24;
@@ -37,7 +47,14 @@ export const clientServerSim: LessonSim<CSState> = {
   topology: {
     nodes: [
       { id: "client", kind: "client", label: "browser", x: 160, y: 225 },
-      { id: "server", kind: "server", label: "api-1", x: 640, y: 225 },
+      {
+        id: "server",
+        kind: "server",
+        label: "api-1",
+        x: 640,
+        y: 225,
+        breakable: true,
+      },
     ],
     edges: [{ id: "wire", from: "client", to: "server" }],
   },
@@ -76,11 +93,11 @@ export const clientServerSim: LessonSim<CSState> = {
   ],
 
   init: () => ({
-    queue: 0,
-    serviceAcc: 0,
+    server: { depth: 0, acc: 0 },
     droppedTotal: 0,
     throughput: 0,
     burstUntil: 0,
+    everKilled: false,
   }),
 
   step: (state, dt, params) => {
@@ -89,6 +106,9 @@ export const clientServerSim: LessonSim<CSState> = {
     const capacity = Number(params.capacity);
     const oneWaySec = Number(params.latency) / 1000;
     const packetSpeed = 1 / oneWaySec;
+    // The learner can click the server dead (and back) at any moment.
+    const alive = isAlive(state, "server");
+    if (!alive) L.everKilled = true;
 
     // 1. Arrivals (timeline may have opened a burst window).
     const burst = state.t < L.burstUntil ? BURST_EXTRA : 0;
@@ -101,16 +121,13 @@ export const clientServerSim: LessonSim<CSState> = {
     let completedNow = 0;
     for (const p of advancePackets(state, dt)) {
       if (p.type === "request") {
-        if (L.queue >= MAX_QUEUE) {
-          // Shed load: bounce a fading red drop back toward the client.
+        // A full queue sheds; a dead box refuses everything. Same visual:
+        // a fading red drop bounced back toward the client.
+        if (!alive || L.server.depth >= MAX_QUEUE) {
           L.droppedTotal += 1;
-          spawnPacket(state, "wire", "drop", {
-            speed: packetSpeed * 1.4,
-            reverse: true,
-            size: 3,
-          });
+          bounceDrop(state, "wire", { speed: packetSpeed * 1.4 });
         } else {
-          L.queue += 1;
+          L.server.depth += 1;
         }
       } else if (p.type === "response") {
         completedNow += 1;
@@ -118,32 +135,35 @@ export const clientServerSim: LessonSim<CSState> = {
       // drops just fade out on arrival
     }
 
-    // 3. Service: the server works through its queue.
-    L.serviceAcc += capacity * dt;
-    while (L.serviceAcc >= 1 && L.queue > 0) {
-      L.serviceAcc -= 1;
-      L.queue -= 1;
-      spawnPacket(state, "wire", "response", {
-        speed: packetSpeed,
-        reverse: true,
+    // 3. Service: the server works through its queue — unless it is dead.
+    // A dead box serves nothing, so the queue freezes exactly where it stood
+    // (nothing is lost, nothing moves) until the learner revives it.
+    if (alive) {
+      drainQueue(L.server, capacity, dt, () => {
+        spawnPacket(state, "wire", "response", {
+          speed: packetSpeed,
+          reverse: true,
+        });
       });
     }
-    if (L.queue === 0) L.serviceAcc = Math.min(L.serviceAcc, 1);
 
     // 4. Readouts.
-    L.throughput = approach(L.throughput, completedNow / dt, 1.5, dt);
-    const queueWaitMs = (L.queue / capacity) * 1000;
+    L.throughput = emaRate(L.throughput, completedNow, dt);
+    const queueWaitMs = (L.server.depth / capacity) * 1000;
     state.metrics.latency = 2 * Number(params.latency) + queueWaitMs;
     state.metrics.throughput = L.throughput;
-    state.metrics.queue = L.queue;
+    state.metrics.queue = L.server.depth;
     state.metrics.dropped = L.droppedTotal;
 
+    // Dead servers do no work: the load bar decays to nothing even though the
+    // backlog behind it is still sitting there.
     state.nodes.server.load = approach(
       state.nodes.server.load,
-      clamp01(L.queue / MAX_QUEUE),
+      alive ? clamp01(L.server.depth / MAX_QUEUE) : 0,
       6,
       dt,
     );
+    state.nodes.server.queueDepth = L.server.depth;
   },
 
   timeline: [
@@ -160,12 +180,27 @@ export const clientServerSim: LessonSim<CSState> = {
       },
     },
     { at: 21.5, caption: "The spike passes. The backlog drains." },
+    {
+      at: 26,
+      caption: "☠ Click the server — watch what a dead box does to its queue.",
+      // Skip the invitation if they already found the gesture themselves.
+      when: (s) => !s.lesson.everKilled,
+    },
+    {
+      at: 26,
+      caption:
+        "Dead: every arrival bounces, the queue is frozen. Click it again to revive.",
+      // Waits — possibly forever — for the first kill, whenever it lands.
+      when: (s) => !isAlive(s, "server"),
+    },
   ],
 
   quiz: [
     {
       id: "cs-queue-growth",
-      at: 16.5,
+      // Before the first drop (t≈15.97 at seed 42) so the prediction still
+      // predicts: queue ≈13 and climbing, zero drops on the counter.
+      at: 15.2,
       question:
         "The spike is pushing arrivals past the server's capacity and the queue is growing. If this keeps up, what happens?",
       choices: [

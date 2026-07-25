@@ -1,0 +1,43 @@
+{
+  "lesson": "data/replication",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:read-your-writes@12",
+      "t": 12.033333,
+      "metrics": {
+        "lagVersions": 7,
+        "lostWrites": 0,
+        "stalePct": 72.130454,
+        "version": 45
+      },
+      "packets": 18,
+      "nextPacketId": 304,
+      "nodes": {
+        "client": "healthy",
+        "f1": "healthy",
+        "f2": "healthy",
+        "leader": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "lagVersions": 10,
+        "lostWrites": 8,
+        "stalePct": 94.376544,
+        "version": 89
+      },
+      "packets": 14,
+      "nextPacketId": 752,
+      "nodes": {
+        "client": "healthy",
+        "f1": "healthy",
+        "f2": "healthy",
+        "leader": "dead"
+      }
+    }
+  ]
+}

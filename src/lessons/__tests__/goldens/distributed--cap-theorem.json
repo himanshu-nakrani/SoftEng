@@ -1,0 +1,45 @@
+{
+  "lesson": "distributed/cap-theorem",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:cap-choice@12",
+      "t": 12.033333,
+      "metrics": {
+        "availability": 95.91863,
+        "diverged": 27,
+        "lostWrites": 0,
+        "partitioned": 1,
+        "rejected": 0
+      },
+      "packets": 7,
+      "nextPacketId": 187,
+      "nodes": {
+        "ce": "healthy",
+        "cw": "healthy",
+        "re": "healthy",
+        "rw": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "availability": 76.441193,
+        "diverged": 0,
+        "lostWrites": 29,
+        "partitioned": 0,
+        "rejected": 0
+      },
+      "packets": 10,
+      "nextPacketId": 471,
+      "nodes": {
+        "ce": "healthy",
+        "cw": "healthy",
+        "re": "healthy",
+        "rw": "healthy"
+      }
+    }
+  ]
+}

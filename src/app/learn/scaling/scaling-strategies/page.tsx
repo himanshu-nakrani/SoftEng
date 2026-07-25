@@ -2,11 +2,9 @@ import { Lesson } from "@/components/lesson/Lesson";
 import { LessonSection } from "@/components/lesson/LessonSection";
 import { Callout, Lead, P, Strong, Term } from "@/components/lesson/prose";
 import { ScalingStrategiesFigure } from "@/lessons/scaling/scaling-strategies-figure";
-import type { Metadata } from "next";
+import { lessonMetadata } from "@/lib/curriculum";
 
-export const metadata: Metadata = {
-  title: "Vertical vs Horizontal Scaling",
-};
+export const metadata = lessonMetadata("scaling-strategies");
 
 export default function ScalingStrategiesPage() {
   return (
@@ -50,7 +48,10 @@ export default function ScalingStrategiesPage() {
           Vertical scaling has a hard ceiling: at some point there is no
           bigger machine to buy. And it concentrates everything into one{" "}
           <Term>failure domain</Term> — you saw what happens when the XL box
-          dies. One click, total outage.
+          dies. One click, total outage. The simulation kills a live machine
+          for you partway through, in whichever mode you&apos;re running:
+          vertical drops <Term>live capacity</Term> straight to zero, while
+          horizontal loses exactly one box and the survivors keep serving.
         </P>
         <P>
           Horizontal scaling has no practical ceiling and degrades gracefully

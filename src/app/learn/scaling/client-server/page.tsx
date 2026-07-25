@@ -2,11 +2,9 @@ import { Lesson } from "@/components/lesson/Lesson";
 import { LessonSection } from "@/components/lesson/LessonSection";
 import { Callout, Lead, P, Strong, Term } from "@/components/lesson/prose";
 import { ClientServerFigure } from "@/lessons/scaling/client-server-figure";
-import type { Metadata } from "next";
+import { lessonMetadata } from "@/lib/curriculum";
 
-export const metadata: Metadata = {
-  title: "Client & Server",
-};
+export const metadata = lessonMetadata("client-server");
 
 export default function ClientServerPage() {
   return (
@@ -53,6 +51,16 @@ export default function ClientServerPage() {
           You just watched that choice happen: the red dots bouncing back
           during the spike were requests the server refused so the ones it
           had already accepted could finish in reasonable time.
+        </P>
+        <P>
+          Now the harsher version: <Strong>click the server</Strong>. Any node
+          you can kill outlines itself in red as you hover it — click{" "}
+          <Term>api-1</Term> once to take it down, again to bring it back.
+          While it&apos;s dead, watch three things: every arrival bounces home
+          as a drop, the <Term>server queue</Term> bar freezes at the depth it
+          had reached (nothing is being worked off), and throughput sinks to
+          zero. Revive it and that frozen backlog drains in one burst — the
+          queued work was never lost, only stalled.
         </P>
         <Callout kind="warning">
           A system that never drops requests isn&apos;t resilient — it&apos;s

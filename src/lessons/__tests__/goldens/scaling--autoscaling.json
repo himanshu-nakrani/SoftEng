@@ -1,0 +1,55 @@
+{
+  "lesson": "scaling/autoscaling",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:as-gap@19",
+      "t": 19,
+      "metrics": {
+        "avgLoad": 96.396305,
+        "booting": 2,
+        "capacity": 24,
+        "demand": 35,
+        "dropped": 15,
+        "queued": 14
+      },
+      "packets": 51,
+      "nextPacketId": 1053,
+      "nodes": {
+        "client": "healthy",
+        "lb": "healthy",
+        "s1": "healthy",
+        "s2": "healthy",
+        "s3": "healthy",
+        "s4": "healthy",
+        "s5": "healthy",
+        "s6": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "avgLoad": 70.632373,
+        "booting": 0,
+        "capacity": 48,
+        "demand": 35,
+        "dropped": 61,
+        "queued": 0
+      },
+      "packets": 57,
+      "nextPacketId": 2553,
+      "nodes": {
+        "client": "healthy",
+        "lb": "healthy",
+        "s1": "healthy",
+        "s2": "healthy",
+        "s3": "healthy",
+        "s4": "healthy",
+        "s5": "healthy",
+        "s6": "healthy"
+      }
+    }
+  ]
+}

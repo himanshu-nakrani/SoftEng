@@ -1,0 +1,61 @@
+{
+  "lesson": "distributed/message-queues",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:mq-backlog@14",
+      "t": 14.033333,
+      "metrics": {
+        "depth": 0,
+        "dropped": 0,
+        "inRate": 6.012703,
+        "lagSec": 0,
+        "outRate": 6.357238
+      },
+      "packets": 14,
+      "nextPacketId": 228,
+      "nodes": {
+        "consumer": "healthy",
+        "producer": "healthy",
+        "queue": "healthy"
+      }
+    },
+    {
+      "label": "quiz:mq-overflow@22",
+      "t": 22,
+      "metrics": {
+        "depth": 17,
+        "dropped": 0,
+        "inRate": 23.166811,
+        "lagSec": 1.018825,
+        "outRate": 16.685882
+      },
+      "packets": 38,
+      "nextPacketId": 514,
+      "nodes": {
+        "consumer": "healthy",
+        "producer": "healthy",
+        "queue": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "depth": 35,
+        "dropped": 17,
+        "inRate": 8.061643,
+        "lagSec": 3.577334,
+        "outRate": 9.783823
+      },
+      "packets": 17,
+      "nextPacketId": 906,
+      "nodes": {
+        "consumer": "healthy",
+        "producer": "healthy",
+        "queue": "healthy"
+      }
+    }
+  ]
+}

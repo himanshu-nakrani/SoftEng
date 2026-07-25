@@ -1,10 +1,15 @@
 "use client";
 
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { cn } from "@/lib/cn";
 import { Pause, Play, RotateCcw, StepForward } from "lucide-react";
 import type { SimControls, SimStatus } from "../useSimulation";
 
-const SPEEDS = [0.5, 1, 2];
+const SPEED_OPTIONS = [0.5, 1, 2].map((s) => ({
+  value: s,
+  label: `${s}x`,
+  ariaLabel: `Speed ${s}x`,
+}));
 
 interface TransportBarProps {
   status: SimStatus;
@@ -13,16 +18,26 @@ interface TransportBarProps {
   controls: SimControls;
 }
 
-/** Play / pause / step / speed / restart + the sim clock. */
+/**
+ * Play / pause / step / speed / restart + the sim clock.
+ *
+ * `aria-keyshortcuts` advertises the figure-level keyboard shortcuts (Space,
+ * `.`, R). This component deliberately binds no handlers: the listener belongs
+ * on the figure container (so a shortcut works anywhere in the figure, not
+ * only while a transport button holds focus) and is wired separately. The
+ * attributes name the contract both halves implement.
+ */
 export function TransportBar({ status, speed, t, controls }: TransportBarProps) {
   const playing = status === "playing";
 
   return (
     <div className="flex items-center gap-1 border-t border-border px-3 py-2">
       <button
+        type="button"
         onClick={controls.toggle}
         disabled={status === "quiz"}
         aria-label={playing ? "Pause simulation" : "Play simulation"}
+        aria-keyshortcuts="Space"
         className="flex size-8 cursor-pointer items-center justify-center rounded-lg bg-accent text-bg transition-all hover:brightness-110 disabled:opacity-40"
       >
         {playing ? (
@@ -33,9 +48,11 @@ export function TransportBar({ status, speed, t, controls }: TransportBarProps) 
       </button>
 
       <button
+        type="button"
         onClick={controls.stepOnce}
         disabled={playing || status === "quiz"}
         aria-label="Advance one tick"
+        aria-keyshortcuts="."
         title="Step one tick"
         className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-fg-muted transition-colors hover:bg-raised hover:text-fg disabled:pointer-events-none disabled:opacity-40"
       >
@@ -43,8 +60,10 @@ export function TransportBar({ status, speed, t, controls }: TransportBarProps) 
       </button>
 
       <button
+        type="button"
         onClick={controls.restart}
         aria-label="Restart simulation"
+        aria-keyshortcuts="R"
         title="Restart (deterministic replay)"
         className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-fg-muted transition-colors hover:bg-raised hover:text-fg"
       >
@@ -53,23 +72,13 @@ export function TransportBar({ status, speed, t, controls }: TransportBarProps) 
 
       <div className="mx-2 h-4 w-px bg-border" />
 
-      <div className="flex overflow-hidden rounded-md border border-border">
-        {SPEEDS.map((s) => (
-          <button
-            key={s}
-            onClick={() => controls.setSpeed(s)}
-            aria-label={`Speed ${s}x`}
-            className={cn(
-              "cursor-pointer px-2 py-0.5 font-mono text-[10px] transition-colors",
-              speed === s
-                ? "bg-accent-dim text-accent"
-                : "text-fg-faint hover:text-fg-muted",
-            )}
-          >
-            {s}x
-          </button>
-        ))}
-      </div>
+      <SegmentedControl
+        ariaLabel="Playback speed"
+        size="sm"
+        options={SPEED_OPTIONS}
+        value={speed}
+        onChange={controls.setSpeed}
+      />
 
       <span className="tech-num ml-auto flex items-center gap-2 text-xs text-fg-muted">
         <span

@@ -1,6 +1,8 @@
 import {
   advancePackets,
-  approach,
+  bounceDrop,
+  emaRate,
+  severEdge,
   shouldSpawn,
   spawnPacket,
 } from "@/engine/sim-helpers";
@@ -8,20 +10,50 @@ import type { LessonSim } from "@/engine/types";
 
 /**
  * Lesson 10 — The CAP Theorem. Two replicas, clients on each coast, a
- * PARTITION toggle that severs replication, and a CP/AP mode switch that
- * decides which promise survives: consistency (west keeps writing, east
- * rejects) or availability (both write, divergence climbs).
+ * replication link between them, and a scripted outage that cuts it: from
+ * that moment the mode switch decides which promise survives — consistency
+ * (CP: the minority side refuses writes) or availability (AP: both sides
+ * accept and diverge). The scripted heal collects on the AP bill:
+ * last-write-wins keeps one replica's copy and deletes every write the other
+ * one accepted while it was cut off.
+ *
+ * The *partition* is scripted because that is the theorem's whole point —
+ * an outage is not a setting anybody opts into (the toggle stays live for
+ * re-runs, and the timeline hands control back after the heal). The
+ * *response* is never scripted: the mode select is the learner's every tick.
  */
+
+/** Scripted outage: opens at SPLIT_AT, closes SPLIT_SECONDS later. */
+const SPLIT_AT = 8;
+const SPLIT_SECONDS = 10;
+const HEAL_AT = SPLIT_AT + SPLIT_SECONDS;
+/** The link is forced back up this long — enough to always finish reconciling. */
+const HEAL_HOLD = 4;
+/** Reconciliation always takes this long, however far the replicas drifted. */
+const HEAL_SECONDS = 2;
 
 interface CAPState {
   vWest: number;
   vEast: number;
   /** Writes applied on exactly one side while partitioned (AP divergence). */
   diverged: number;
+  /** …split by side, because reconciliation only discards the loser's. */
+  divWest: number;
+  divEast: number;
   rejectedTotal: number;
   acceptEma: number;
-  /** Replication packets in the buffer when the partition healed. */
+  /** Reconciliation in progress: the link is back, the versions disagree. */
   healing: boolean;
+  /** Writes last-write-wins is about to delete — banked when the heal starts. */
+  pendingLoss: number;
+  /** Divergence drained per second, so a heal always takes HEAL_SECONDS. */
+  healRate: number;
+  /** Writes acknowledged to a client and then thrown away by a heal. */
+  lostWrites: number;
+  /** Scripted outage window (set by the timeline). */
+  scriptSplitUntil: number;
+  /** …and the window where the link is forced back up to reconcile. */
+  scriptHealUntil: number;
 }
 
 export const capTheoremSim: LessonSim<CAPState> = {
@@ -53,10 +85,13 @@ export const capTheoremSim: LessonSim<CAPState> = {
       label: "during partition",
       kind: "select",
       options: [
-        { value: "cp", label: "CP — refuse writes" },
         { value: "ap", label: "AP — accept & diverge" },
+        { value: "cp", label: "CP — refuse writes" },
       ],
-      defaultValue: "cp",
+      // AP by default so the scripted outage tells the whole story unaided:
+      // accept everything, diverge, then pay at the heal. CP is the deliberate
+      // alternative the learner picks — and the sim never overrides the pick.
+      defaultValue: "ap",
     },
     {
       key: "rate",
@@ -74,33 +109,60 @@ export const capTheoremSim: LessonSim<CAPState> = {
     vWest: 0,
     vEast: 0,
     diverged: 0,
+    divWest: 0,
+    divEast: 0,
     rejectedTotal: 0,
     acceptEma: 0,
     healing: false,
+    pendingLoss: 0,
+    healRate: 0,
+    lostWrites: 0,
+    scriptSplitUntil: 0,
+    scriptHealUntil: 0,
   }),
 
   step: (state, dt, params) => {
     const L = state.lesson;
-    const partitioned = params.partition === true;
+    // Scripted outage, then a scripted heal window that outranks the toggle
+    // just long enough for reconciliation to finish. After that the toggle
+    // is the only thing holding the link down.
+    const scriptedSplit = state.t < L.scriptSplitUntil;
+    const scriptedHeal = !scriptedSplit && state.t < L.scriptHealUntil;
+    const partitioned =
+      scriptedSplit || (!scriptedHeal && params.partition === true);
     const cp = params.mode === "cp";
 
-    // Heal moment: divergence resolves (last-write-wins — someone loses).
+    // Heal moment: the link is back and the replicas disagree. Last-write-wins
+    // keeps the higher version, which means the other side's writes — every
+    // one of them acknowledged to a real client — are deleted.
     if (!partitioned && L.diverged > 0) {
-      L.diverged = Math.max(0, L.diverged - 12 * dt); // visible resolution
-      L.healing = true;
+      if (!L.healing) {
+        L.healing = true;
+        // Bank the bill before reconciliation hides who lost. Ties go to west,
+        // the same arbitrary tiebreak a wall-clock timestamp would make.
+        L.pendingLoss = L.vWest >= L.vEast ? L.divEast : L.divWest;
+        L.healRate = L.diverged / HEAL_SECONDS;
+      }
+      L.diverged = Math.max(0, L.diverged - L.healRate * dt);
       if (L.diverged === 0) {
         const merged = Math.max(L.vWest, L.vEast);
         L.vWest = merged;
         L.vEast = merged;
+        L.lostWrites += L.pendingLoss;
+        L.pendingLoss = 0;
+        L.divWest = 0;
+        L.divEast = 0;
         L.healing = false;
       }
     }
 
-    // Writes arrive on both coasts.
-    for (let i = 0; i < shouldSpawn(state, Number(params.rate), dt); i++) {
+    // Writes arrive on both coasts (independent draws — the coasts don't sync).
+    const westSpawns = shouldSpawn(state, Number(params.rate), dt);
+    for (let i = 0; i < westSpawns; i++) {
       spawnPacket(state, "in-w", "write", { speed: 1.6 });
     }
-    for (let i = 0; i < shouldSpawn(state, Number(params.rate), dt); i++) {
+    const eastSpawns = shouldSpawn(state, Number(params.rate), dt);
+    for (let i = 0; i < eastSpawns; i++) {
       spawnPacket(state, "in-e", "write", { speed: 1.6 });
     }
 
@@ -111,18 +173,18 @@ export const capTheoremSim: LessonSim<CAPState> = {
         if (partitioned && cp && !west) {
           // CP: the minority (east) side refuses — consistency over availability.
           L.rejectedTotal += 1;
-          spawnPacket(state, p.edgeId, "limited", {
-            speed: 1.9,
-            reverse: true,
-            size: 3,
-          });
+          bounceDrop(state, p.edgeId, { type: "limited", speed: 1.9 });
           continue;
         }
         acceptedNow += 1;
         if (west) L.vWest += 1;
         else L.vEast += 1;
         if (partitioned) {
-          L.diverged += 1; // applied on one side only
+          // Applied on one side only — and remembered per side, since a heal
+          // discards exactly the losing side's share.
+          L.diverged += 1;
+          if (west) L.divWest += 1;
+          else L.divEast += 1;
         } else {
           // Replicate across; direction encoded in reverse flag.
           spawnPacket(state, "sync", "replication", {
@@ -133,42 +195,40 @@ export const capTheoremSim: LessonSim<CAPState> = {
           });
         }
         spawnPacket(state, p.edgeId, "response", { speed: 1.6, reverse: true });
-      } else if (p.type === "replication") {
-        // Applied on the far side.
+      } else if (p.type === "replication" && !L.healing) {
+        // Applied on the far side — but not mid-heal: a replication landing
+        // during reconciliation would quietly converge the version chips
+        // before the bill is paid, hiding the whole point.
         if (p.payload?.west === true) L.vEast = Math.max(L.vEast, L.vWest);
         else L.vWest = Math.max(L.vWest, L.vEast);
       }
+      // Severed sync packets (now "drop") just fade out on arrival.
     }
 
-    // While partitioned, nothing crosses the divide (drop in-flight sync).
+    // While partitioned, nothing crosses the divide: cut the link and let
+    // whatever was mid-flight die where the break caught it.
     if (partitioned) {
-      const crossing = state.packets.filter((p) => p.edgeId === "sync");
-      if (crossing.length > 0) {
-        state.packets = state.packets.filter((p) => p.edgeId !== "sync");
-        for (const p of crossing) {
-          spawnPacket(state, "sync", "drop", {
-            speed: 1.6,
-            reverse: p.reverse,
-            size: 3,
-          });
-        }
-      }
+      severEdge(state, "sync", "drop");
+      // A partition re-opening mid-heal abandons that reconciliation; the next
+      // one re-banks the bill from scratch.
+      L.healing = false;
+      L.pendingLoss = 0;
     }
 
     // Readouts.
-    L.acceptEma = approach(L.acceptEma, acceptedNow / dt, 1.5, dt);
+    L.acceptEma = emaRate(L.acceptEma, acceptedNow, dt);
     const maxRate = Number(params.rate) * 2;
     state.nodes.rw.queueDepth = L.vWest;
     state.nodes.re.queueDepth = L.vEast;
     state.nodes.rw.health = "healthy";
-    state.nodes.re.health =
-      partitioned && cp ? "degraded" : "healthy";
+    state.nodes.re.health = partitioned && cp ? "degraded" : "healthy";
     state.metrics.diverged = L.diverged;
     state.metrics.availability = Math.min(
       (L.acceptEma / Math.max(maxRate, 0.01)) * 100,
       100,
     );
     state.metrics.rejected = L.rejectedTotal;
+    state.metrics.lostWrites = L.lostWrites;
     state.metrics.partitioned = partitioned ? 1 : 0;
   },
 
@@ -179,14 +239,28 @@ export const capTheoremSim: LessonSim<CAPState> = {
         "Two coasts, one dataset. Violet packets keep db-west and db-east in sync.",
     },
     {
-      at: 8,
+      at: SPLIT_AT,
       caption:
-        "Flip NETWORK PARTITION. The sync link is severed — now pick your poison.",
+        "⚡ A fiber cut takes the link down. Nobody chose this — the only choice left is what to do about it.",
+      apply: (s) => {
+        s.lesson.scriptSplitUntil = s.t + SPLIT_SECONDS;
+        s.lesson.scriptHealUntil = s.t + SPLIT_SECONDS + HEAL_HOLD;
+      },
     },
     {
-      at: 16,
+      at: 13.5,
       caption:
-        "Try both modes while split: CP rejects (red), AP diverges (watch the counter). Then heal.",
+        "AP: both sides keep accepting, so the versions drift apart. DIVERGED WRITES is the unpaid bill.",
+    },
+    {
+      at: HEAL_AT,
+      caption:
+        "The link is back. Two replicas, two different versions — and only one of them survives.",
+    },
+    {
+      at: 23,
+      caption:
+        "Your turn: cut the link yourself, and try CP — db-east refuses writes instead of losing them later.",
     },
   ],
 
@@ -214,6 +288,33 @@ export const capTheoremSim: LessonSim<CAPState> = {
       explain:
         "With the link down, information physically cannot cross the partition. Any write accepted on one side is invisible to the other — so 'available everywhere AND consistent everywhere' isn't an engineering challenge, it's a contradiction. CP and AP are both real systems; CA-under-partition is a fiction.",
     },
+    {
+      id: "cap-heal-loss",
+      at: HEAL_AT + 0.5,
+      // Gated on a reconciliation that actually has something to lose: a
+      // learner who sat out the split in CP never diverged, so this beat waits
+      // for the AP split they eventually run instead of asking about nothing.
+      when: (s) => s.lesson.pendingLoss > 0,
+      question:
+        "The partition is healing. The two replicas hold different versions and last-write-wins keeps the higher one. What happens to the writes the losing replica accepted while the link was down?",
+      choices: [
+        {
+          id: "discarded",
+          label: "They're silently discarded — no error, no notification",
+        },
+        {
+          id: "replayed",
+          label: "They're replayed onto the winner, so every write survives",
+        },
+        {
+          id: "queued",
+          label: "They're queued and applied after the winner's writes",
+        },
+      ],
+      correctChoiceId: "discarded",
+      explain:
+        "Watch LOST WRITES jump. AP bought availability during the split; this is the bill. Last-write-wins overwrites the losing replica wholesale, so every write it accepted — each one already acknowledged to a client with a cheerful 200 — vanishes without a trace. Conflict resolution is where AP systems earn their keep: LWW is the cheapest and the lossiest, while vector clocks detect the conflict, CRDTs merge it (a counter that adds both sides' increments instead of picking one), and app-level merges decide it with logic only you can write.",
+    },
   ],
 
   meters: [
@@ -236,6 +337,13 @@ export const capTheoremSim: LessonSim<CAPState> = {
       metricKey: "rejected",
       label: "rejected writes",
       kind: "counter",
+      dangerAbove: 0,
+    },
+    {
+      metricKey: "lostWrites",
+      label: "lost writes",
+      kind: "counter",
+      decimals: 0,
       dangerAbove: 0,
     },
   ],

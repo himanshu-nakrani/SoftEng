@@ -43,25 +43,52 @@ export function LessonSection({ id, children }: LessonSectionProps) {
     const el = ref.current;
     if (!el) return;
     let timer: ReturnType<typeof setTimeout> | null = null;
+    let inView = false;
+
+    const cancelDwell = () => {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+    };
+    const startDwell = () => {
+      // A backgrounded tab must not farm completions.
+      if (timer || section.kind !== "concept") return;
+      if (document.visibilityState !== "visible") return;
+      timer = setTimeout(markComplete, CONCEPT_DWELL_MS);
+    };
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
+        // A section taller than ~2.8 viewports can never reach 35% visible,
+        // so "fills most of the viewport" counts as in-view too.
+        inView =
+          entry.intersectionRatio >= 0.35 ||
+          entry.intersectionRect.height >= 0.6 * window.innerHeight;
+        if (inView) {
           setLastVisited(meta.slug, id);
-          if (section.kind === "concept" && !timer) {
-            timer = setTimeout(markComplete, CONCEPT_DWELL_MS);
-          }
-        } else if (timer) {
-          clearTimeout(timer);
-          timer = null;
+          startDwell();
+        } else {
+          cancelDwell();
         }
       },
-      { threshold: 0.35 },
+      { threshold: [0, 0.15, 0.35] },
     );
     observer.observe(el);
+
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        if (inView) startDwell();
+      } else {
+        cancelDwell();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+
     return () => {
       observer.disconnect();
-      if (timer) clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisibility);
+      cancelDwell();
     };
   }, [id, meta.slug, section.kind, markComplete, setLastVisited]);
 

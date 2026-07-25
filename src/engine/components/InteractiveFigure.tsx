@@ -1,19 +1,28 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useReducedMotion } from "motion/react";
-import type { ReactNode } from "react";
+import { Maximize2, Minimize2 } from "lucide-react";
+import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
 import { CornerTicks } from "@/components/ui/CornerTicks";
+import { cn } from "@/lib/cn";
 import { buildPaths } from "../paths";
-import type { LessonSim, LessonSimView, NodeRuntime } from "../types";
+import type { LessonSim, LessonSimView, NodeRuntime, NodeSpec } from "../types";
 import { STAGE_H, STAGE_W } from "../types";
 import type { SimSnapshot } from "../snapshot";
-import { useSimulation, useSimSnapshot, type Simulation } from "../useSimulation";
+import {
+  useSimulation,
+  useSimSnapshot,
+  type SimEvent,
+  type Simulation,
+} from "../useSimulation";
 import { CaptionOverlay } from "./CaptionOverlay";
 import { ControlPanel } from "./ControlPanel";
 import { EdgeLine } from "./EdgeLine";
+import { FigureErrorBoundary } from "./FigureErrorBoundary";
 import { Meter } from "./Meter";
-import { PacketLayer } from "./PacketLayer";
+import { PacketLayer, resolvePacketStyles } from "./PacketLayer";
+import { PacketLegend } from "./PacketLegend";
 import { SystemNode } from "./SystemNode";
 import { PredictionQuiz } from "../interactions/PredictionQuiz";
 import { TransportBar } from "./TransportBar";
@@ -31,9 +40,26 @@ interface InteractiveFigureProps<L> {
    * live snapshot so it can react to sim state.
    */
   stageOverlay?: (snapshot: SimSnapshot) => ReactNode;
+  /**
+   * Extra SVG drawn *inside* each node's group — the node's internals (cache
+   * slots, a token bucket, a replica log). Called per node per snapshot with
+   * that node's runtime; return null for nodes you don't decorate. Coordinates
+   * are node-local (origin = top-left of the 88x60 box; see SystemNode's
+   * render site for the occupied bands).
+   *
+   * Snapshot data ONLY — this renders on the React (10Hz) layer and must never
+   * reach into the live state ref.
+   */
+  nodeOverlay?: (
+    spec: NodeSpec,
+    runtime: SimSnapshot["nodes"][string],
+    snapshot: SimSnapshot,
+  ) => ReactNode;
   /** First meaningful interaction (drives section completion). */
   onEngage?: () => void;
-  onQuizResult?: (quizId: string, correct: boolean) => void;
+  onQuizResult?: (quizId: string, choiceId: string, correct: boolean) => void;
+  /** Every meaningful interaction, individually attributable. */
+  onSimEvent?: (ev: SimEvent) => void;
 }
 
 /** Structure layer: subscribes to 10Hz snapshots, renders nodes/edges/meters. */
@@ -41,20 +67,31 @@ function StageContent({
   sim,
   simulation,
   stageOverlay,
+  nodeOverlay,
+  fill,
 }: {
   sim: LessonSimView;
   simulation: Simulation;
   stageOverlay?: (snapshot: SimSnapshot) => ReactNode;
+  nodeOverlay?: InteractiveFigureProps<never>["nodeOverlay"];
+  /** Expanded figure: fill the stage box instead of being width-driven. */
+  fill?: boolean;
 }) {
   const snapshot = useSimSnapshot(simulation);
   const registry = useMemo(() => buildPaths(sim.topology), [sim.topology]);
   const reduced = useReducedMotion();
+  // One resolution shared by the packets and the edges that stand in for them
+  // under reduced motion, so both read the same colors.
+  const packetStyles = useMemo(() => resolvePacketStyles(sim), [sim]);
 
   return (
     <>
       <svg
         viewBox={`0 0 ${STAGE_W} ${STAGE_H}`}
-        className="block h-auto w-full"
+        // Width-driven in flow; height-driven when the figure owns the screen,
+        // where preserveAspectRatio's default centres the drawing for us. Same
+        // viewBox either way, so nothing in the sim knows the difference.
+        className={fill ? "block size-full" : "block h-auto w-full"}
         role="img"
         aria-label={liveDescription(snapshot.nodes, sim)}
       >
@@ -83,6 +120,12 @@ function StageContent({
               key={edge.id}
               path={path}
               dimmed={target?.health === "dead" || target?.ghost}
+              // Reduced motion hides the packets, so the edges have to say
+              // where the traffic is. Normal motion passes nothing extra and
+              // renders exactly as before.
+              reducedMotion={Boolean(reduced)}
+              activity={reduced ? snapshot.edgeActivity[edge.id] : undefined}
+              packetStyles={packetStyles}
             />
           );
         })}
@@ -93,20 +136,28 @@ function StageContent({
           simulation={simulation}
           registry={registry}
           hidden={Boolean(reduced)}
+          sim={sim}
         />
 
-        {sim.topology.nodes.map((spec) => (
-          <SystemNode
-            key={spec.id}
-            spec={spec}
-            runtime={
-              snapshot.nodes[spec.id] ?? { health: "healthy", load: 0 }
-            }
-            onToggleHealth={
-              spec.breakable ? simulation.controls.toggleNodeHealth : undefined
-            }
-          />
-        ))}
+        {sim.topology.nodes.map((spec) => {
+          const runtime = snapshot.nodes[spec.id] ?? {
+            health: "healthy" as const,
+            load: 0,
+          };
+          return (
+            <SystemNode
+              key={spec.id}
+              spec={spec}
+              runtime={runtime}
+              onToggleHealth={
+                spec.breakable
+                  ? simulation.controls.toggleNodeHealth
+                  : undefined
+              }
+              overlay={nodeOverlay?.(spec, runtime, snapshot)}
+            />
+          );
+        })}
       </svg>
       <CaptionOverlay caption={snapshot.caption} />
     </>
@@ -145,7 +196,11 @@ function MetersRow({
               : "sm:border-l sm:border-border sm:px-6 max-sm:odd:pl-4"
           }
         >
-          <Meter spec={spec} value={snapshot.metrics[spec.metricKey] ?? 0} />
+          <Meter
+            spec={spec}
+            value={snapshot.metrics[spec.metricKey] ?? 0}
+            series={snapshot.series[spec.metricKey]}
+          />
         </div>
       ))}
     </div>
@@ -167,19 +222,66 @@ function Clock({ simulation }: { simulation: Simulation }) {
 /**
  * THE single entry point for lesson visualizations: stage + meters +
  * controls + transport + quiz overlay. Lesson pages compose nothing else.
+ *
+ * The whole figure — including the `useSimulation` call that owns the runner —
+ * lives inside a `FigureErrorBoundary`. That placement is load-bearing: a
+ * lesson `step` that throws is captured in the rAF loop and re-thrown during
+ * `FigureBody`'s render, so the boundary must sit *above* the component
+ * holding the hook. Restarting the boundary remounts `FigureBody`, which
+ * builds a fresh runner from the seed.
  */
-export function InteractiveFigure<L>({
+export function InteractiveFigure<L>(props: InteractiveFigureProps<L>) {
+  return (
+    <FigureErrorBoundary label={props.sim.id}>
+      <FigureBody {...props} />
+    </FigureErrorBoundary>
+  );
+}
+
+function FigureBody<L>({
   sim,
   description,
   autoplay = true,
   seed,
   stageOverlay,
+  nodeOverlay,
   onEngage,
   onQuizResult,
+  onSimEvent,
 }: InteractiveFigureProps<L>) {
-  const simulation = useSimulation(sim, { seed, onEngage, onQuizResult });
+  const simulation = useSimulation(sim, {
+    seed,
+    onEngage,
+    onQuizResult,
+    onSimEvent,
+  });
   const containerRef = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
+  const [expanded, setExpanded] = useState(false);
+
+  // Any breakable node makes this figure a *touch* target at every width, not
+  // just a small one — so it earns the expand affordance on desktop too.
+  const hasBreakable = useMemo(
+    () => sim.topology.nodes.some((n) => n.breakable),
+    [sim.topology.nodes],
+  );
+
+  // Expanded: Escape exits and the page behind stops scrolling. The previous
+  // inline value is restored rather than cleared — another figure (or a drawer)
+  // may have set it.
+  useEffect(() => {
+    if (!expanded) return;
+    const onKeyDown = (e: globalThis.KeyboardEvent) => {
+      if (e.key === "Escape") setExpanded(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [expanded]);
 
   // Observe verb: autoplay on first scroll-into-view; pause when off-screen.
   const controlsRef = useRef(simulation.controls);
@@ -200,7 +302,7 @@ export function InteractiveFigure<L>({
           if (shouldAutoplay || pausedByScroll) {
             everPlayed = true;
             pausedByScroll = false;
-            controlsRef.current.play();
+            controlsRef.current.play({ system: true });
           }
         } else if (statusRef.current === "playing") {
           pausedByScroll = true;
@@ -213,25 +315,123 @@ export function InteractiveFigure<L>({
     return () => observer.disconnect();
   }, [autoplay, reduced]);
 
+  /**
+   * Figure-level transport shortcuts. They live here rather than on the
+   * transport buttons so a shortcut works anywhere inside the figure — which is
+   * the contract `TransportBar`'s `aria-keyshortcuts` already advertises.
+   *
+   * Anything that is itself a control keeps its own keys (Space on a button is
+   * activation; arrows on the speed radiogroup are selection), and a fired
+   * checkpoint owns the keyboard outright — resuming a quizzed sim with Space
+   * would skip the prediction the overlay is waiting on.
+   */
+  const onFigureKeyDown = (e: ReactKeyboardEvent<HTMLElement>) => {
+    if (simulation.status === "quiz") return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const target = e.target;
+    if (
+      target instanceof Element &&
+      target.closest(
+        "button,input,select,textarea,a,[role=radio],[role=button],[role=switch]",
+      )
+    ) {
+      return;
+    }
+
+    const { controls } = simulation;
+    switch (e.key) {
+      case " ":
+      case "k":
+      case "K":
+        e.preventDefault();
+        controls.toggle();
+        break;
+      case ".":
+        e.preventDefault();
+        controls.stepOnce();
+        break;
+      case "r":
+      case "R":
+        e.preventDefault();
+        controls.restart();
+        break;
+      case "1":
+        e.preventDefault();
+        controls.setSpeed(0.5);
+        break;
+      case "2":
+        e.preventDefault();
+        controls.setSpeed(1);
+        break;
+      case "3":
+        e.preventDefault();
+        controls.setSpeed(2);
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
     <figure
       ref={containerRef}
-      className="my-6 overflow-hidden rounded-lg border border-border bg-surface"
+      // ONE element, ONE class list — expanding swaps `className` on the very
+      // same node in the very same position, so React reconciles in place and
+      // the running sim (runner, RNG cursor, quiz progress) is untouched.
+      className={cn(
+        "border-border bg-surface",
+        expanded
+          ? "fixed inset-0 z-50 m-0 flex flex-col overflow-y-auto rounded-none border-0"
+          : "my-6 overflow-hidden rounded-lg border",
+      )}
+      tabIndex={0}
+      onKeyDown={onFigureKeyDown}
+      aria-keyshortcuts="Space . R 1 2 3"
     >
-      <div className="relative bg-bg/40">
+      <div className={cn("relative bg-bg/40", expanded && "min-h-0 flex-1")}>
         <StageContent
           sim={sim}
           simulation={simulation}
           stageOverlay={stageOverlay}
+          nodeOverlay={nodeOverlay}
+          fill={expanded}
         />
         <CornerTicks />
-        {/* figure plate — every sim is a numbered schematic */}
-        <span
-          aria-hidden
-          className="pointer-events-none absolute top-2.5 right-5 font-mono text-[9px] tracking-[0.12em] text-fg-faint/80 uppercase"
-        >
-          fig · {sim.id} · seed {seed ?? 42}
-        </span>
+        {/* Top-right rail: the figure plate (every sim is a numbered
+            schematic) and the expand toggle, in one row so neither has to
+            dodge the other. The rail itself takes pointer events; the plate
+            opts back out. */}
+        <div className="absolute top-2 right-2.5 flex items-center gap-2.5">
+          <span
+            aria-hidden
+            className="pointer-events-none font-mono text-[9px] tracking-[0.12em] text-fg-faint/80 uppercase"
+          >
+            fig · {sim.id} · seed {seed ?? 42}
+          </span>
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            aria-expanded={expanded}
+            aria-label={
+              expanded
+                ? "Exit full screen and return the figure to the page"
+                : "Expand the figure to full screen"
+            }
+            title={expanded ? "Exit full screen (Esc)" : "Expand to full screen"}
+            className={cn(
+              "size-7 shrink-0 cursor-pointer items-center justify-center rounded-md border border-border bg-surface/80 text-fg-muted backdrop-blur transition-colors hover:border-border-bright hover:text-fg",
+              // Small stages always get it; a stage you are meant to *poke*
+              // gets it at every width. Expanded always shows the way out.
+              expanded || hasBreakable ? "flex" : "flex lg:hidden",
+            )}
+          >
+            {expanded ? (
+              <Minimize2 className="size-3.5" strokeWidth={1.75} />
+            ) : (
+              <Maximize2 className="size-3.5" strokeWidth={1.75} />
+            )}
+          </button>
+        </div>
         <PredictionQuiz
           quiz={simulation.activeQuiz}
           answer={simulation.quizAnswer}
@@ -240,6 +440,11 @@ export function InteractiveFigure<L>({
         />
       </div>
       <figcaption className="sr-only">{description}</figcaption>
+      {/* Directly under the stage, above the instruments: the key belongs next
+          to the thing it explains, and it stays out of the meters row, whose
+          flex dividers and 2-column mobile grid a chip row would break. Renders
+          nothing — not an empty strip — for sims with no `packetLegend`. */}
+      <PacketLegend sim={sim} />
       <MetersRow sim={sim} simulation={simulation} />
       <ControlPanel
         specs={sim.params}

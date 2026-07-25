@@ -1,4 +1,11 @@
-import type { Metadata } from "next";
+import {
+  absoluteUrl,
+  siteDescription,
+  siteName,
+  siteTitle,
+  siteUrl,
+} from "@/lib/site";
+import type { Metadata, Viewport } from "next";
 import {
   Bricolage_Grotesque,
   IBM_Plex_Mono,
@@ -24,13 +31,47 @@ const plexMono = IBM_Plex_Mono({
   variable: "--font-plex-mono",
 });
 
+/**
+ * Site-wide `<head>`. `metadataBase` resolves every relative URL a page or
+ * file-convention asset (icon, opengraph-image) produces, so it has to carry
+ * the base path the host serves from — see src/lib/site.ts.
+ */
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
-    default: "syslab — learn systems by breaking them",
-    template: "%s · syslab",
+    default: siteTitle,
+    template: `%s · ${siteName}`,
   },
-  description:
-    "Interactive system design lessons. Watch requests flow, drag the sliders, kill the servers — learn how large-scale systems actually behave.",
+  description: siteDescription,
+  applicationName: siteName,
+  keywords: [
+    "system design",
+    "distributed systems",
+    "interactive simulation",
+    "scalability",
+    "caching",
+    "load balancing",
+    "learn by doing",
+  ],
+  category: "education",
+  openGraph: {
+    type: "website",
+    siteName,
+    title: siteTitle,
+    description: siteDescription,
+    url: absoluteUrl("/"),
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteTitle,
+    description: siteDescription,
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#1a1712",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({
@@ -43,6 +84,13 @@ export default function RootLayout({
       <body
         className={`${bricolage.variable} ${plexSans.variable} ${plexMono.variable} font-sans antialiased`}
       >
+        {/* Keyboard-only escape hatch past the nav; invisible until focused. */}
+        <a
+          href="#main"
+          className="sr-only rounded-md font-semibold focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[200] focus:bg-accent focus:px-4 focus:py-2 focus:text-sm focus:text-bg"
+        >
+          Skip to content
+        </a>
         {children}
       </body>
     </html>

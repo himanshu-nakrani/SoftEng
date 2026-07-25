@@ -1,15 +1,7 @@
+import type { Accent } from "@/curriculum/types";
+import { accentCssVar } from "@/lib/accent";
 import { cn } from "@/lib/cn";
 import type { CSSProperties, ReactNode } from "react";
-
-type Accent = "cyan" | "violet" | "amber" | "green" | "red";
-
-const accentVar: Record<Accent, string> = {
-  cyan: "var(--color-glow-cyan)",
-  violet: "var(--color-glow-violet)",
-  amber: "var(--color-glow-amber)",
-  green: "var(--color-glow-green)",
-  red: "var(--color-glow-red)",
-};
 
 interface GlowCardProps {
   children: ReactNode;
@@ -31,7 +23,7 @@ export function GlowCard({
 }: GlowCardProps) {
   return (
     <div
-      style={{ "--glow-color": accentVar[accent] } as CSSProperties}
+      style={{ "--glow-color": accentCssVar[accent] } as CSSProperties}
       className={cn(
         "rounded-lg border border-border bg-surface transition-all duration-300",
         active

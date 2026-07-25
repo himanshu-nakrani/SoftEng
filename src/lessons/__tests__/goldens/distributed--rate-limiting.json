@@ -1,0 +1,41 @@
+{
+  "lesson": "distributed/rate-limiting",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:bucket-burst@14.5",
+      "t": 14.533333,
+      "metrics": {
+        "allowed": 1.978007,
+        "dropped": 0,
+        "rejected": 0,
+        "tokens": 10
+      },
+      "packets": 11,
+      "nextPacketId": 196,
+      "nodes": {
+        "api": "healthy",
+        "client": "healthy",
+        "limiter": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "allowed": 3.449812,
+        "dropped": 0,
+        "rejected": 22,
+        "tokens": 9
+      },
+      "packets": 9,
+      "nextPacketId": 507,
+      "nodes": {
+        "api": "healthy",
+        "client": "healthy",
+        "limiter": "healthy"
+      }
+    }
+  ]
+}

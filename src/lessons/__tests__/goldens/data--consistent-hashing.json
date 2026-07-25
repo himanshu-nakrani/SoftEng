@@ -1,0 +1,28 @@
+{
+  "lesson": "data/consistent-hashing",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "movedMask": 0,
+        "nodes": 3,
+        "remapAt": -99,
+        "remapped": 0,
+        "spread": 16.666667,
+        "vnodes": 0
+      },
+      "packets": 14,
+      "nextPacketId": 548,
+      "nodes": {
+        "client": "healthy",
+        "n1": "healthy",
+        "n2": "healthy",
+        "n3": "healthy",
+        "n4": "healthy"
+      }
+    }
+  ]
+}

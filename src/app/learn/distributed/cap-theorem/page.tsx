@@ -2,11 +2,9 @@ import { Lesson } from "@/components/lesson/Lesson";
 import { LessonSection } from "@/components/lesson/LessonSection";
 import { Callout, Lead, P, Strong, Term } from "@/components/lesson/prose";
 import { CapTheoremFigure } from "@/lessons/distributed/cap-theorem-figure";
-import type { Metadata } from "next";
+import { lessonMetadata } from "@/lib/curriculum";
 
-export const metadata: Metadata = {
-  title: "The CAP Theorem",
-};
+export const metadata = lessonMetadata("cap-theorem");
 
 export default function CapTheoremPage() {
   return (
@@ -33,8 +31,11 @@ export default function CapTheoremPage() {
         <P>
           Two coasts, two replicas, writes landing on both. The violet{" "}
           <Term>sync</Term> stream keeps the version chips marching
-          together. Flip <Term>network partition</Term> and watch the link
-          die — from this moment, each side knows only its own truth.
+          together. A few seconds in, a fiber cut takes the link down on
+          its own — nobody flipped anything, which is exactly the point —
+          and from that moment each side knows only its own truth. The{" "}
+          <Term>network partition</Term> toggle lets you stage the outage
+          again whenever you want it.
         </P>
         <CapTheoremFigure />
       </LessonSection>
@@ -52,6 +53,10 @@ export default function CapTheoremPage() {
           Heal the partition in AP mode and watch divergence drain: this
           sim resolves by last-write-wins, which is a polite way of saying{" "}
           <Strong>somebody&apos;s write gets silently discarded</Strong>.
+          The moment the versions merge, the two chips snap to one number
+          and <Term>lost writes</Term> jumps by every write the losing
+          replica accepted while it was cut off — each one already
+          answered with a cheerful 200 that nobody will ever take back.
           Real AP systems spend enormous effort here — vector clocks,
           CRDTs, application-level merges — because &quot;discard a
           write&quot; is a fine answer for a like-counter and a

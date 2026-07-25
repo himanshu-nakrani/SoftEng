@@ -1,0 +1,43 @@
+{
+  "lesson": "scaling/realtime-delivery",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:rtd-reconnect@18.4",
+      "t": 18.4,
+      "metrics": {
+        "connections": 0,
+        "delivered": 15,
+        "latency": 890.775989,
+        "waste": 1.514704
+      },
+      "packets": 0,
+      "nextPacketId": 106,
+      "nodes": {
+        "c1": "degraded",
+        "c2": "degraded",
+        "c3": "degraded",
+        "server": "dead"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "connections": 0,
+        "delivered": 27,
+        "latency": 848.798178,
+        "waste": 1.64412
+      },
+      "packets": 3,
+      "nextPacketId": 169,
+      "nodes": {
+        "c1": "healthy",
+        "c2": "healthy",
+        "c3": "healthy",
+        "server": "healthy"
+      }
+    }
+  ]
+}
