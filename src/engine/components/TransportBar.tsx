@@ -2,9 +2,10 @@
 
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { cn } from "@/lib/cn";
-import { Pause, Play, RotateCcw, StepForward } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { SimControls, SimStatus } from "../useSimulation";
+import { ListVideo, Pause, Play, RotateCcw, StepForward } from "lucide-react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import type { CaptionEntry, SimControls, SimStatus } from "../useSimulation";
+import { TranscriptPanel } from "./TranscriptPanel";
 
 const SPEED_OPTIONS = [0.5, 1, 2].map((s) => ({
   value: s,
@@ -73,7 +74,22 @@ interface TransportBarProps {
   timeline?: readonly ScrubEvent[];
   /** `sim.quiz` — drawn as violet diamonds. */
   quiz?: readonly ScrubCheckpoint[];
+  /**
+   * `Simulation.captionLog` — the captions this run has shown, listed by the
+   * transcript panel. Optional: without it the bar is exactly what it was, and
+   * the transcript toggle stays disabled (there is nothing to show).
+   */
+  captionLog?: readonly CaptionEntry[];
+  /**
+   * `Simulation.captionLogVersion`. The log is mutated in place, so this
+   * counter — not the array's identity — is what says it changed; it is passed
+   * straight through to the panel, whose auto-scroll keys off it.
+   */
+  captionLogVersion?: number;
 }
+
+/** Nothing to transcribe: one shared empty so the default prop is stable. */
+const NO_CAPTIONS: readonly CaptionEntry[] = [];
 
 /**
  * A beat earns a marker when its `at` is a real position on the clock.
@@ -181,7 +197,8 @@ function useThrottledSeek(seek: (t: number) => void) {
 }
 
 /**
- * Play / pause / step / speed / restart, the scrub track, and the sim clock.
+ * Play / pause / step / speed / restart, the scrub track, the sim clock, and
+ * the caption transcript that drops out from under all of it.
  *
  * `aria-keyshortcuts` advertises the figure-level keyboard shortcuts (Space,
  * `.`, R). This component deliberately binds no handlers for those: the
@@ -202,9 +219,18 @@ export function TransportBar({
   furthestT,
   timeline,
   quiz,
+  captionLog = NO_CAPTIONS,
+  captionLogVersion = 0,
 }: TransportBarProps) {
   const playing = status === "playing";
   const quizzing = status === "quiz";
+
+  const [transcriptOpen, setTranscriptOpen] = useState(false);
+  const transcriptId = useId();
+  // Disabled only while there is nothing to show AND nothing is showing — a
+  // restart empties the log, and a toggle that disabled itself under an open
+  // panel would trap the learner with no way to close it.
+  const transcriptDisabled = captionLog.length === 0 && !transcriptOpen;
 
   const markers = useMemo(() => buildMarkers(timeline, quiz), [timeline, quiz]);
 
@@ -237,132 +263,175 @@ export function TransportBar({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-1 border-t border-border px-3 py-2">
-      <button
-        type="button"
-        onClick={controls.toggle}
-        disabled={quizzing}
-        aria-label={playing ? "Pause simulation" : "Play simulation"}
-        aria-keyshortcuts="Space"
-        className="flex size-8 cursor-pointer items-center justify-center rounded-lg bg-accent text-bg transition-all hover:brightness-110 disabled:opacity-40"
-      >
-        {playing ? (
-          <Pause className="size-4" fill="currentColor" strokeWidth={0} />
-        ) : (
-          <Play className="size-4 translate-x-px" fill="currentColor" strokeWidth={0} />
-        )}
-      </button>
-
-      <button
-        type="button"
-        onClick={controls.stepOnce}
-        disabled={playing || quizzing}
-        aria-label="Advance one tick"
-        aria-keyshortcuts="."
-        title="Step one tick"
-        className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-fg-muted transition-colors hover:bg-raised hover:text-fg disabled:pointer-events-none disabled:opacity-40"
-      >
-        <StepForward className="size-4" />
-      </button>
-
-      <button
-        type="button"
-        onClick={controls.restart}
-        aria-label="Restart simulation"
-        aria-keyshortcuts="R"
-        title="Restart (deterministic replay)"
-        className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-fg-muted transition-colors hover:bg-raised hover:text-fg"
-      >
-        <RotateCcw className="size-4" />
-      </button>
-
-      <div className="mx-2 h-4 w-px bg-border" />
-
-      <SegmentedControl
-        ariaLabel="Playback speed"
-        size="sm"
-        options={SPEED_OPTIONS}
-        value={speed}
-        onChange={controls.setSpeed}
-      />
-
-      {/* The scrub track. Inline between the speed switch and the clock where
-          there is width for it; on narrow screens `order-last w-full` wraps it
-          onto its own line rather than crushing it to a stub. The row is sized
-          (h-10 there, the bar's own 48px here) so the slider's 44px hit box —
-          `.sim-slider`'s padding, which bleeds past the 4px track — clears the
-          buttons instead of stealing their taps. */}
-      <div className="relative order-last flex h-10 w-full items-center sm:order-none sm:mx-3 sm:h-auto sm:w-auto sm:min-w-24 sm:flex-1">
-        <input
-          type="range"
-          min={0}
-          max={scrubMax}
-          step={SCRUB_STEP}
-          value={value}
+    <>
+      <div className="flex flex-wrap items-center gap-1 border-t border-border px-3 py-2">
+        <button
+          type="button"
+          onClick={controls.toggle}
           disabled={quizzing}
-          onChange={(e) => {
-            const next = Number(e.target.value);
-            setScrubbing(next);
-            request(next);
-          }}
-          onPointerUp={release}
-          onKeyUp={release}
-          onBlur={release}
-          aria-label="Timeline"
-          aria-valuetext={`t = ${value.toFixed(1)}s`}
-          title="Scrub the timeline — replays from the seed"
-          className="sim-slider h-1 w-full cursor-pointer appearance-none rounded-full bg-border accent-accent disabled:cursor-not-allowed disabled:opacity-40"
-          // Drives the filled-track gradient in globals.css.
-          style={
-            {
-              "--fill": `${(value / scrubMax) * 100}%`,
-            } as React.CSSProperties
-          }
-        />
-        {/* Scripted beats: dots for timeline captions, violet diamonds for
-            checkpoints (the same violet the quiz status pip uses). Inset by
-            half a thumb width so a marker sits under the thumb's centre when
-            the sim is at that moment.
-
-            Inert on purpose — the track must own every pointer event, so a
-            press next to a marker seeks instead of being swallowed by it. That
-            does cost the native tooltip (`pointer-events: none` means no
-            hover), so `title` here is descriptive metadata for the DOM, not a
-            hover affordance; the caption itself still plays over the stage
-            when the beat fires. */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-2 top-1/2 h-0"
+          aria-label={playing ? "Pause simulation" : "Play simulation"}
+          aria-keyshortcuts="Space"
+          className="flex size-8 cursor-pointer items-center justify-center rounded-lg bg-accent text-bg transition-all hover:brightness-110 disabled:opacity-40"
         >
-          {markers.map((m) => (
-            <span
-              key={m.key}
-              title={m.title}
-              style={{ left: `${(m.at / scrubMax) * 100}%` }}
-              className={cn(
-                "absolute -translate-x-1/2 -translate-y-1/2 ring-1 ring-bg",
-                m.kind === "checkpoint"
-                  ? "size-1.5 rotate-45 bg-glow-violet"
-                  : "size-1 rounded-full bg-fg-muted",
-              )}
-            />
-          ))}
-        </div>
-      </div>
-
-      <span className="tech-num ml-auto flex items-center gap-2 text-xs text-fg-muted">
-        <span
-          className={cn(
-            "size-1.5 rounded-full",
-            playing
-              ? "animate-pulse bg-glow-green shadow-[0_0_6px_var(--color-glow-green)]"
-              : quizzing
-                ? "bg-glow-violet"
-                : "bg-glow-orange",
+          {playing ? (
+            <Pause className="size-4" fill="currentColor" strokeWidth={0} />
+          ) : (
+            <Play className="size-4 translate-x-px" fill="currentColor" strokeWidth={0} />
           )}
+        </button>
+
+        <button
+          type="button"
+          onClick={controls.stepOnce}
+          disabled={playing || quizzing}
+          aria-label="Advance one tick"
+          aria-keyshortcuts="."
+          title="Step one tick"
+          className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-fg-muted transition-colors hover:bg-raised hover:text-fg disabled:pointer-events-none disabled:opacity-40"
+        >
+          <StepForward className="size-4" />
+        </button>
+
+        <button
+          type="button"
+          onClick={controls.restart}
+          aria-label="Restart simulation"
+          aria-keyshortcuts="R"
+          title="Restart (deterministic replay)"
+          className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-fg-muted transition-colors hover:bg-raised hover:text-fg"
+        >
+          <RotateCcw className="size-4" />
+        </button>
+
+        <div className="mx-2 h-4 w-px bg-border" />
+
+        <SegmentedControl
+          ariaLabel="Playback speed"
+          size="sm"
+          options={SPEED_OPTIONS}
+          value={speed}
+          onChange={controls.setSpeed}
         />
-        t={t.toFixed(1)}s
-      </span>
-    </div>
+
+        {/* The scrub track. Inline between the speed switch and the clock where
+            there is width for it; on narrow screens `order-last w-full` wraps it
+            onto its own line rather than crushing it to a stub. The row is sized
+            (h-10 there, the bar's own 48px here) so the slider's 44px hit box —
+            `.sim-slider`'s padding, which bleeds past the 4px track — clears the
+            buttons instead of stealing their taps. */}
+        <div className="relative order-last flex h-10 w-full items-center sm:order-none sm:mx-3 sm:h-auto sm:w-auto sm:min-w-24 sm:flex-1">
+          <input
+            type="range"
+            min={0}
+            max={scrubMax}
+            step={SCRUB_STEP}
+            value={value}
+            disabled={quizzing}
+            onChange={(e) => {
+              const next = Number(e.target.value);
+              setScrubbing(next);
+              request(next);
+            }}
+            onPointerUp={release}
+            onKeyUp={release}
+            onBlur={release}
+            aria-label="Timeline"
+            aria-valuetext={`t = ${value.toFixed(1)}s`}
+            title="Scrub the timeline — replays from the seed"
+            className="sim-slider h-1 w-full cursor-pointer appearance-none rounded-full bg-border accent-accent disabled:cursor-not-allowed disabled:opacity-40"
+            // Drives the filled-track gradient in globals.css.
+            style={
+              {
+                "--fill": `${(value / scrubMax) * 100}%`,
+              } as React.CSSProperties
+            }
+          />
+          {/* Scripted beats: dots for timeline captions, violet diamonds for
+              checkpoints (the same violet the quiz status pip uses). Inset by
+              half a thumb width so a marker sits under the thumb's centre when
+              the sim is at that moment.
+
+              Inert on purpose — the track must own every pointer event, so a
+              press next to a marker seeks instead of being swallowed by it. That
+              does cost the native tooltip (`pointer-events: none` means no
+              hover), so `title` here is descriptive metadata for the DOM, not a
+              hover affordance; the caption itself still plays over the stage
+              when the beat fires. */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-2 top-1/2 h-0"
+          >
+            {markers.map((m) => (
+              <span
+                key={m.key}
+                title={m.title}
+                style={{ left: `${(m.at / scrubMax) * 100}%` }}
+                className={cn(
+                  "absolute -translate-x-1/2 -translate-y-1/2 ring-1 ring-bg",
+                  m.kind === "checkpoint"
+                    ? "size-1.5 rotate-45 bg-glow-violet"
+                    : "size-1 rounded-full bg-fg-muted",
+                )}
+              />
+            ))}
+          </div>
+        </div>
+
+        <span className="tech-num ml-auto flex items-center gap-2 text-xs text-fg-muted">
+          <span
+            className={cn(
+              "size-1.5 rounded-full",
+              playing
+                ? "animate-pulse bg-glow-green shadow-[0_0_6px_var(--color-glow-green)]"
+                : quizzing
+                  ? "bg-glow-violet"
+                  : "bg-glow-orange",
+            )}
+          />
+          t={t.toFixed(1)}s
+        </span>
+
+        {/* Transcript toggle — last in the row, right of the clock, because it
+            opens the thing that hangs below the bar rather than acting on the
+            run. The clock keeps its own `ml-auto`; a second auto margin here
+            would split the free space between them and float this into the
+            middle of the row on narrow screens. */}
+        <button
+          type="button"
+          onClick={() => setTranscriptOpen((v) => !v)}
+          disabled={transcriptDisabled}
+          aria-expanded={transcriptOpen}
+          aria-controls={transcriptId}
+          aria-label={
+            transcriptOpen ? "Hide caption transcript" : "Show caption transcript"
+          }
+          title={
+            transcriptDisabled
+              ? "Transcript — no captions yet"
+              : transcriptOpen
+                ? "Hide the caption transcript"
+                : "Show the caption transcript (every caption so far, seekable)"
+          }
+          className={cn(
+            "ml-1 flex size-8 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-raised hover:text-fg disabled:pointer-events-none disabled:opacity-40",
+            transcriptOpen ? "bg-raised text-accent" : "text-fg-muted",
+          )}
+        >
+          <ListVideo className="size-4" />
+        </button>
+      </div>
+      <TranscriptPanel
+        id={transcriptId}
+        open={transcriptOpen}
+        log={captionLog}
+        version={captionLogVersion}
+        t={t}
+        speed={speed}
+        onSeek={controls.seekTo}
+        // A fired checkpoint owns the transport (`seekTo` no-ops during a quiz),
+        // so the rows say so rather than looking broken.
+        disabled={quizzing}
+      />
+    </>
   );
 }
