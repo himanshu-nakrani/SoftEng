@@ -1,8 +1,9 @@
+import { ContinueCta } from "@/components/landing/ContinueCta";
 import { HeroSim } from "@/components/landing/HeroSim";
 import { Vignettes } from "@/components/landing/Vignettes";
 import { CornerTicks } from "@/components/ui/CornerTicks";
 import { accentCssVar } from "@/lib/accent";
-import { modules, track } from "@/lib/curriculum";
+import { allLessons, modules, track } from "@/lib/curriculum";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
@@ -43,10 +44,12 @@ function SectionRule({ n, label }: { n: string; label: string }) {
 }
 
 export default function Home() {
-  const allLessons = modules.flatMap((m) => m.lessons);
+  // Every count on this page is derived — the registry is the only source of
+  // truth, so shipping a lesson updates the copy for free.
   const availableCount = allLessons.filter(
     (l) => l.status === "available",
   ).length;
+  const allLive = availableCount === allLessons.length;
 
   return (
     <div className="relative">
@@ -66,13 +69,7 @@ export default function Home() {
             the intuition articles can&apos;t give you.
           </p>
           <div className="mb-10 flex flex-wrap items-center gap-3">
-            <Link
-              href="/learn"
-              className="flex items-center gap-2 rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-bg transition-all hover:shadow-[0_0_28px_-6px_var(--color-accent)] hover:brightness-110"
-            >
-              Start the track
-              <ArrowRight className="size-4" />
-            </Link>
+            <ContinueCta />
             <Link
               href="/about"
               className="rounded-md border border-border px-5 py-2.5 text-sm text-fg-muted transition-colors hover:border-border-bright hover:text-fg"
@@ -82,7 +79,8 @@ export default function Home() {
           </div>
           <p className="font-mono text-xs leading-relaxed text-fg-faint">
             <span className="text-glow-green">&gt;</span> {availableCount} live
-            simulations · seeded &amp; deterministic · no account, no server
+            simulations across {modules.length} modules · seeded &amp;
+            deterministic · no account, no server
             <span className="caret-blink ml-1 inline-block h-3 w-1.5 translate-y-0.5 bg-accent" />
           </p>
         </div>
@@ -108,7 +106,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ---- the three verbs: numbered ledger ---- */}
+      {/* ---- the four verbs: numbered ledger ---- */}
       <section className="mx-auto max-w-6xl px-6 pb-28">
         <SectionRule n="01" label="the method" />
         <h2 className="font-display mb-8 text-2xl font-bold tracking-tight sm:text-3xl">
@@ -125,7 +123,9 @@ export default function Home() {
             {track.title}
           </h2>
           <p className="tech-num text-xs text-fg-faint">
-            {availableCount}/{allLessons.length} lessons live
+            {allLive
+              ? `${allLessons.length} lessons · ${modules.length} modules`
+              : `${availableCount}/${allLessons.length} lessons live`}
           </p>
         </div>
 
@@ -137,7 +137,7 @@ export default function Home() {
             return (
               <Link
                 key={mod.slug}
-                href="/learn"
+                href={`/learn#${mod.slug}`}
                 className="group relative grid items-baseline gap-x-8 gap-y-2 border-t border-border py-6 transition-colors last:border-b hover:bg-surface/60 md:grid-cols-[110px_240px_1fr_auto]"
               >
                 <span
@@ -160,8 +160,10 @@ export default function Home() {
                 <span className="pl-4 font-mono text-xs leading-relaxed text-fg-muted md:pl-0">
                   {mod.lessons.map((l) => l.title).join("  ·  ")}
                 </span>
-                <span className="tech-num pl-4 text-xs text-fg-faint transition-colors group-hover:text-fg-muted md:pl-0">
-                  {live}/{mod.lessons.length} live{" "}
+                <span className="tech-num pl-4 text-xs whitespace-nowrap text-fg-faint transition-colors group-hover:text-fg-muted md:pl-0">
+                  {live === mod.lessons.length
+                    ? `${live} lesson${live === 1 ? "" : "s"}`
+                    : `${live}/${mod.lessons.length} live`}{" "}
                   <ArrowRight className="ml-1 inline size-3 -translate-y-px transition-transform group-hover:translate-x-0.5" />
                 </span>
               </Link>
