@@ -1,7 +1,10 @@
 "use client";
 
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { cn } from "@/lib/cn";
 import { Zap } from "lucide-react";
+import { useReducedMotion } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 import type { ParamSpec, ParamValue, ParamValues } from "../types";
 
 interface ControlPanelProps {
@@ -9,6 +12,75 @@ interface ControlPanelProps {
   values: ParamValues;
   onChange: (key: string, value: ParamValue) => void;
   onPress: (key: string) => void;
+}
+
+/** How long a pressed scenario button stays visibly "fired" (ms). */
+const FIRED_MS = 600;
+
+/**
+ * A momentary "button" param — a scenario trigger ("kill a shard", "burst").
+ *
+ * The press is consumed by the lesson's next `step`, which for a paused sim
+ * could be seconds away (the hook resumes play on press, see
+ * `useSimulation.pressButton`) — so the control also confirms *itself*: a
+ * brief lit state for sighted users and a live-region line for screen readers.
+ * Own component because the flash is per-button local state and hooks cannot
+ * live inside the `specs.map` below.
+ */
+function ButtonParam({
+  spec,
+  onPress,
+}: {
+  spec: ParamSpec;
+  onPress: (key: string) => void;
+}) {
+  const [fired, setFired] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reduced = useReducedMotion();
+
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
+
+  const press = () => {
+    onPress(spec.key);
+    if (timer.current) clearTimeout(timer.current);
+    // Off first, so a second press re-announces (an unchanged live region is
+    // silent) and re-runs the flash.
+    setFired(false);
+    timer.current = setTimeout(() => {
+      setFired(true);
+      timer.current = setTimeout(() => setFired(false), FIRED_MS);
+    }, 0);
+  };
+
+  return (
+    // Two siblings, no wrapper: the button stays a direct flex child of the
+    // panel and the status line is sr-only (absolutely positioned), so neither
+    // changes the row's layout.
+    <>
+      <button
+        type="button"
+        onClick={press}
+        className={cn(
+          "flex cursor-pointer items-center gap-1.5 rounded-lg border border-glow-amber/40 bg-glow-amber-dim px-3 py-1.5 font-mono text-[11px] font-medium text-glow-amber transition-all hover:brightness-125 active:scale-95",
+          // Reduced motion keeps the state change (information) and drops the
+          // pulsing (decoration).
+          fired && "ring-2 ring-glow-amber/70 brightness-150",
+          fired && !reduced && "animate-pulse",
+        )}
+      >
+        <Zap className="size-3" />
+        {spec.label}
+      </button>
+      <span role="status" className="sr-only">
+        {fired ? `${spec.label} triggered` : ""}
+      </span>
+    </>
+  );
 }
 
 /** Live parameter controls — changes take effect next tick, no restart. */
@@ -41,6 +113,9 @@ export function ControlPanel({
                 max={spec.max}
                 step={spec.step}
                 value={Number(value)}
+                // Without this a screen reader reads the raw number ("40");
+                // the unit is what makes it a rate, a percentage, a count.
+                aria-valuetext={`${value}${spec.unit ?? ""}`}
                 onChange={(e) => onChange(spec.key, Number(e.target.value))}
                 className="h-1 w-full cursor-pointer appearance-none rounded-full bg-border accent-accent"
               />
@@ -53,6 +128,7 @@ export function ControlPanel({
           return (
             <button
               key={spec.key}
+              type="button"
               role="switch"
               aria-checked={on}
               onClick={() => onChange(spec.key, !on)}
@@ -80,46 +156,21 @@ export function ControlPanel({
           return (
             <div key={spec.key} className="flex flex-col gap-1.5">
               <span className="tech-label">{spec.label}</span>
-              <div
-                role="radiogroup"
-                aria-label={spec.label}
-                className="flex overflow-hidden rounded-lg border border-border"
-              >
-                {spec.options?.map((opt) => {
-                  const selected = value === opt.value;
-                  return (
-                    <button
-                      key={opt.value}
-                      role="radio"
-                      aria-checked={selected}
-                      onClick={() => onChange(spec.key, opt.value)}
-                      className={cn(
-                        "cursor-pointer px-2.5 py-1 font-mono text-[11px] transition-colors",
-                        selected
-                          ? "bg-accent-dim text-accent"
-                          : "text-fg-muted hover:bg-raised hover:text-fg",
-                      )}
-                    >
-                      {opt.label}
-                    </button>
-                  );
-                })}
-              </div>
+              <SegmentedControl
+                ariaLabel={spec.label}
+                options={(spec.options ?? []).map((opt) => ({
+                  value: opt.value,
+                  label: opt.label,
+                }))}
+                value={value === undefined ? undefined : String(value)}
+                onChange={(next) => onChange(spec.key, next)}
+              />
             </div>
           );
         }
 
         // kind === "button" — momentary scenario trigger
-        return (
-          <button
-            key={spec.key}
-            onClick={() => onPress(spec.key)}
-            className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-glow-amber/40 bg-glow-amber-dim px-3 py-1.5 font-mono text-[11px] font-medium text-glow-amber transition-all hover:brightness-125 active:scale-95"
-          >
-            <Zap className="size-3" />
-            {spec.label}
-          </button>
-        );
+        return <ButtonParam key={spec.key} spec={spec} onPress={onPress} />;
       })}
     </div>
   );

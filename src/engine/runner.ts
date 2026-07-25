@@ -25,7 +25,7 @@ import type {
 } from "./types";
 import { TICK } from "./types";
 
-/** Sim-seconds a timeline caption stays up. */
+/** Sim-seconds a timeline caption stays up (before `setCaptionScale`). */
 export const CAPTION_DURATION = 4;
 
 export interface TickResult {
@@ -59,6 +59,24 @@ export interface SimRunner {
   setParam: (key: string, value: ParamValue) => void;
   /** Momentary "button" params: sets true; the lesson's step resets it. */
   pressButton: (key: string) => void;
+  /**
+   * Multiplier on `CAPTION_DURATION`, applied when a caption is *set*
+   * (default 1). Purely display-cosmetic: it moves the expiry of
+   * `caption` and touches nothing else — no `SimState` field, no RNG draw, no
+   * timeline or quiz gate — so a headless run is byte-identical whatever the
+   * scale, and the default keeps existing behaviour exactly.
+   *
+   * It exists because caption expiry is measured in *sim* seconds while
+   * reading is done in *wall* seconds: at 2x speed a 4 sim-second caption is
+   * on screen for 2 real seconds. The browser binding passes the speed
+   * multiplier here so display time stays constant (see `useSimulation`'s
+   * `setSpeed`). Headless callers can ignore it.
+   *
+   * Applies to captions set from now on; a caption already up keeps the
+   * deadline it was given. Survives `restart()` — it is a viewing preference,
+   * not run state. Non-finite or non-positive values are ignored.
+   */
+  setCaptionScale: (scale: number) => void;
   /** Advance exactly one TICK: step → clock → timeline → quiz detection. */
   tick: () => TickResult;
   /**
@@ -126,6 +144,7 @@ export function createRunner<L>(
 
   let captionText: string | null = null;
   let captionUntil = 0;
+  let captionScale = 1;
   const firedQuizzes = new Set<string>();
   const firedEvents = new Set<number>();
 
@@ -143,7 +162,7 @@ export function createRunner<L>(
       ev.apply?.(s);
       if (ev.caption) {
         captionText = ev.caption;
-        captionUntil = s.t + CAPTION_DURATION;
+        captionUntil = s.t + CAPTION_DURATION * captionScale;
       }
     });
     if (captionText && s.t > captionUntil) {
@@ -179,6 +198,9 @@ export function createRunner<L>(
     },
     pressButton: (key) => {
       params = { ...params, [key]: true };
+    },
+    setCaptionScale: (scale) => {
+      if (Number.isFinite(scale) && scale > 0) captionScale = scale;
     },
     tick,
     runTo: (until) => {

@@ -245,6 +245,11 @@ export function useSimulation<L>(
       setSpeed: (x) => {
         speedRef.current = x;
         setSpeedState(x);
+        // Caption expiry is counted in sim-seconds, so faster playback would
+        // shorten reading time (4 sim-seconds is 2 real seconds at 2x). Scale
+        // the duration by the same multiplier to hold display time constant.
+        // Display-only — see `SimRunner.setCaptionScale`.
+        runner.setCaptionScale(x);
       },
       setParam: (key, value) => {
         engage();
@@ -255,6 +260,12 @@ export function useSimulation<L>(
       pressButton: (key) => {
         engage();
         runner.pressButton(key);
+        // A momentary param is consumed by the lesson's next `step`, so on a
+        // paused sim the press would look like it did nothing until the
+        // learner also hit play. Pressing a scenario button IS a request to
+        // see it happen: resume. Only from "paused" — resuming out of "quiz"
+        // would skip the checkpoint the sim is waiting on.
+        if (statusRef.current === "paused") setStatus("playing");
         // No React state mirror needed — momentary.
         emit({ kind: "button-press", id: key });
       },
