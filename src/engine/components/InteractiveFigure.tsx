@@ -247,6 +247,8 @@ function Clock({
       furthestT={simulation.furthestT}
       timeline={sim.timeline}
       quiz={sim.quiz}
+      captionLog={simulation.captionLog}
+      captionLogVersion={simulation.captionLogVersion}
     />
   );
 }

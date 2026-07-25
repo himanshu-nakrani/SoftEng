@@ -13,7 +13,7 @@ import { allLessons, lessonPath } from "@/lib/curriculum";
  * later is smoke-tested automatically without touching this file.
  */
 
-const STATIC_ROUTES = ["/", "/learn", "/about"];
+const STATIC_ROUTES = ["/", "/learn", "/review", "/about"];
 
 const LESSON_ROUTES = allLessons
   .filter((lesson) => lesson.status === "available")

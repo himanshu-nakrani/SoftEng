@@ -1,3 +1,4 @@
+import { RegisterSW } from "@/components/RegisterSW";
 import {
   absoluteUrl,
   ogImage,
@@ -14,21 +15,45 @@ import {
 } from "next/font/google";
 import "./globals.css";
 
+/**
+ * Same normalisation as next.config.ts — `/SoftEng`, `SoftEng` and `/SoftEng/`
+ * all collapse to `/SoftEng`, and an unset variable to `""`.
+ *
+ * Restated here rather than imported because next.config.ts is not part of the
+ * app's module graph. `BASE_PATH` is what the deploy job and next.config.ts
+ * agree on; `NEXT_PUBLIC_BASE_PATH` is accepted as the alias the CI workflow
+ * also exports. This is a server component, so both are readable at build time
+ * and neither leaks into the client bundle except as the string prop below.
+ */
+const rawBasePath = (
+  process.env.BASE_PATH ??
+  process.env.NEXT_PUBLIC_BASE_PATH ??
+  ""
+).trim();
+const basePath = rawBasePath
+  ? `/${rawBasePath.replace(/^\/+/, "").replace(/\/+$/, "")}`
+  : "";
+
 const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
   variable: "--font-bricolage",
 });
 
+// Weights are exactly what the app uses. Every `font-bold` in the codebase sits
+// on a `font-display` element (Bricolage, a variable font), so Plex Sans 700
+// was downloaded on every page and painted on none — dropped.
 const plexSans = IBM_Plex_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600"],
   variable: "--font-plex-sans",
 });
 
+// Likewise the italic face: the site has no italic monospace. `<em>` only ever
+// appears in body prose (Plex Sans), never inside `<Term>`/`.tech-label`/
+// `.tech-num`, and no `italic` utility is applied to a mono element anywhere.
 const plexMono = IBM_Plex_Mono({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
-  style: ["normal", "italic"],
   variable: "--font-plex-mono",
 });
 
@@ -45,6 +70,11 @@ export const metadata: Metadata = {
   },
   description: siteDescription,
   applicationName: siteName,
+  // Unlike icons and OG images, Next emits `manifest` verbatim — it is not
+  // resolved against `metadataBase`. So it has to carry the base path itself,
+  // and it cannot be document-relative: `manifest.webmanifest` on
+  // /learn/scaling/client-server would resolve to /learn/scaling/.
+  manifest: `${basePath}/manifest.webmanifest`,
   keywords: [
     "system design",
     "distributed systems",
@@ -97,6 +127,7 @@ export default function RootLayout({
           Skip to content
         </a>
         {children}
+        <RegisterSW basePath={basePath} />
       </body>
     </html>
   );
