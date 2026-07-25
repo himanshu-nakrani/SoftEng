@@ -5,6 +5,7 @@ import {
   clamp01,
   drainQueue,
   emaRate,
+  isAlive,
   shouldSpawn,
   spawnPacket,
   type ServiceQueue,
@@ -17,7 +18,8 @@ import type { LessonSim } from "@/engine/types";
  *
  * Model (believable, not queueing theory): requests arrive at `rate`,
  * the server works through a bounded queue at `capacity` req/s; the
- * overflow is shed as drops.
+ * overflow is shed as drops. Click the server to kill it: arrivals bounce,
+ * the queue freezes where it stood, and reviving drains the backlog.
  */
 
 interface CSState {
@@ -28,6 +30,12 @@ interface CSState {
   throughput: number;
   /** Scripted traffic spike window (set by timeline). */
   burstUntil: number;
+  /**
+   * Has the learner ever killed the server? Latches true — it gates the
+   * closing "click it" invitation, which shouldn't nag someone who already
+   * found the gesture.
+   */
+  everKilled: boolean;
 }
 
 const MAX_QUEUE = 24;
@@ -39,7 +47,14 @@ export const clientServerSim: LessonSim<CSState> = {
   topology: {
     nodes: [
       { id: "client", kind: "client", label: "browser", x: 160, y: 225 },
-      { id: "server", kind: "server", label: "api-1", x: 640, y: 225 },
+      {
+        id: "server",
+        kind: "server",
+        label: "api-1",
+        x: 640,
+        y: 225,
+        breakable: true,
+      },
     ],
     edges: [{ id: "wire", from: "client", to: "server" }],
   },
@@ -82,6 +97,7 @@ export const clientServerSim: LessonSim<CSState> = {
     droppedTotal: 0,
     throughput: 0,
     burstUntil: 0,
+    everKilled: false,
   }),
 
   step: (state, dt, params) => {
@@ -90,6 +106,9 @@ export const clientServerSim: LessonSim<CSState> = {
     const capacity = Number(params.capacity);
     const oneWaySec = Number(params.latency) / 1000;
     const packetSpeed = 1 / oneWaySec;
+    // The learner can click the server dead (and back) at any moment.
+    const alive = isAlive(state, "server");
+    if (!alive) L.everKilled = true;
 
     // 1. Arrivals (timeline may have opened a burst window).
     const burst = state.t < L.burstUntil ? BURST_EXTRA : 0;
@@ -102,8 +121,9 @@ export const clientServerSim: LessonSim<CSState> = {
     let completedNow = 0;
     for (const p of advancePackets(state, dt)) {
       if (p.type === "request") {
-        if (L.server.depth >= MAX_QUEUE) {
-          // Shed load: bounce a fading red drop back toward the client.
+        // A full queue sheds; a dead box refuses everything. Same visual:
+        // a fading red drop bounced back toward the client.
+        if (!alive || L.server.depth >= MAX_QUEUE) {
           L.droppedTotal += 1;
           bounceDrop(state, "wire", { speed: packetSpeed * 1.4 });
         } else {
@@ -115,13 +135,17 @@ export const clientServerSim: LessonSim<CSState> = {
       // drops just fade out on arrival
     }
 
-    // 3. Service: the server works through its queue.
-    drainQueue(L.server, capacity, dt, () => {
-      spawnPacket(state, "wire", "response", {
-        speed: packetSpeed,
-        reverse: true,
+    // 3. Service: the server works through its queue — unless it is dead.
+    // A dead box serves nothing, so the queue freezes exactly where it stood
+    // (nothing is lost, nothing moves) until the learner revives it.
+    if (alive) {
+      drainQueue(L.server, capacity, dt, () => {
+        spawnPacket(state, "wire", "response", {
+          speed: packetSpeed,
+          reverse: true,
+        });
       });
-    });
+    }
 
     // 4. Readouts.
     L.throughput = emaRate(L.throughput, completedNow, dt);
@@ -131,12 +155,15 @@ export const clientServerSim: LessonSim<CSState> = {
     state.metrics.queue = L.server.depth;
     state.metrics.dropped = L.droppedTotal;
 
+    // Dead servers do no work: the load bar decays to nothing even though the
+    // backlog behind it is still sitting there.
     state.nodes.server.load = approach(
       state.nodes.server.load,
-      clamp01(L.server.depth / MAX_QUEUE),
+      alive ? clamp01(L.server.depth / MAX_QUEUE) : 0,
       6,
       dt,
     );
+    state.nodes.server.queueDepth = L.server.depth;
   },
 
   timeline: [
@@ -153,6 +180,19 @@ export const clientServerSim: LessonSim<CSState> = {
       },
     },
     { at: 21.5, caption: "The spike passes. The backlog drains." },
+    {
+      at: 26,
+      caption: "☠ Click the server — watch what a dead box does to its queue.",
+      // Skip the invitation if they already found the gesture themselves.
+      when: (s) => !s.lesson.everKilled,
+    },
+    {
+      at: 26,
+      caption:
+        "Dead: every arrival bounces, the queue is frozen. Click it again to revive.",
+      // Waits — possibly forever — for the first kill, whenever it lands.
+      when: (s) => !isAlive(s, "server"),
+    },
   ],
 
   quiz: [

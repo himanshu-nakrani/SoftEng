@@ -54,6 +54,16 @@ export default function ClientServerPage() {
           during the spike were requests the server refused so the ones it
           had already accepted could finish in reasonable time.
         </P>
+        <P>
+          Now the harsher version: <Strong>click the server</Strong>. Any node
+          you can kill outlines itself in red as you hover it — click{" "}
+          <Term>api-1</Term> once to take it down, again to bring it back.
+          While it&apos;s dead, watch three things: every arrival bounces home
+          as a drop, the <Term>server queue</Term> bar freezes at the depth it
+          had reached (nothing is being worked off), and throughput sinks to
+          zero. Revive it and that frozen backlog drains in one burst — the
+          queued work was never lost, only stalled.
+        </P>
         <Callout kind="warning">
           A system that never drops requests isn&apos;t resilient — it&apos;s
           a system that hasn&apos;t met real traffic yet. Load shedding is a
