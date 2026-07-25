@@ -1,0 +1,73 @@
+{
+  "lesson": "distributed/geo-replication",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:geo-conflict@7",
+      "t": 7.033333,
+      "metrics": {
+        "conflicts": 9,
+        "latEast": 17.330828,
+        "latWest": 17.331924,
+        "lostWrites": 0,
+        "rejected": 0,
+        "replLag": 41.332013,
+        "rtt": 80,
+        "singlePrimary": 0
+      },
+      "packets": 9,
+      "nextPacketId": 122,
+      "nodes": {
+        "cli-e": "healthy",
+        "cli-w": "healthy",
+        "db-e": "healthy",
+        "db-w": "healthy"
+      }
+    },
+    {
+      "label": "quiz:geo-latency@19.5",
+      "t": 19.5,
+      "metrics": {
+        "conflicts": 35,
+        "latEast": 17.333333,
+        "latWest": 17.333333,
+        "lostWrites": 0,
+        "rejected": 0,
+        "replLag": 41.333333,
+        "rtt": 80,
+        "singlePrimary": 1
+      },
+      "packets": 10,
+      "nextPacketId": 372,
+      "nodes": {
+        "cli-e": "healthy",
+        "cli-w": "healthy",
+        "db-e": "healthy",
+        "db-w": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "conflicts": 35,
+        "latEast": 17.333333,
+        "latWest": 17.553617,
+        "lostWrites": 0,
+        "rejected": 22,
+        "replLag": 41.333333,
+        "rtt": 80,
+        "singlePrimary": 0
+      },
+      "packets": 4,
+      "nextPacketId": 557,
+      "nodes": {
+        "cli-e": "healthy",
+        "cli-w": "healthy",
+        "db-e": "dead",
+        "db-w": "healthy"
+      }
+    }
+  ]
+}

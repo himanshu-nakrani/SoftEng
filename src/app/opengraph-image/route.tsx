@@ -1,23 +1,30 @@
 import { allLessons } from "@/lib/curriculum";
-import { siteTitle } from "@/lib/site";
 import { ImageResponse } from "next/og";
 
 /**
- * The share card, rendered once at build time (static export has no server to
- * render it on demand). Fonts are the ones next/og bundles — the build runs
- * without network access, so nothing here may fetch a typeface.
+ * The site-wide share card, rendered once at build time (static export has no
+ * server to render it on demand). Fonts are the ones next/og bundles — the
+ * build runs without network access, so nothing here may fetch a typeface.
+ *
+ * A ROUTE HANDLER, deliberately not the `opengraph-image.tsx` file convention:
+ * the convention auto-injects its own og:image URL built as basePath joined
+ * onto a metadataBase that already carries the base path — a doubled
+ * `/SoftEng/SoftEng/...` 404 on the Pages deploy — and a layout-level explicit
+ * `openGraph.images` does NOT suppress that injection (page-level ones do,
+ * which is why the per-lesson cards are safe). Serving the same PNG from a
+ * handler keeps the URL, kills the injection, and lets the layout's explicit
+ * entry be the only tag emitted.
  */
 export const dynamic = "force-static";
-export const alt = siteTitle;
-export const size = { width: 1200, height: 630 };
-export const contentType = "image/png";
+
+const size = { width: 1200, height: 630 };
 
 const BG = "#1a1712";
 const AMBER = "#f0b135";
 const FG = "#eee6da";
 const FAINT = "#8a8075";
 
-export default function OpengraphImage() {
+export function GET() {
   const live = allLessons.filter((l) => l.status === "available").length;
 
   return new ImageResponse(

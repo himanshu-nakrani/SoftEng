@@ -401,6 +401,23 @@ export const curriculum: Curriculum = {
                 { id: "coordinator-dies", title: "Kill the coordinator", kind: "interactive" },
               ],
             },
+            {
+              slug: "geo-replication",
+              moduleSlug: "distributed",
+              title: "Geo-Replication",
+              tagline:
+                "Two regions, one dataset — every write chooses between the speed of light and a conflict.",
+              difficulty: "advanced",
+              estimatedMinutes: 15,
+              prerequisites: ["replication", "cap-theorem"],
+              status: "available",
+              sections: [
+                { id: "speed-of-light", title: "The speed of light is a dependency", kind: "concept" },
+                { id: "two-regions", title: "Write in two regions", kind: "interactive" },
+                { id: "conflict-or-wait", title: "Conflict or wait — pick one", kind: "interactive" },
+                { id: "region-failover", title: "Region failover", kind: "concept" },
+              ],
+            },
           ],
         },
       ],

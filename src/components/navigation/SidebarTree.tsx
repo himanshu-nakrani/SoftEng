@@ -5,7 +5,7 @@ import type { LessonMeta, Module } from "@/curriculum/types";
 import { useLessonProgress } from "@/hooks/use-lesson-progress";
 import { cn } from "@/lib/cn";
 import { lessonPath, modules } from "@/lib/curriculum";
-import { Map as MapIcon } from "lucide-react";
+import { ListChecks, Map as MapIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -120,6 +120,22 @@ export function SidebarTree({ onNavigate }: { onNavigate?: () => void }) {
           </ul>
         </nav>
       ))}
+
+      {/* Tree footer: the track-wide practice deck. Below the modules because
+          it belongs to none of them, behind a hairline so it reads as a
+          different kind of destination. No `aria-current` — /review lives
+          outside this layout, so this row can never be the active page while
+          the tree is on screen. */}
+      <div className="mt-1 border-t border-border pt-2">
+        <Link
+          href="/review"
+          onClick={onNavigate}
+          className={cn(ROW, "text-fg-muted hover:bg-surface hover:text-fg")}
+        >
+          <ListChecks className="size-4" strokeWidth={1.75} />
+          Review deck
+        </Link>
+      </div>
     </>
   );
 }

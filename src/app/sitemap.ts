@@ -26,6 +26,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
     {
+      url: absoluteUrl("/review"),
+      lastModified,
+      changeFrequency: "weekly",
+      priority: 0.6,
+    },
+    {
       url: absoluteUrl("/about"),
       lastModified,
       changeFrequency: "yearly",

@@ -28,6 +28,21 @@ export type SimEvent =
   | { kind: "node-kill" | "param-change" | "button-press"; id: string }
   | { kind: "quiz-answered"; id: string; correct: boolean };
 
+/**
+ * One line of the run's narration: a timeline caption that has actually been
+ * shown, and the sim-time it appeared at.
+ *
+ * `at` is a real position on this run's clock, so it doubles as the row's seek
+ * target — `seekTo(entry.at)` replays to the tick that fired the caption, which
+ * is what makes the transcript a seekable index of the lesson's story rather
+ * than a log.
+ */
+export interface CaptionEntry {
+  /** Sim-seconds. Also the seek target for this line. */
+  readonly at: number;
+  readonly text: string;
+}
+
 export interface SimControls {
   /** `system: true` marks a non-user play (scroll autoplay) — never engages. */
   play: (opts?: { system?: boolean }) => void;
@@ -80,6 +95,20 @@ export interface Simulation {
    * clock by up to a second — a scrub track's right edge, not a readout.
    */
   furthestT: number;
+  /**
+   * Every timeline caption this run has shown, oldest first — the history the
+   * stage itself cannot keep (a caption is up for 4 sim-seconds and then gone).
+   *
+   * MUTATED IN PLACE, STABLE IDENTITY. The array object lives as long as the
+   * hook does; appends push onto it and a rebuild empties and refills it.
+   * `captionLogVersion` is the ONLY change signal — never `useMemo`/`useEffect`
+   * on the array's identity, it will not change. (Copying the array per tick to
+   * get identity semantics would allocate on the hot path for a panel almost
+   * nobody has open; the version counter costs one integer.)
+   */
+  captionLog: readonly CaptionEntry[];
+  /** Bumped on every change to `captionLog`. Depend on THIS, not the array. */
+  captionLogVersion: number;
   /** React mirror of params for controlled inputs. */
   params: ParamValues;
   /** Set while status === "quiz". */
@@ -145,6 +174,89 @@ export function useSimulation<L>(
   const [quizAnswer, setQuizAnswer] = useState<string | null>(null);
   const engaged = useRef(false);
   const [tickError, setTickError] = useState<Error | null>(null);
+
+  // ---- Caption transcript -------------------------------------------------
+  // The runner reports the caption that is visible after each tick; a *new*
+  // one is a change in that value, which is all the history anyone keeps.
+  const captionLogRef = useRef<CaptionEntry[]>([]);
+  const lastCaptionRef = useRef<string | null>(null);
+  const [captionLogVersion, setCaptionLogVersion] = useState(0);
+
+  /**
+   * The lesson's ungated captioned beats, ascending — the only part of the
+   * narration that can be RECONSTRUCTED at an arbitrary sim-time (see
+   * `rebuildCaptionLog`). Captured once, like the runner itself: both are built
+   * from the first `sim` and a lesson object is a module constant.
+   */
+  const scheduleRef = useRef<CaptionEntry[] | null>(null);
+  if (scheduleRef.current === null) {
+    scheduleRef.current = (sim.timeline ?? [])
+      .filter((ev) => ev.caption !== undefined && ev.when === undefined)
+      .map((ev) => ({ at: ev.at, text: ev.caption! }))
+      .sort((a, b) => a.at - b.at);
+  }
+
+  /**
+   * Record the caption a tick left standing, if it is a new one.
+   *
+   * Detection is by value change, since that is what the runner exposes: a
+   * caption that expires reads back as null, so the next one is always a
+   * change. The one blind spot is two beats with byte-identical text whose
+   * windows overlap — the second is not a new *value*, so it does not get a
+   * line. Lessons write distinct captions, and a duplicate line would be worse
+   * than a missing one for something used as an index.
+   */
+  const noteCaption = useCallback((caption: string | null, at: number) => {
+    if (caption === lastCaptionRef.current) return;
+    lastCaptionRef.current = caption;
+    if (caption === null) return; // expiry, not a new line
+    captionLogRef.current.push({ at, text: caption });
+    setCaptionLogVersion((v) => v + 1);
+  }, []);
+
+  /** Empty the log and resync the change detector (restart's verb). */
+  const clearCaptionLog = useCallback(() => {
+    captionLogRef.current.length = 0;
+    lastCaptionRef.current = null;
+    setCaptionLogVersion((v) => v + 1);
+  }, []);
+
+  /**
+   * Re-derive the log after a seek.
+   *
+   * A seek is a replay from tick zero, and the replay re-fires every beat on
+   * the way — so the log MUST NOT simply keep accumulating (every scrub would
+   * duplicate the whole story) and MUST NOT simply be cleared (scrubbing to
+   * t=20 would claim nothing had ever been narrated). It is rebuilt instead.
+   *
+   * `SimRunner.seekTo` discards the replay's `TickResult`s (that is the quiz-
+   * forfeit rule), so the hook cannot observe those firings — it reconstructs
+   * from what IS knowable without state: the lesson's ungated captioned beats
+   * with `at <= t`, which fire on the clock alone and therefore provably fired
+   * during the replay.
+   *
+   * LIMITATION, deliberate and honest: a GATED beat (`when`) fires only if its
+   * condition held at that moment of the replay, which is a fact about a world
+   * that no longer exists. Those lines are dropped from the log by a seek and
+   * come back only when live playback crosses the beat again. Guessing would
+   * mean printing a stamped line for narration the learner may never have seen.
+   *
+   * `caption` is the runner's post-seek caption, adopted as the detector's
+   * baseline so the first tick after the seek — which still reports that same
+   * caption — does not append it a second time.
+   */
+  const rebuildCaptionLog = useCallback(
+    (t: number, caption: string | null) => {
+      const log = captionLogRef.current;
+      log.length = 0;
+      for (const beat of scheduleRef.current ?? []) {
+        if (beat.at <= t) log.push(beat);
+      }
+      lastCaptionRef.current = caption;
+      setCaptionLogVersion((v) => v + 1);
+    },
+    [],
+  );
 
   const store = useMemo(() => createSnapshotStore(liveRef), [liveRef]);
 
@@ -217,8 +329,12 @@ export function useSimulation<L>(
 
   /** One logical tick, plus this layer's policy: a crossed quiz hard-pauses. */
   const tick = useCallback(() => {
-    const { firedQuiz } = runner.tick();
+    const { firedQuiz, caption } = runner.tick();
     markProgress(runner.state.t);
+    // Stamp the line with the clock of the tick that raised it — which is the
+    // first tick at or after the beat's `at`, and therefore a time you can seek
+    // back to and see the caption again.
+    noteCaption(caption, runner.state.t);
     if (firedQuiz) {
       setActiveQuiz(firedQuiz);
       setQuizAnswer(null);
@@ -228,7 +344,7 @@ export function useSimulation<L>(
       // however many ticks are still banked (up to ~11 at 2x).
       statusRef.current = "quiz";
     }
-  }, [markProgress, runner]);
+  }, [markProgress, noteCaption, runner]);
 
   // The single rAF loop.
   useEffect(() => {
@@ -302,6 +418,9 @@ export function useSimulation<L>(
         setQuizAnswer(null);
         setStatus("paused");
         resetProgress();
+        // The run being un-seen includes its narration: a restarted figure has
+        // told the learner nothing yet.
+        clearCaptionLog();
         store.publish(null);
       },
       seekTo: (t) => {
@@ -325,6 +444,9 @@ export function useSimulation<L>(
         // seekTo replaces the state object, exactly as restart does.
         liveRef.current = runner.state;
         markProgress(runner.state.t, true);
+        // The replay re-fired every beat it passed; rebuild rather than let
+        // the log double (see `rebuildCaptionLog` for what survives a seek).
+        rebuildCaptionLog(runner.state.t, runner.caption);
         store.publish(runner.caption);
       },
       setSpeed: (x) => {
@@ -369,7 +491,19 @@ export function useSimulation<L>(
         }
       },
     }),
-    [emit, engage, fail, liveRef, markProgress, resetProgress, runner, store, tick],
+    [
+      clearCaptionLog,
+      emit,
+      engage,
+      fail,
+      liveRef,
+      markProgress,
+      rebuildCaptionLog,
+      resetProgress,
+      runner,
+      store,
+      tick,
+    ],
   );
 
   const answerQuiz = useCallback(
@@ -405,6 +539,8 @@ export function useSimulation<L>(
     status,
     speed,
     furthestT,
+    captionLog: captionLogRef.current,
+    captionLogVersion,
     params,
     activeQuiz,
     answerQuiz,

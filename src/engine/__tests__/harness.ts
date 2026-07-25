@@ -33,6 +33,7 @@ import { leaderElectionSim } from "@/lessons/distributed/leader-election";
 import { messageQueuesSim } from "@/lessons/distributed/message-queues";
 import { rateLimitingSim } from "@/lessons/distributed/rate-limiting";
 import { twoPhaseCommitSim } from "@/lessons/distributed/two-phase-commit";
+import { geoReplicationSim } from "@/lessons/distributed/geo-replication";
 import { gossipSim } from "@/lessons/distributed/gossip";
 import { circuitBreakerSim } from "@/lessons/resilience/circuit-breaker";
 import { retriesTimeoutsSim } from "@/lessons/resilience/retries-timeouts";
@@ -91,6 +92,7 @@ const SIM_BY_KEY: Record<string, LessonSim<unknown>> = {
   "distributed/cap-theorem": widen(capTheoremSim),
   "distributed/leader-election": widen(leaderElectionSim),
   "distributed/gossip": widen(gossipSim),
+  "distributed/geo-replication": widen(geoReplicationSim),
   "distributed/two-phase-commit": widen(twoPhaseCommitSim),
 };
 
