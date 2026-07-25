@@ -216,6 +216,23 @@ export const curriculum: Curriculum = {
           accent: "green",
           lessons: [
             {
+              slug: "tail-latency",
+              moduleSlug: "resilience",
+              title: "Tail Latency",
+              tagline:
+                "Your average is 40ms and your users are furious — the p99 is where systems are judged.",
+              difficulty: "intermediate",
+              estimatedMinutes: 14,
+              prerequisites: ["load-balancing"],
+              status: "available",
+              sections: [
+                { id: "averages-lie", title: "Why averages lie", kind: "concept" },
+                { id: "find-the-tail", title: "Find the tail", kind: "interactive" },
+                { id: "fanout-amplification", title: "Fan-out amplifies the tail", kind: "interactive" },
+                { id: "budgets-hedging", title: "Budgets & hedged requests", kind: "concept" },
+              ],
+            },
+            {
               slug: "retries-timeouts",
               moduleSlug: "resilience",
               title: "Timeouts & Retries",
@@ -350,6 +367,22 @@ export const curriculum: Curriculum = {
                 { id: "why-a-leader", title: "Why elect anyone?", kind: "concept" },
                 { id: "kill-the-leader", title: "Kill the leader", kind: "interactive" },
                 { id: "quorum", title: "No majority, no leader", kind: "interactive" },
+              ],
+            },
+            {
+              slug: "gossip",
+              moduleSlug: "distributed",
+              title: "Gossip Protocols",
+              tagline:
+                "No leader, no broadcast — every node tells a few friends, and the rumor still reaches everyone.",
+              difficulty: "advanced",
+              estimatedMinutes: 13,
+              prerequisites: ["leader-election"],
+              status: "available",
+              sections: [
+                { id: "epidemic", title: "Epidemics as infrastructure", kind: "concept" },
+                { id: "spread-it", title: "Spread a rumor", kind: "interactive" },
+                { id: "lose-nodes", title: "Losing nodes mid-rumor", kind: "interactive" },
               ],
             },
             {
