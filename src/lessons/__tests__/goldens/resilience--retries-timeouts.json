@@ -1,0 +1,61 @@
+{
+  "lesson": "resilience/retries-timeouts",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:rt-timeout-floor@11",
+      "t": 11.033333,
+      "metrics": {
+        "amplification": 1.138471,
+        "attempts": 4.82743,
+        "served": 4.39889,
+        "timeouts": 0,
+        "wasted": 0
+      },
+      "packets": 6,
+      "nextPacketId": 188,
+      "nodes": {
+        "api": "healthy",
+        "client": "healthy",
+        "db": "healthy"
+      }
+    },
+    {
+      "label": "quiz:rt-metastable@19.5",
+      "t": 19.5,
+      "metrics": {
+        "amplification": 4.058881,
+        "attempts": 16.914129,
+        "served": 0.4275,
+        "timeouts": 59,
+        "wasted": 6
+      },
+      "packets": 15,
+      "nextPacketId": 410,
+      "nodes": {
+        "api": "healthy",
+        "client": "healthy",
+        "db": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "amplification": 4.401936,
+        "attempts": 17.252746,
+        "served": 0.002146,
+        "timeouts": 202,
+        "wasted": 132
+      },
+      "packets": 14,
+      "nextPacketId": 853,
+      "nodes": {
+        "api": "healthy",
+        "client": "healthy",
+        "db": "healthy"
+      }
+    }
+  ]
+}

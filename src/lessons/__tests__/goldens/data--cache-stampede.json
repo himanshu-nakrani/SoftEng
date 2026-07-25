@@ -1,0 +1,43 @@
+{
+  "lesson": "data/cache-stampede",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:stampede-coalesce@19.8",
+      "t": 19.8,
+      "metrics": {
+        "dbLoad": 60.442523,
+        "failed": 0,
+        "fetches": 20,
+        "hitRatio": 86.663642,
+        "latency": 233.124236
+      },
+      "packets": 36,
+      "nextPacketId": 536,
+      "nodes": {
+        "cache": "healthy",
+        "client": "healthy",
+        "db": "degraded"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "dbLoad": 0.000078,
+        "failed": 0,
+        "fetches": 20,
+        "hitRatio": 65.129509,
+        "latency": 163.076291
+      },
+      "packets": 16,
+      "nextPacketId": 1107,
+      "nodes": {
+        "cache": "healthy",
+        "client": "healthy",
+        "db": "healthy"
+      }
+    }
+  ]
+}

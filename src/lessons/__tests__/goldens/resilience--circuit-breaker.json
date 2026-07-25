@@ -1,0 +1,41 @@
+{
+  "lesson": "resilience/circuit-breaker",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:cb-half-open@20.5",
+      "t": 20.5,
+      "metrics": {
+        "errors": 85.735195,
+        "latency": 1.006421,
+        "shed": 21,
+        "trips": 1
+      },
+      "packets": 2,
+      "nextPacketId": 229,
+      "nodes": {
+        "breaker": "healthy",
+        "client": "healthy",
+        "svc": "degraded"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "errors": 26.474095,
+        "latency": 38.920459,
+        "shed": 47,
+        "trips": 2
+      },
+      "packets": 7,
+      "nextPacketId": 317,
+      "nodes": {
+        "breaker": "healthy",
+        "client": "healthy",
+        "svc": "healthy"
+      }
+    }
+  ]
+}

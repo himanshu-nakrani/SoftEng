@@ -20,15 +20,25 @@ import type {
 import { allLessons } from "@/lib/curriculum";
 import type { LessonMeta } from "@/curriculum/types";
 
+import { cacheStampedeSim } from "@/lessons/data/cache-stampede";
 import { cachingSim } from "@/lessons/data/caching";
+import { cdnEdgeSim } from "@/lessons/data/cdn-edge";
 import { consistentHashingSim } from "@/lessons/data/consistent-hashing";
 import { replicationSim } from "@/lessons/data/replication";
 import { shardingSim } from "@/lessons/data/sharding";
 import { capTheoremSim } from "@/lessons/distributed/cap-theorem";
+import { deliveryGuaranteesSim } from "@/lessons/distributed/delivery-guarantees";
+import { fanoutSim } from "@/lessons/distributed/fanout";
+import { leaderElectionSim } from "@/lessons/distributed/leader-election";
 import { messageQueuesSim } from "@/lessons/distributed/message-queues";
 import { rateLimitingSim } from "@/lessons/distributed/rate-limiting";
+import { twoPhaseCommitSim } from "@/lessons/distributed/two-phase-commit";
+import { circuitBreakerSim } from "@/lessons/resilience/circuit-breaker";
+import { retriesTimeoutsSim } from "@/lessons/resilience/retries-timeouts";
+import { autoscalingSim } from "@/lessons/scaling/autoscaling";
 import { clientServerSim } from "@/lessons/scaling/client-server";
 import { loadBalancingSim } from "@/lessons/scaling/load-balancing";
+import { realtimeDeliverySim } from "@/lessons/scaling/realtime-delivery";
 import { scalingStrategiesSim } from "@/lessons/scaling/scaling-strategies";
 
 /* ------------------------------------------------------------------ *
@@ -61,13 +71,23 @@ const SIM_BY_KEY: Record<string, LessonSim<unknown>> = {
   "scaling/client-server": widen(clientServerSim),
   "scaling/scaling-strategies": widen(scalingStrategiesSim),
   "scaling/load-balancing": widen(loadBalancingSim),
+  "scaling/autoscaling": widen(autoscalingSim),
+  "scaling/realtime-delivery": widen(realtimeDeliverySim),
   "data/caching": widen(cachingSim),
+  "data/cache-stampede": widen(cacheStampedeSim),
+  "data/cdn-edge": widen(cdnEdgeSim),
   "data/replication": widen(replicationSim),
   "data/sharding": widen(shardingSim),
   "data/consistent-hashing": widen(consistentHashingSim),
+  "resilience/retries-timeouts": widen(retriesTimeoutsSim),
+  "resilience/circuit-breaker": widen(circuitBreakerSim),
   "distributed/rate-limiting": widen(rateLimitingSim),
   "distributed/message-queues": widen(messageQueuesSim),
+  "distributed/delivery-guarantees": widen(deliveryGuaranteesSim),
+  "distributed/fanout": widen(fanoutSim),
   "distributed/cap-theorem": widen(capTheoremSim),
+  "distributed/leader-election": widen(leaderElectionSim),
+  "distributed/two-phase-commit": widen(twoPhaseCommitSim),
 };
 
 export interface LessonUnderTest {
