@@ -2,10 +2,18 @@
 
 import { Button } from "@/components/ui/Button";
 import { GlowCard } from "@/components/ui/GlowCard";
+import { Kbd } from "@/components/ui/Kbd";
 import { useTrackProgress } from "@/hooks/use-lesson-progress";
-import { lessonPath, nextLesson } from "@/lib/curriculum";
+import type { LessonMeta } from "@/curriculum/types";
+import { lessonPath, nextLesson, prevLesson } from "@/lib/curriculum";
 import { useProgress } from "@/stores/progress";
-import { ArrowRight, Map as MapIcon, RotateCcw, Sparkles } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Map as MapIcon,
+  RotateCcw,
+  Sparkles,
+} from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useLessonMeta } from "./context";
@@ -25,7 +33,7 @@ function EndOfTrackCard() {
 
   if (open > 0) {
     return (
-      <Link href="/learn" className="group mt-16 block">
+      <Link href="/learn" className="group block">
         <GlowCard className="flex items-center gap-4 px-5 py-4">
           <div>
             <p className="tech-label mb-1">end of the track</p>
@@ -46,7 +54,7 @@ function EndOfTrackCard() {
   }
 
   return (
-    <GlowCard accent="green" active className="mt-16 px-5 py-4">
+    <GlowCard accent="green" active className="px-5 py-4">
       <p className="tech-label mb-1 flex items-center gap-1.5 text-glow-green">
         <Sparkles className="size-3" strokeWidth={2} />
         track complete
@@ -98,34 +106,71 @@ function EndOfTrackCard() {
   );
 }
 
-/** Bottom-of-lesson forward navigation. */
+/**
+ * The way back. Quiet by construction — a ghost outline against the next
+ * lesson's glow card — because moving on is the default and re-reading is the
+ * exception. Shown only for a shipped neighbour, so the `[` shortcut and this
+ * link are true or absent together.
+ */
+function PrevLessonLink({ lesson }: { lesson: LessonMeta }) {
+  return (
+    <Link
+      href={lessonPath(lesson)}
+      className="group flex items-center gap-3 rounded-xl border border-border px-4 py-3 transition-colors hover:border-border-bright hover:bg-surface/60 sm:w-64 sm:shrink-0"
+    >
+      <ArrowLeft
+        className="size-4 shrink-0 text-fg-faint transition-transform group-hover:-translate-x-0.5"
+        strokeWidth={1.75}
+      />
+      <span className="min-w-0">
+        <span className="tech-label flex items-center gap-1.5">
+          previous <Kbd>[</Kbd>
+        </span>
+        <span className="mt-0.5 block truncate text-sm text-fg-muted transition-colors group-hover:text-fg">
+          {lesson.title}
+        </span>
+      </span>
+    </Link>
+  );
+}
+
+/** Bottom-of-lesson navigation: the next lesson, with a way back beside it. */
 export function NextLessonCard() {
   const meta = useLessonMeta();
   const next = nextLesson(meta.slug);
+  const prev = prevLesson(meta.slug);
 
-  if (!next) return <EndOfTrackCard />;
-
-  if (next.status === "coming-soon") {
-    return (
-      <div className="mt-16 rounded-xl border border-border bg-surface px-5 py-4 opacity-60">
-        <p className="tech-label mb-1 flex items-center gap-1.5">
-          <Sparkles className="size-3" />
-          next up — coming soon
-        </p>
-        <p className="font-display text-lg font-semibold">{next.title}</p>
-      </div>
-    );
-  }
-
-  return (
-    <Link href={lessonPath(next)} className="group mt-16 block">
+  const forward = !next ? (
+    <EndOfTrackCard />
+  ) : next.status === "coming-soon" ? (
+    <div className="rounded-xl border border-border bg-surface px-5 py-4 opacity-60">
+      <p className="tech-label mb-1 flex items-center gap-1.5">
+        <Sparkles className="size-3" />
+        next up — coming soon
+      </p>
+      <p className="font-display text-lg font-semibold">{next.title}</p>
+    </div>
+  ) : (
+    <Link href={lessonPath(next)} className="group block">
       <GlowCard className="flex items-center gap-4 px-5 py-4">
-        <div>
-          <p className="tech-label mb-1">next lesson</p>
+        <div className="min-w-0">
+          <p className="tech-label mb-1 flex items-center gap-1.5">
+            next lesson <Kbd>]</Kbd>
+          </p>
           <p className="font-display text-lg font-semibold">{next.title}</p>
         </div>
-        <ArrowRight className="ml-auto size-5 text-accent transition-transform group-hover:translate-x-1" />
+        <ArrowRight className="ml-auto size-5 shrink-0 text-accent transition-transform group-hover:translate-x-1" />
       </GlowCard>
     </Link>
+  );
+
+  return (
+    // Column on phones (back below the star, where it stays out of the way),
+    // row from sm up. The `mt-16` that each branch used to carry lives here now
+    // so both halves share one top edge.
+    <div className="mt-16 flex flex-col-reverse gap-3 sm:flex-row sm:items-stretch">
+      {prev?.status === "available" && <PrevLessonLink lesson={prev} />}
+      <div className="min-w-0 flex-1">{forward}</div>
+    </div>
   );
 }

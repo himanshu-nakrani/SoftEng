@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useReducedMotion } from "motion/react";
-import type { ReactNode } from "react";
+import { Maximize2, Minimize2 } from "lucide-react";
+import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
 import { CornerTicks } from "@/components/ui/CornerTicks";
+import { cn } from "@/lib/cn";
 import { buildPaths } from "../paths";
 import type { LessonSim, LessonSimView, NodeRuntime, NodeSpec } from "../types";
 import { STAGE_H, STAGE_W } from "../types";
@@ -66,11 +68,14 @@ function StageContent({
   simulation,
   stageOverlay,
   nodeOverlay,
+  fill,
 }: {
   sim: LessonSimView;
   simulation: Simulation;
   stageOverlay?: (snapshot: SimSnapshot) => ReactNode;
   nodeOverlay?: InteractiveFigureProps<never>["nodeOverlay"];
+  /** Expanded figure: fill the stage box instead of being width-driven. */
+  fill?: boolean;
 }) {
   const snapshot = useSimSnapshot(simulation);
   const registry = useMemo(() => buildPaths(sim.topology), [sim.topology]);
@@ -83,7 +88,10 @@ function StageContent({
     <>
       <svg
         viewBox={`0 0 ${STAGE_W} ${STAGE_H}`}
-        className="block h-auto w-full"
+        // Width-driven in flow; height-driven when the figure owns the screen,
+        // where preserveAspectRatio's default centres the drawing for us. Same
+        // viewBox either way, so nothing in the sim knows the difference.
+        className={fill ? "block size-full" : "block h-auto w-full"}
         role="img"
         aria-label={liveDescription(snapshot.nodes, sim)}
       >
@@ -249,6 +257,31 @@ function FigureBody<L>({
   });
   const containerRef = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
+  const [expanded, setExpanded] = useState(false);
+
+  // Any breakable node makes this figure a *touch* target at every width, not
+  // just a small one — so it earns the expand affordance on desktop too.
+  const hasBreakable = useMemo(
+    () => sim.topology.nodes.some((n) => n.breakable),
+    [sim.topology.nodes],
+  );
+
+  // Expanded: Escape exits and the page behind stops scrolling. The previous
+  // inline value is restored rather than cleared — another figure (or a drawer)
+  // may have set it.
+  useEffect(() => {
+    if (!expanded) return;
+    const onKeyDown = (e: globalThis.KeyboardEvent) => {
+      if (e.key === "Escape") setExpanded(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [expanded]);
 
   // Observe verb: autoplay on first scroll-into-view; pause when off-screen.
   const controlsRef = useRef(simulation.controls);
@@ -282,26 +315,123 @@ function FigureBody<L>({
     return () => observer.disconnect();
   }, [autoplay, reduced]);
 
+  /**
+   * Figure-level transport shortcuts. They live here rather than on the
+   * transport buttons so a shortcut works anywhere inside the figure — which is
+   * the contract `TransportBar`'s `aria-keyshortcuts` already advertises.
+   *
+   * Anything that is itself a control keeps its own keys (Space on a button is
+   * activation; arrows on the speed radiogroup are selection), and a fired
+   * checkpoint owns the keyboard outright — resuming a quizzed sim with Space
+   * would skip the prediction the overlay is waiting on.
+   */
+  const onFigureKeyDown = (e: ReactKeyboardEvent<HTMLElement>) => {
+    if (simulation.status === "quiz") return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const target = e.target;
+    if (
+      target instanceof Element &&
+      target.closest(
+        "button,input,select,textarea,a,[role=radio],[role=button],[role=switch]",
+      )
+    ) {
+      return;
+    }
+
+    const { controls } = simulation;
+    switch (e.key) {
+      case " ":
+      case "k":
+      case "K":
+        e.preventDefault();
+        controls.toggle();
+        break;
+      case ".":
+        e.preventDefault();
+        controls.stepOnce();
+        break;
+      case "r":
+      case "R":
+        e.preventDefault();
+        controls.restart();
+        break;
+      case "1":
+        e.preventDefault();
+        controls.setSpeed(0.5);
+        break;
+      case "2":
+        e.preventDefault();
+        controls.setSpeed(1);
+        break;
+      case "3":
+        e.preventDefault();
+        controls.setSpeed(2);
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
     <figure
       ref={containerRef}
-      className="my-6 overflow-hidden rounded-lg border border-border bg-surface"
+      // ONE element, ONE class list — expanding swaps `className` on the very
+      // same node in the very same position, so React reconciles in place and
+      // the running sim (runner, RNG cursor, quiz progress) is untouched.
+      className={cn(
+        "border-border bg-surface",
+        expanded
+          ? "fixed inset-0 z-50 m-0 flex flex-col overflow-y-auto rounded-none border-0"
+          : "my-6 overflow-hidden rounded-lg border",
+      )}
+      tabIndex={0}
+      onKeyDown={onFigureKeyDown}
+      aria-keyshortcuts="Space . R 1 2 3"
     >
-      <div className="relative bg-bg/40">
+      <div className={cn("relative bg-bg/40", expanded && "min-h-0 flex-1")}>
         <StageContent
           sim={sim}
           simulation={simulation}
           stageOverlay={stageOverlay}
           nodeOverlay={nodeOverlay}
+          fill={expanded}
         />
         <CornerTicks />
-        {/* figure plate — every sim is a numbered schematic */}
-        <span
-          aria-hidden
-          className="pointer-events-none absolute top-2.5 right-5 font-mono text-[9px] tracking-[0.12em] text-fg-faint/80 uppercase"
-        >
-          fig · {sim.id} · seed {seed ?? 42}
-        </span>
+        {/* Top-right rail: the figure plate (every sim is a numbered
+            schematic) and the expand toggle, in one row so neither has to
+            dodge the other. The rail itself takes pointer events; the plate
+            opts back out. */}
+        <div className="absolute top-2 right-2.5 flex items-center gap-2.5">
+          <span
+            aria-hidden
+            className="pointer-events-none font-mono text-[9px] tracking-[0.12em] text-fg-faint/80 uppercase"
+          >
+            fig · {sim.id} · seed {seed ?? 42}
+          </span>
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            aria-expanded={expanded}
+            aria-label={
+              expanded
+                ? "Exit full screen and return the figure to the page"
+                : "Expand the figure to full screen"
+            }
+            title={expanded ? "Exit full screen (Esc)" : "Expand to full screen"}
+            className={cn(
+              "size-7 shrink-0 cursor-pointer items-center justify-center rounded-md border border-border bg-surface/80 text-fg-muted backdrop-blur transition-colors hover:border-border-bright hover:text-fg",
+              // Small stages always get it; a stage you are meant to *poke*
+              // gets it at every width. Expanded always shows the way out.
+              expanded || hasBreakable ? "flex" : "flex lg:hidden",
+            )}
+          >
+            {expanded ? (
+              <Minimize2 className="size-3.5" strokeWidth={1.75} />
+            ) : (
+              <Maximize2 className="size-3.5" strokeWidth={1.75} />
+            )}
+          </button>
+        </div>
         <PredictionQuiz
           quiz={simulation.activeQuiz}
           answer={simulation.quizAnswer}

@@ -138,20 +138,177 @@ body::after {
   filter: blur(40px);
 }
 
-/* monospace technical label — the site's signature detail */
-.tech-label {
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-fg-muted);
-  font-variant-numeric: tabular-nums;
+/* ---------------------------------------------------------------------------
+   Component classes — LAYERED on purpose.
+
+   Everything in here behaves like a Tailwind component class: it sets defaults
+   that a utility on the same element is expected to override. Unlayered rules
+   beat *every* layer regardless of specificity, so `.tech-label` left outside a
+   layer silently won over `text-accent` and friends — `className="tech-label
+   text-accent"` rendered muted grey. `@layer components` sits below
+   `utilities` in Tailwind v4's layer order (theme, base, components,
+   utilities), which restores the expected "utility wins" behaviour.
+
+   Rules that are NOT utility-like (`.glow-ring`, `.glow-blob`, `.tech-rule`,
+   `.text-outline`, the animation helpers) stay unlayered below: their
+   declarations are the effect itself, not a default to be overridden.
+--------------------------------------------------------------------------- */
+
+@layer components {
+  /* monospace technical label — the site's signature detail */
+  .tech-label {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* numeric readouts in meters */
+  .tech-num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* -------------------------------------------------------------------------
+     Simulation sliders (parameter ranges).
+
+     `appearance: none` — a Tailwind utility already on both range inputs —
+     strips WebKit's thumb *and* puts nothing back, so the control renders as a
+     bare 4px line with no visible handle. These rules restore the handle and
+     make WebKit and Firefox agree on it.
+
+     SELECTOR: the intended hook (`.sim-slider`) plus
+     `input[type="range"].accent-accent`, which is the exact class combination
+     both of the app's range inputs already carry (engine ControlPanel + the
+     landing "manipulate" vignette) and which nothing else in the app uses.
+     ControlPanel is not editable from here; once it (and Vignettes) carry
+     `className="sim-slider"` the attribute half of each selector can go.
+
+     HIT AREA: WCAG 2.5.5 wants ~44px. The *visible* track stays 4px —
+     `content-box` sizing plus symmetric `padding-block` grows the hit box to
+     44px, and matching negative margins hand those 40px straight back to the
+     layout, so the control-panel row is exactly as tall as it was. The
+     `background-clip` keeps the track's paint on the 4px band instead of
+     flooding the whole padding box.
+
+     The strip reaches 20px above the track, which lands on the slider's own
+     `<label>` text — the same control, and on touch the two-line block reading
+     as one target is the point. It does NOT reach a neighbour: the label
+     (~16px) plus the column's 6px gap plus the panel's 12px `gap-y` put 34px
+     of cushion between the track and anything on the row above.
+
+     FILLED TRACK (handoff, one line, ControlPanel's owner): add
+     `style={{ "--fill": `${((n - spec.min) / (spec.max - spec.min)) * 100}%` }}`
+     to the range input and a `linear-gradient(to right, var(--color-accent) 0
+     var(--fill), transparent var(--fill))` background-image can be switched on
+     here. Deliberately not shipped: without that inline value the gradient has
+     nothing to read.
+  ------------------------------------------------------------------------- */
+  .sim-slider,
+  input[type="range"].accent-accent {
+    box-sizing: content-box;
+    height: 4px;
+    padding-block: 20px;
+    margin-block: -20px;
+    background-clip: content-box;
+  }
+
+  .sim-slider::-webkit-slider-runnable-track,
+  input[type="range"].accent-accent::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 999px;
+    background: transparent;
+  }
+
+  .sim-slider::-moz-range-track,
+  input[type="range"].accent-accent::-moz-range-track {
+    height: 4px;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+  }
+
+  .sim-slider::-webkit-slider-thumb,
+  input[type="range"].accent-accent::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    /* centre a 16px handle on a 4px track: (4 - 16) / 2 */
+    margin-top: -6px;
+    border: none;
+    border-radius: 50%;
+    background: var(--color-accent);
+    box-shadow:
+      0 0 0 1px var(--color-bg),
+      0 0 8px -1px var(--color-accent);
+    transition:
+      transform 120ms var(--ease-out-soft),
+      box-shadow 120ms linear;
+  }
+
+  .sim-slider::-moz-range-thumb,
+  input[type="range"].accent-accent::-moz-range-thumb {
+    appearance: none;
+    box-sizing: border-box;
+    width: 16px;
+    height: 16px;
+    border: none;
+    border-radius: 50%;
+    background: var(--color-accent);
+    box-shadow:
+      0 0 0 1px var(--color-bg),
+      0 0 8px -1px var(--color-accent);
+    transition:
+      transform 120ms var(--ease-out-soft),
+      box-shadow 120ms linear;
+  }
+
+  .sim-slider:hover::-webkit-slider-thumb,
+  input[type="range"].accent-accent:hover::-webkit-slider-thumb {
+    transform: scale(1.15);
+  }
+  .sim-slider:hover::-moz-range-thumb,
+  input[type="range"].accent-accent:hover::-moz-range-thumb {
+    transform: scale(1.15);
+  }
+
+  .sim-slider:active::-webkit-slider-thumb,
+  input[type="range"].accent-accent:active::-webkit-slider-thumb {
+    transform: scale(0.92);
+  }
+  .sim-slider:active::-moz-range-thumb,
+  input[type="range"].accent-accent:active::-moz-range-thumb {
+    transform: scale(0.92);
+  }
+
+  /* Keyboard focus rings the handle (see the unlayered outline reset below). */
+  .sim-slider:focus-visible::-webkit-slider-thumb,
+  input[type="range"].accent-accent:focus-visible::-webkit-slider-thumb {
+    box-shadow:
+      0 0 0 2px var(--color-bg),
+      0 0 0 4px var(--color-accent);
+  }
+  .sim-slider:focus-visible::-moz-range-thumb,
+  input[type="range"].accent-accent:focus-visible::-moz-range-thumb {
+    box-shadow:
+      0 0 0 2px var(--color-bg),
+      0 0 0 4px var(--color-accent);
+  }
 }
 
-/* numeric readouts in meters */
-.tech-num {
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
+/*
+  Has to stay UNLAYERED: it overrides the global `:focus-visible` rule at the
+  top of this file, which is itself unlayered — and unlayered always beats a
+  layer. Without it the 44px hit box (not the 4px track) would be outlined, a
+  rectangle that overlaps the control's own label. Focus stays visible: the
+  layered rules above ring the thumb instead.
+*/
+.sim-slider:focus-visible,
+input[type="range"].accent-accent:focus-visible {
+  outline: none;
 }
 
 /* hairline rule that fades at both ends — the section divider language */
@@ -179,6 +336,18 @@ body::after {
 }
 .caret-blink {
   animation: caret-blink 1.1s step-end infinite;
+}
+
+/* breakable-node badge — a slow "you can kill me" pulse on the SVG badge group.
+   Base opacity is 1 and the 100% keyframe is 1, so the reduced-motion block at
+   the bottom of this file (duration 0.01ms, one iteration) leaves the badge
+   fully visible: the affordance survives, only the pulsing goes. */
+@keyframes break-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+.break-pulse {
+  animation: break-pulse 2.6s ease-in-out infinite;
 }
 
 /* landing vignette: packets flowing along a line forever */

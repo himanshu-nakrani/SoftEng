@@ -2,6 +2,7 @@
 
 import type { Difficulty, LessonMeta } from "@/curriculum/types";
 import { useHydrated } from "@/hooks/use-hydrated";
+import { useLessonKeyboardNav } from "@/hooks/use-lesson-keyboard-nav";
 import { useLessonProgress } from "@/hooks/use-lesson-progress";
 import { cn } from "@/lib/cn";
 import { getLesson, moduleOf } from "@/lib/curriculum";
@@ -92,6 +93,8 @@ export function Lesson({ slug, children }: LessonProps) {
     (sectionId: string) => completeSection(slug, sectionId),
     [completeSection, slug],
   );
+  // `[` / `]` walk the curriculum; the bottom card shows the same two moves.
+  useLessonKeyboardNav(slug);
 
   const meta = getLesson(slug);
   if (!meta) {
