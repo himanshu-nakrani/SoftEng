@@ -4,15 +4,16 @@
   "runTo": 30,
   "checkpoints": [
     {
-      "label": "quiz:bucket-burst@12",
-      "t": 12.033333,
+      "label": "quiz:bucket-burst@14.5",
+      "t": 14.533333,
       "metrics": {
-        "allowed": 0.866125,
+        "allowed": 1.978007,
+        "dropped": 0,
         "rejected": 0,
         "tokens": 10
       },
-      "packets": 6,
-      "nextPacketId": 152,
+      "packets": 11,
+      "nextPacketId": 196,
       "nodes": {
         "api": "healthy",
         "client": "healthy",
@@ -23,12 +24,13 @@
       "label": "t=30",
       "t": 30,
       "metrics": {
-        "allowed": 2.933747,
-        "rejected": 0,
+        "allowed": 3.449812,
+        "dropped": 0,
+        "rejected": 22,
         "tokens": 9
       },
       "packets": 9,
-      "nextPacketId": 431,
+      "nextPacketId": 507,
       "nodes": {
         "api": "healthy",
         "client": "healthy",

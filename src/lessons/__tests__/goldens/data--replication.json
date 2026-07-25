@@ -8,7 +8,8 @@
       "t": 12.033333,
       "metrics": {
         "lagVersions": 7,
-        "stalePct": 100,
+        "lostWrites": 0,
+        "stalePct": 72.130454,
         "version": 45
       },
       "packets": 18,
@@ -24,17 +25,18 @@
       "label": "t=30",
       "t": 30,
       "metrics": {
-        "lagVersions": 9,
-        "stalePct": 100,
-        "version": 114
+        "lagVersions": 10,
+        "lostWrites": 8,
+        "stalePct": 94.376544,
+        "version": 89
       },
-      "packets": 15,
-      "nextPacketId": 798,
+      "packets": 14,
+      "nextPacketId": 752,
       "nodes": {
         "client": "healthy",
         "f1": "healthy",
         "f2": "healthy",
-        "leader": "healthy"
+        "leader": "dead"
       }
     }
   ]

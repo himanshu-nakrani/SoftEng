@@ -4,6 +4,24 @@
   "runTo": 30,
   "checkpoints": [
     {
+      "label": "quiz:lb-uneven-capacity@7.05",
+      "t": 7.066667,
+      "metrics": {
+        "dropped": 0,
+        "latency": 453.333333,
+        "throughput": 12.241388
+      },
+      "packets": 30,
+      "nextPacketId": 304,
+      "nodes": {
+        "client": "healthy",
+        "lb": "healthy",
+        "s1": "healthy",
+        "s2": "healthy",
+        "s3": "healthy"
+      }
+    },
+    {
       "label": "quiz:lb-inflight@11.5",
       "t": 11.533333,
       "metrics": {

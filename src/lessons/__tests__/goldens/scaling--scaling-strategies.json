@@ -29,11 +29,11 @@
       "metrics": {
         "capacity": 12,
         "cost": 32,
-        "dropped": 0,
-        "throughput": 10.482748
+        "dropped": 39,
+        "throughput": 10.482742
       },
       "packets": 16,
-      "nextPacketId": 554,
+      "nextPacketId": 523,
       "nodes": {
         "client": "healthy",
         "h1": "healthy",

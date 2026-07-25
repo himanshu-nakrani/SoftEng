@@ -4,16 +4,16 @@
   "runTo": 30,
   "checkpoints": [
     {
-      "label": "quiz:cs-queue-growth@16.5",
-      "t": 16.533333,
+      "label": "quiz:cs-queue-growth@15.2",
+      "t": 15.233333,
       "metrics": {
-        "dropped": 9,
-        "latency": 2240,
-        "queue": 24,
-        "throughput": 12.454401
+        "dropped": 0,
+        "latency": 1406.666667,
+        "queue": 14,
+        "throughput": 10.797152
       },
-      "packets": 6,
-      "nextPacketId": 264,
+      "packets": 4,
+      "nextPacketId": 205,
       "nodes": {
         "client": "healthy",
         "server": "healthy"

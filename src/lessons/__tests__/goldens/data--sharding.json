@@ -7,8 +7,11 @@
       "label": "quiz:mod-remap@12",
       "t": 12.033333,
       "metrics": {
+        "dropped": 0,
+        "hotShard": 1.157211,
         "remapped": 0,
-        "shards": 3
+        "shards": 3,
+        "throughput": 10.100704
       },
       "packets": 28,
       "nextPacketId": 445,
@@ -25,8 +28,11 @@
       "label": "t=30",
       "t": 30,
       "metrics": {
-        "remapped": 0,
-        "shards": 3
+        "dropped": 0,
+        "hotShard": 1.313694,
+        "remapped": 81.25,
+        "shards": 3,
+        "throughput": 6.846555
       },
       "packets": 27,
       "nextPacketId": 1068,

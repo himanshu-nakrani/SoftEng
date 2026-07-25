@@ -198,7 +198,9 @@ export const clientServerSim: LessonSim<CSState> = {
   quiz: [
     {
       id: "cs-queue-growth",
-      at: 16.5,
+      // Before the first drop (t≈15.97 at seed 42) so the prediction still
+      // predicts: queue ≈13 and climbing, zero drops on the counter.
+      at: 15.2,
       question:
         "The spike is pushing arrivals past the server's capacity and the queue is growing. If this keeps up, what happens?",
       choices: [

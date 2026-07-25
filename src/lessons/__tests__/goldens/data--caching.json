@@ -7,12 +7,12 @@
       "label": "quiz:cache-ttl@14",
       "t": 14.033333,
       "metrics": {
-        "dbLoad": 61.256802,
-        "hitRatio": 100,
-        "latency": 117.102563
+        "dbLoad": 0.469543,
+        "hitRatio": 73.989719,
+        "latency": 166.907781
       },
-      "packets": 15,
-      "nextPacketId": 332,
+      "packets": 9,
+      "nextPacketId": 303,
       "nodes": {
         "cache": "healthy",
         "client": "healthy",
@@ -23,14 +23,14 @@
       "label": "t=30",
       "t": 30,
       "metrics": {
-        "dbLoad": 2.654193,
-        "hitRatio": 0,
-        "latency": 397.819793
+        "dbLoad": 10.507657,
+        "hitRatio": 20.416706,
+        "latency": 520.851141
       },
-      "packets": 18,
-      "nextPacketId": 711,
+      "packets": 16,
+      "nextPacketId": 617,
       "nodes": {
-        "cache": "healthy",
+        "cache": "dead",
         "client": "healthy",
         "db": "healthy"
       }
