@@ -26,13 +26,40 @@ interface ProgressState {
   setLastVisited: (lessonSlug: string, sectionId: string) => void;
   resetLesson: (lessonSlug: string) => void;
   resetAll: () => void;
+  /**
+   * Folds an exported (or hand-edited) payload into the live progress.
+   * Never destructive — see `mergeProgress` for the keep-best rules — so a
+   * mistaken import can't wipe work that only exists on this device.
+   */
+  importProgress: (raw: unknown) => ImportSummary;
 }
 
 /** The persisted slice — what `partialize` writes and `migrate` returns. */
-type PersistedProgress = Pick<
+export type PersistedProgress = Pick<
   ProgressState,
   "completedSections" | "quizAnswers" | "lastVisited"
 >;
+
+/** Persisted-shape version — shared by the store and the export envelope. */
+export const PROGRESS_VERSION = 2;
+
+/** Download/upload envelope. `state` is exactly the persisted slice. */
+export interface ProgressExport {
+  app: "syslab";
+  version: number;
+  exportedAt: string; // ISO date
+  state: PersistedProgress;
+}
+
+/** What an import actually changed — the settings UI reports this verbatim. */
+export interface ImportSummary {
+  /** Lesson slugs the incoming file had anything to say about. */
+  lessons: number;
+  sectionsAdded: number;
+  quizzesAdded: number;
+  /** Existing quiz records the incoming one beat (see `betterQuiz`). */
+  quizzesUpdated: number;
+}
 
 const emptyProgress = (): PersistedProgress => ({
   completedSections: {},
@@ -99,9 +126,120 @@ export function sanitizeProgress(raw: unknown): PersistedProgress {
 export const quizKey = (lessonSlug: string, quizId: string) =>
   `${lessonSlug}/${quizId}`;
 
+/** Wraps the persisted slice for download. */
+export function buildProgressExport(state: PersistedProgress): ProgressExport {
+  return {
+    app: "syslab",
+    version: PROGRESS_VERSION,
+    exportedAt: new Date().toISOString(),
+    state: {
+      completedSections: state.completedSections,
+      quizAnswers: state.quizAnswers,
+      lastVisited: state.lastVisited,
+    },
+  };
+}
+
+/**
+ * Unwraps an uploaded file: accepts the full envelope, a bare persisted slice
+ * (hand-edited files, or a raw copy of the localStorage value), and rejects
+ * everything else by sanitizing it down to empty progress — so a wrong file
+ * imports as "0 changes" rather than throwing or corrupting the store.
+ */
+export function readProgressExport(raw: unknown): PersistedProgress {
+  if (isRecord(raw) && isRecord(raw.state)) return sanitizeProgress(raw.state);
+  return sanitizeProgress(raw);
+}
+
+/** True when nothing is tracked — used to disable export/reset affordances. */
+export function isEmptyProgress(state: PersistedProgress): boolean {
+  return (
+    Object.keys(state.completedSections).length === 0 &&
+    Object.keys(state.quizAnswers).length === 0
+  );
+}
+
+/**
+ * Keep-best for one quiz checkpoint: a first-try-correct record always wins
+ * (it is the fact the mastery tier is built on and can never be re-earned),
+ * otherwise the record with more attempts is the more complete history.
+ */
+function betterQuiz(mine: QuizResult, theirs: QuizResult): QuizResult {
+  if (mine.correctFirstTry !== theirs.correctFirstTry) {
+    return mine.correctFirstTry ? mine : theirs;
+  }
+  return theirs.attempts > mine.attempts ? theirs : mine;
+}
+
+/**
+ * Non-destructive union of two progress snapshots:
+ *  - completedSections: set union per lesson (a section can't un-complete)
+ *  - quizAnswers: keep-best per key
+ *  - lastVisited: the incoming pointer when it has one. There is no timestamp
+ *    on lastVisited to compare, and an import is an explicit "continue from
+ *    this snapshot" gesture, so incoming wins; an import without one leaves
+ *    the local pointer alone.
+ */
+export function mergeProgress(
+  base: PersistedProgress,
+  incoming: PersistedProgress,
+): { next: PersistedProgress; summary: ImportSummary } {
+  const completedSections: Record<string, string[]> = {
+    ...base.completedSections,
+  };
+  let sectionsAdded = 0;
+  for (const [slug, ids] of Object.entries(incoming.completedSections)) {
+    const existing = completedSections[slug] ?? [];
+    const merged = [...existing];
+    for (const id of ids) {
+      if (!merged.includes(id)) {
+        merged.push(id);
+        sectionsAdded += 1;
+      }
+    }
+    completedSections[slug] = merged;
+  }
+
+  const quizAnswers: Record<string, QuizResult> = { ...base.quizAnswers };
+  let quizzesAdded = 0;
+  let quizzesUpdated = 0;
+  for (const [key, theirs] of Object.entries(incoming.quizAnswers)) {
+    const mine = quizAnswers[key];
+    if (!mine) {
+      quizAnswers[key] = theirs;
+      quizzesAdded += 1;
+      continue;
+    }
+    const best = betterQuiz(mine, theirs);
+    if (best !== mine) {
+      quizAnswers[key] = best;
+      quizzesUpdated += 1;
+    }
+  }
+
+  const touched = new Set<string>(Object.keys(incoming.completedSections));
+  for (const key of Object.keys(incoming.quizAnswers)) {
+    touched.add(key.slice(0, key.indexOf("/")));
+  }
+
+  return {
+    next: {
+      completedSections,
+      quizAnswers,
+      lastVisited: incoming.lastVisited ?? base.lastVisited,
+    },
+    summary: {
+      lessons: touched.size,
+      sectionsAdded,
+      quizzesAdded,
+      quizzesUpdated,
+    },
+  };
+}
+
 export const useProgress = create<ProgressState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       ...emptyProgress(),
 
       completeSection: (lessonSlug, sectionId) =>
@@ -151,10 +289,20 @@ export const useProgress = create<ProgressState>()(
         }),
 
       resetAll: () => set(emptyProgress()),
+
+      importProgress: (raw) => {
+        const { completedSections, quizAnswers, lastVisited } = get();
+        const { next, summary } = mergeProgress(
+          { completedSections, quizAnswers, lastVisited },
+          readProgressExport(raw),
+        );
+        set(next);
+        return summary;
+      },
     }),
     {
       name: "softeng-progress",
-      version: 2,
+      version: PROGRESS_VERSION,
       migrate: (state) => sanitizeProgress(state),
       merge: (persisted, current) => ({
         ...current,

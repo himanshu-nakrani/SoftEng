@@ -1,10 +1,12 @@
 "use client";
 
-import type { Difficulty } from "@/curriculum/types";
+import type { Difficulty, LessonMeta } from "@/curriculum/types";
 import { useHydrated } from "@/hooks/use-hydrated";
+import { useLessonProgress } from "@/hooks/use-lesson-progress";
 import { cn } from "@/lib/cn";
 import { getLesson, moduleOf } from "@/lib/curriculum";
 import { useProgress } from "@/stores/progress";
+import { Sparkles } from "lucide-react";
 import { useCallback, type ReactNode } from "react";
 import { LessonCompletionContext, LessonContext } from "./context";
 import { NextLessonCard } from "./NextLessonCard";
@@ -53,6 +55,27 @@ function CheckpointRail({ slug }: { slug: string }) {
   );
 }
 
+/**
+ * Mastery mark for the lesson header row: shown only when every section is
+ * done AND every checkpoint here was right first try. Own component so the
+ * store read stays out of the page-level render and stays hydration-gated
+ * (`useLessonProgress` returns the logged-out default until mount).
+ */
+function MasteryMark({ meta }: { meta: LessonMeta }) {
+  const { mastered } = useLessonProgress(meta);
+  if (!mastered) return null;
+
+  return (
+    <span
+      className="inline-flex items-center gap-1 font-mono text-[10px] tracking-widest text-accent uppercase"
+      title="Mastered — every checkpoint right first try"
+    >
+      <Sparkles className="size-3" strokeWidth={2} />
+      mastered
+    </span>
+  );
+}
+
 interface LessonProps {
   slug: string;
   children: ReactNode;
@@ -95,6 +118,7 @@ export function Lesson({ slug, children }: LessonProps) {
               <div className="mb-4 flex items-center gap-3">
                 <span className="tech-label">{mod.title}</span>
                 <div className="tech-rule flex-1" />
+                <MasteryMark meta={meta} />
                 <span className="tech-num text-xs text-fg-faint">
                   {nn} / {String(mod.lessons.length).padStart(2, "0")}
                 </span>

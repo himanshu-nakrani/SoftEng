@@ -1,4 +1,4 @@
-import { LessonMap } from "@/components/navigation/LessonMap";
+import { LessonMap, TrackProgress } from "@/components/navigation/LessonMap";
 import { track } from "@/lib/curriculum";
 import type { Metadata } from "next";
 
@@ -21,6 +21,7 @@ export default function LearnPage() {
           {track.description}
         </p>
       </header>
+      <TrackProgress />
       <LessonMap />
     </>
   );
