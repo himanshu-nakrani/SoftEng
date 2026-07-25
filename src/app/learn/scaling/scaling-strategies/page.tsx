@@ -1,6 +1,14 @@
 import { Lesson } from "@/components/lesson/Lesson";
 import { LessonSection } from "@/components/lesson/LessonSection";
-import { Callout, Lead, P, Strong, Term } from "@/components/lesson/prose";
+import {
+  Callout,
+  Compare,
+  CompareCol,
+  Lead,
+  P,
+  Strong,
+  Term,
+} from "@/components/lesson/prose";
 import { ScalingStrategiesFigure } from "@/lessons/scaling/scaling-strategies-figure";
 import { lessonMetadata } from "@/lib/curriculum";
 
@@ -44,22 +52,27 @@ export default function ScalingStrategiesPage() {
       <LessonSection id="tradeoffs">
         <P>
           The deeper difference isn&apos;t price — it&apos;s the{" "}
-          <Strong>ceiling</Strong> and the <Strong>blast radius</Strong>.
-          Vertical scaling has a hard ceiling: at some point there is no
-          bigger machine to buy. And it concentrates everything into one{" "}
-          <Term>failure domain</Term> — you saw what happens when the XL box
-          dies. One click, total outage. The simulation kills a live machine
-          for you partway through, in whichever mode you&apos;re running:
-          vertical drops <Term>live capacity</Term> straight to zero, while
-          horizontal loses exactly one box and the survivors keep serving.
+          <Strong>ceiling</Strong> and the <Strong>blast radius</Strong>. The
+          simulation kills a live machine for you partway through, in
+          whichever mode you&apos;re running.
         </P>
-        <P>
-          Horizontal scaling has no practical ceiling and degrades gracefully
-          — losing one of three machines costs a third of capacity, not all
-          of it. The price is coordination: spreading traffic, sharing state,
-          handling partial failure. Nearly everything else in system design
-          exists to pay that price.
-        </P>
+        <Compare>
+          <CompareCol title="vertical">
+            A hard ceiling: at some point there is no bigger machine to buy.
+            And it concentrates everything into one <Term>failure domain</Term>{" "}
+            — you saw what happens when the XL box dies. One click, total
+            outage: vertical drops <Term>live capacity</Term> straight to
+            zero.
+          </CompareCol>
+          <CompareCol title="horizontal">
+            No practical ceiling, and it degrades gracefully — losing one of
+            three machines costs a third of capacity, not all of it.
+            Horizontal loses exactly one box and the survivors keep serving.
+            The price is coordination: spreading traffic, sharing state,
+            handling partial failure. Nearly everything else in system design
+            exists to pay that price.
+          </CompareCol>
+        </Compare>
         <Callout kind="note">
           Real systems do both: scale each box to the sweet spot of its
           price curve, then scale out. The interesting engineering is always
