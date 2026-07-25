@@ -2,11 +2,9 @@ import { Lesson } from "@/components/lesson/Lesson";
 import { LessonSection } from "@/components/lesson/LessonSection";
 import { Callout, Lead, P, Strong, Term } from "@/components/lesson/prose";
 import { CdnEdgeFigure } from "@/lessons/data/cdn-edge-figure";
-import type { Metadata } from "next";
+import { lessonMetadata } from "@/lib/curriculum";
 
-export const metadata: Metadata = {
-  title: "CDN & Edge Caching",
-};
+export const metadata = lessonMetadata("cdn-edge");
 
 export default function CdnEdgePage() {
   return (

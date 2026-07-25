@@ -2,11 +2,9 @@ import { Lesson } from "@/components/lesson/Lesson";
 import { LessonSection } from "@/components/lesson/LessonSection";
 import { Callout, Lead, P, Strong, Term } from "@/components/lesson/prose";
 import { RateLimitingFigure } from "@/lessons/distributed/rate-limiting-figure";
-import type { Metadata } from "next";
+import { lessonMetadata } from "@/lib/curriculum";
 
-export const metadata: Metadata = {
-  title: "Rate Limiting",
-};
+export const metadata = lessonMetadata("rate-limiting");
 
 export default function RateLimitingPage() {
   return (

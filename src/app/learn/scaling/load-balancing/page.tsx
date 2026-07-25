@@ -2,11 +2,9 @@ import { Lesson } from "@/components/lesson/Lesson";
 import { LessonSection } from "@/components/lesson/LessonSection";
 import { Callout, Lead, P, Strong, Term } from "@/components/lesson/prose";
 import { LoadBalancingFigure } from "@/lessons/scaling/load-balancing-figure";
-import type { Metadata } from "next";
+import { lessonMetadata } from "@/lib/curriculum";
 
-export const metadata: Metadata = {
-  title: "Load Balancing",
-};
+export const metadata = lessonMetadata("load-balancing");
 
 export default function LoadBalancingPage() {
   return (

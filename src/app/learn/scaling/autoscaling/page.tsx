@@ -2,11 +2,9 @@ import { Lesson } from "@/components/lesson/Lesson";
 import { LessonSection } from "@/components/lesson/LessonSection";
 import { Callout, Lead, P, Strong, Term } from "@/components/lesson/prose";
 import { AutoscalingFigure } from "@/lessons/scaling/autoscaling-figure";
-import type { Metadata } from "next";
+import { lessonMetadata } from "@/lib/curriculum";
 
-export const metadata: Metadata = {
-  title: "Autoscaling",
-};
+export const metadata = lessonMetadata("autoscaling");
 
 export default function AutoscalingPage() {
   return (

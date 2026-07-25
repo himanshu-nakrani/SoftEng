@@ -2,11 +2,9 @@ import { Lesson } from "@/components/lesson/Lesson";
 import { LessonSection } from "@/components/lesson/LessonSection";
 import { Callout, Lead, P, Strong, Term } from "@/components/lesson/prose";
 import { TwoPhaseCommitFigure } from "@/lessons/distributed/two-phase-commit-figure";
-import type { Metadata } from "next";
+import { lessonMetadata } from "@/lib/curriculum";
 
-export const metadata: Metadata = {
-  title: "Two-Phase Commit",
-};
+export const metadata = lessonMetadata("two-phase-commit");
 
 export default function TwoPhaseCommitPage() {
   return (

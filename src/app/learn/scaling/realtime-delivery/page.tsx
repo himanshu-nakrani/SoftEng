@@ -2,11 +2,9 @@ import { Lesson } from "@/components/lesson/Lesson";
 import { LessonSection } from "@/components/lesson/LessonSection";
 import { Callout, Lead, P, Strong, Term } from "@/components/lesson/prose";
 import { RealtimeDeliveryFigure } from "@/lessons/scaling/realtime-delivery-figure";
-import type { Metadata } from "next";
+import { lessonMetadata } from "@/lib/curriculum";
 
-export const metadata: Metadata = {
-  title: "Realtime Delivery",
-};
+export const metadata = lessonMetadata("realtime-delivery");
 
 export default function RealtimeDeliveryPage() {
   return (

@@ -2,11 +2,9 @@ import { Lesson } from "@/components/lesson/Lesson";
 import { LessonSection } from "@/components/lesson/LessonSection";
 import { Callout, Lead, P, Strong, Term } from "@/components/lesson/prose";
 import { LeaderElectionFigure } from "@/lessons/distributed/leader-election-figure";
-import type { Metadata } from "next";
+import { lessonMetadata } from "@/lib/curriculum";
 
-export const metadata: Metadata = {
-  title: "Leader Election",
-};
+export const metadata = lessonMetadata("leader-election");
 
 export default function LeaderElectionPage() {
   return (

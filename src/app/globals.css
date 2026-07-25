@@ -59,6 +59,10 @@
 
 html {
   scroll-behavior: smooth;
+  /* The site is dark-only, so tell the UA: native controls (scrollbars, range
+     inputs, form widgets, the canvas behind the page) render dark chrome
+     instead of light. */
+  color-scheme: dark;
 }
 
 body {

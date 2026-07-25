@@ -2,11 +2,9 @@ import { Lesson } from "@/components/lesson/Lesson";
 import { LessonSection } from "@/components/lesson/LessonSection";
 import { Callout, Lead, P, Strong, Term } from "@/components/lesson/prose";
 import { ClientServerFigure } from "@/lessons/scaling/client-server-figure";
-import type { Metadata } from "next";
+import { lessonMetadata } from "@/lib/curriculum";
 
-export const metadata: Metadata = {
-  title: "Client & Server",
-};
+export const metadata = lessonMetadata("client-server");
 
 export default function ClientServerPage() {
   return (

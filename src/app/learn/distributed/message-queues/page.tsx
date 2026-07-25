@@ -2,11 +2,9 @@ import { Lesson } from "@/components/lesson/Lesson";
 import { LessonSection } from "@/components/lesson/LessonSection";
 import { Callout, Lead, P, Strong, Term } from "@/components/lesson/prose";
 import { MessageQueuesFigure } from "@/lessons/distributed/message-queues-figure";
-import type { Metadata } from "next";
+import { lessonMetadata } from "@/lib/curriculum";
 
-export const metadata: Metadata = {
-  title: "Message Queues & Backpressure",
-};
+export const metadata = lessonMetadata("message-queues");
 
 export default function MessageQueuesPage() {
   return (

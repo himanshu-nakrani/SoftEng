@@ -2,11 +2,9 @@ import { Lesson } from "@/components/lesson/Lesson";
 import { LessonSection } from "@/components/lesson/LessonSection";
 import { Callout, Lead, P, Strong, Term } from "@/components/lesson/prose";
 import { CircuitBreakerFigure } from "@/lessons/resilience/circuit-breaker-figure";
-import type { Metadata } from "next";
+import { lessonMetadata } from "@/lib/curriculum";
 
-export const metadata: Metadata = {
-  title: "Circuit Breakers",
-};
+export const metadata = lessonMetadata("circuit-breaker");
 
 export default function CircuitBreakerPage() {
   return (

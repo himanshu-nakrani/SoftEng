@@ -2,11 +2,9 @@ import { Lesson } from "@/components/lesson/Lesson";
 import { LessonSection } from "@/components/lesson/LessonSection";
 import { Callout, Lead, P, Strong, Term } from "@/components/lesson/prose";
 import { ConsistentHashingFigure } from "@/lessons/data/consistent-hashing-figure";
-import type { Metadata } from "next";
+import { lessonMetadata } from "@/lib/curriculum";
 
-export const metadata: Metadata = {
-  title: "Consistent Hashing",
-};
+export const metadata = lessonMetadata("consistent-hashing");
 
 export default function ConsistentHashingPage() {
   return (

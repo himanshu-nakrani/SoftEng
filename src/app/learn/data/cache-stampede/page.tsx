@@ -2,11 +2,9 @@ import { Lesson } from "@/components/lesson/Lesson";
 import { LessonSection } from "@/components/lesson/LessonSection";
 import { Callout, Lead, P, Strong, Term } from "@/components/lesson/prose";
 import { CacheStampedeFigure } from "@/lessons/data/cache-stampede-figure";
-import type { Metadata } from "next";
+import { lessonMetadata } from "@/lib/curriculum";
 
-export const metadata: Metadata = {
-  title: "Cache Stampede",
-};
+export const metadata = lessonMetadata("cache-stampede");
 
 export default function CacheStampedePage() {
   return (

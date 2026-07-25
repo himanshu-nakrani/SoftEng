@@ -2,11 +2,9 @@ import { Lesson } from "@/components/lesson/Lesson";
 import { LessonSection } from "@/components/lesson/LessonSection";
 import { Callout, Lead, P, Strong, Term } from "@/components/lesson/prose";
 import { ScalingStrategiesFigure } from "@/lessons/scaling/scaling-strategies-figure";
-import type { Metadata } from "next";
+import { lessonMetadata } from "@/lib/curriculum";
 
-export const metadata: Metadata = {
-  title: "Vertical vs Horizontal Scaling",
-};
+export const metadata = lessonMetadata("scaling-strategies");
 
 export default function ScalingStrategiesPage() {
   return (
