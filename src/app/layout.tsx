@@ -39,18 +39,23 @@ const bricolage = Bricolage_Grotesque({
   variable: "--font-bricolage",
 });
 
-// Weights are exactly what the app uses. Every `font-bold` in the codebase sits
-// on a `font-display` element (Bricolage, a variable font), so Plex Sans 700
-// was downloaded on every page and painted on none — dropped.
+// 700 is currently unused — every `font-bold` in the app sits on a
+// `font-display` element — but it stays. Google serves Plex Sans as a variable
+// font, so all four weights resolve to the *same* six woff2 files: dropping 700
+// removes six `@font-face` lines and zero bytes, while making the next
+// `font-bold` on a sans element synthesise a fake bold from 600.
 const plexSans = IBM_Plex_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-plex-sans",
 });
 
-// Likewise the italic face: the site has no italic monospace. `<em>` only ever
-// appears in body prose (Plex Sans), never inside `<Term>`/`.tech-label`/
-// `.tech-num`, and no `italic` utility is applied to a mono element anywhere.
+// Plex Mono is NOT variable — each weight and style is its own set of files,
+// and the italic files share nothing with the normal ones. The site has no
+// italic monospace (`<em>` only appears in body prose, never inside `<Term>`,
+// `.tech-label` or `.tech-num`, and no `italic` utility lands on a mono
+// element), so requesting the italic face downloaded 15 woff2 files — 112 KiB,
+// 3 of them preloaded on every page — to render nothing. Dropped.
 const plexMono = IBM_Plex_Mono({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
