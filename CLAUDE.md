@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**syslab** — an interactive system-design learning site. Every lesson is built around a running simulation (animated request packets, live sliders, killable servers) rather than prose. Next.js 15 App Router + React 19 + TypeScript, Tailwind CSS v4, `motion` (import from `"motion/react"`, NOT legacy `framer-motion` — lint-enforced), zustand. Static export (`output: "export"`) — no server, no accounts; progress lives in localStorage. One track, four modules (scaling, data, resilience, distributed), 22 lessons.
+**syslab** — an interactive system-design learning site. Every lesson is built around a running simulation (animated request packets, live sliders, killable servers) rather than prose. Next.js 15 App Router + React 19 + TypeScript, Tailwind CSS v4, `motion` (import from `"motion/react"`, NOT legacy `framer-motion` — lint-enforced), zustand. Static export (`output: "export"`) — no server, no accounts; progress lives in localStorage. One track, four modules (scaling, data, resilience, distributed), 23 lessons. Beyond lessons: `/review` (a practice deck over every prediction checkpoint, deep-linking `?t=<sim-second>` into lessons via the transport scrubber — practice answers never write to the store), a per-figure caption transcript whose rows seek, and a hand-rolled service worker (`public/sw.js`) making visited lessons work offline.
 
 ## Commands
 
@@ -14,7 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run test` — vitest alone: invariant suite (determinism, packet cap, topology integrity, meter coverage, quiz semantics for EVERY available lesson) + golden-run regression.
   - Goldens live in `src/lessons/__tests__/goldens/`; a missing golden bootstraps on first run. After a DELIBERATE behavior change: `UPDATE_GOLDENS=1 npx vitest run`, then eyeball the diff.
   - A new lesson needs one line in `SIM_BY_KEY` in `src/engine/__tests__/harness.ts` — the matrix guard fails loudly if you forget.
-- `npm run test:e2e` — Playwright smoke over the built export (routes derived from the registry, zero console/hydration errors, one sim drive, reduced-motion). Needs `npm run build` first. In sandboxes where the pinned browser mismatches: `PW_CHROMIUM_PATH=<chromium binary> npx playwright test`.
+- `npm run test:e2e` — Playwright over the built export: desktop smoke (registry-derived routes, zero console/hydration errors, sim drive, reduced-motion), mobile (drawer, fullscreen no-remount, overflow, touch targets), axe (wcag2a/aa on seven routes; two known findings pinned in `e2e/a11y.spec.ts` — fg-faint contrast and the stage's `role="img"` hiding breakable nodes from AT), and visual regression (`e2e/visual.spec.ts` — per-lesson stage screenshots at seeked sim-seconds; self-gated off on CI, regen protocol in the spec header: `--update-snapshots` then eyeball). Needs `npm run build` first. In sandboxes where the pinned browser mismatches: `PW_CHROMIUM_PATH=<chromium binary> npx playwright test`.
 - CI (`.github/workflows/ci.yml`) runs check + build + e2e on every push/PR; pushes to `main` deploy to GitHub Pages with `BASE_PATH=/SoftEng`.
 
 ## Architecture
