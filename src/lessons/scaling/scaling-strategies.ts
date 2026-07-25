@@ -6,6 +6,8 @@ import {
   drainQueue,
   emaRate,
   isAlive,
+  killNode,
+  reviveNode,
   shouldSpawn,
   spawnPacket,
   type ServiceQueue,
@@ -24,10 +26,29 @@ interface ScalingState {
   rr: number;
   droppedTotal: number;
   throughput: number;
+  /**
+   * Ids the live mode/scale has provisioned, refreshed every step. Timeline
+   * `apply` callbacks only receive state — never params — so this is how the
+   * scripted failure finds the topology the learner is actually running.
+   */
+  activeIds: string[];
+  /**
+   * Who the scripted failure took. Remembered so the revive puts back exactly
+   * that box and never resurrects one the learner killed themselves.
+   */
+  scriptedVictim: string | null;
+  /**
+   * Sim-time the scripted failure actually landed. The revive keys off this
+   * rather than its own `at`, so the corpse always gets its full window even
+   * when the death's gate held it back.
+   */
+  scriptedDeathAt: number | null;
 }
 
 const UNIT_CAPACITY = 6; // req/s per "1×" of scale
 const MAX_QUEUE_PER_UNIT = 10;
+/** Sim-seconds the scripted corpse stays down — one full caption. */
+const OUTAGE_WINDOW = 4;
 const H_IDS = ["h1", "h2", "h3", "h4"] as const;
 
 /** Active server ids + per-server capacity for the current mode/scale. */
@@ -116,6 +137,9 @@ export const scalingStrategiesSim: LessonSim<ScalingState> = {
     rr: 0,
     droppedTotal: 0,
     throughput: 0,
+    activeIds: ["xl"],
+    scriptedVictim: null,
+    scriptedDeathAt: null,
   }),
 
   step: (state, dt, params) => {
@@ -129,6 +153,8 @@ export const scalingStrategiesSim: LessonSim<ScalingState> = {
     for (const id of ["xl", ...H_IDS]) {
       state.nodes[id].ghost = !ids.includes(id);
     }
+    // Publish the live fleet for the timeline's scripted failure to aim at.
+    L.activeIds = ids;
 
     const alive = ids.filter((id) => isAlive(state, id));
 
@@ -139,7 +165,7 @@ export const scalingStrategiesSim: LessonSim<ScalingState> = {
       if (alive.length === 0) {
         // Total outage: everything bounces.
         L.droppedTotal += 1;
-        bounceDrop(state, `e-${ids[0] ?? "xl"}`, { speed: 1.6 });
+        bounceDrop(state, `e-${ids[0] ?? "xl"}`);
         continue;
       }
       const target = alive[L.rr++ % alive.length];
@@ -154,7 +180,7 @@ export const scalingStrategiesSim: LessonSim<ScalingState> = {
         const server = L.servers[serverId];
         if (!isAlive(state, serverId) || server.depth >= maxQueue(serverId)) {
           L.droppedTotal += 1;
-          bounceDrop(state, p.edgeId, { speed: 1.6 });
+          bounceDrop(state, p.edgeId);
         } else {
           server.depth += 1;
         }
@@ -205,25 +231,64 @@ export const scalingStrategiesSim: LessonSim<ScalingState> = {
         "Same total capacity either way. Now check the COST meter as you scale.",
     },
     {
+      // The proof the quiz just asked for: a machine dies on its own, in
+      // whichever fleet the learner happens to be running. `apply` never sees
+      // params, so it aims at `activeIds`, which step republishes every tick.
+      // The gate covers the learner who has already clicked the fleet dead —
+      // the beat waits for something to actually kill rather than lying.
       at: 15,
-      caption: "☠ Click a server to kill it. Try this in BOTH modes.",
+      when: (s) => s.lesson.activeIds.some((id) => isAlive(s, id)),
+      caption:
+        "☠ One machine just died — watch LIVE CAPACITY. This is the failure-domain difference.",
+      apply: (s) => {
+        const live = s.lesson.activeIds.filter((id) => isAlive(s, id));
+        const victim = live[live.length - 1]; // `when` guarantees one exists
+        if (!victim) return;
+        killNode(s, victim);
+        s.lesson.scriptedVictim = victim;
+        s.lesson.scriptedDeathAt = s.t;
+      },
+    },
+    {
+      // Hand the fleet back intact: a corpse left standing would follow the
+      // learner through the rest of the lesson (health survives mode flips,
+      // and an out-of-mode box renders as a ghost, hiding the corpse until it
+      // silently zeroes capacity on the way back). The gate measures from the
+      // death rather than from this `at`, so a failure the gate above held
+      // back still gets its full window instead of being undone the same tick.
+      at: 15 + OUTAGE_WINDOW,
+      when: (s) =>
+        s.lesson.scriptedDeathAt !== null &&
+        s.t >= s.lesson.scriptedDeathAt + OUTAGE_WINDOW,
+      caption:
+        "…and it's back. Now do it yourself: kill a box in BOTH modes and compare.",
+      apply: (s) => {
+        if (s.lesson.scriptedVictim) reviveNode(s, s.lesson.scriptedVictim);
+        s.lesson.scriptedVictim = null;
+      },
     },
   ],
 
   quiz: [
     {
+      // Premise is self-contained (it names both shapes) so it stays true at
+      // any slider position; the scripted death two seconds later shows the
+      // learner whichever half of the answer their current mode lives in.
       id: "blast-radius",
       at: 13,
       question:
-        "You're at scale 3× and exactly one machine dies. Which mode hurts more?",
+        "Same total capacity, two shapes: one 4× machine, or four 1× machines. In a moment, exactly one machine dies. Which shape hurts more?",
       choices: [
-        { id: "v", label: "Vertical — you just lost 100% of capacity" },
-        { id: "h", label: "Horizontal — more machines, more failures" },
+        {
+          id: "v",
+          label: "Vertical — the one big box IS the fleet: capacity → 0",
+        },
+        { id: "h", label: "Horizontal — more machines, more things to fail" },
         { id: "same", label: "Same either way: capacity is capacity" },
       ],
       correctChoiceId: "v",
       explain:
-        "Vertical scaling concentrates all capacity in one failure domain — one dead box is a total outage. Horizontal keeps serving at 2/3 capacity. This asymmetry, not raw speed, is why the industry defaults to horizontal.",
+        "Vertical concentrates every request into one failure domain, so one dead box is a total outage — live capacity 0. Horizontal loses a slice: three of four machines keep serving at 75%. More machines really do fail more often; each failure just costs a fraction instead of everything. Watch — one of your machines is about to die.",
     },
   ],
 

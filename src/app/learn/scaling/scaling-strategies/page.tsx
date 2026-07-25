@@ -50,7 +50,10 @@ export default function ScalingStrategiesPage() {
           Vertical scaling has a hard ceiling: at some point there is no
           bigger machine to buy. And it concentrates everything into one{" "}
           <Term>failure domain</Term> — you saw what happens when the XL box
-          dies. One click, total outage.
+          dies. One click, total outage. The simulation kills a live machine
+          for you partway through, in whichever mode you&apos;re running:
+          vertical drops <Term>live capacity</Term> straight to zero, while
+          horizontal loses exactly one box and the survivors keep serving.
         </P>
         <P>
           Horizontal scaling has no practical ceiling and degrades gracefully
