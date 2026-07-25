@@ -1,0 +1,112 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+# One run per ref. Never cancel a main run mid-flight — that could interrupt a
+# Pages deployment; feature branches are free to supersede themselves.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Check, build & smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # tsc --noEmit, eslint, the curriculum registry check, unit tests.
+      - name: Check
+        run: npm run check
+
+      # Static export to out/ — no BASE_PATH, so the site is rooted at "/",
+      # which is what the e2e suite serves.
+      - name: Build
+        run: npm run build
+
+      # Runners have no browsers preinstalled; the e2e project is chromium-only.
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E smoke tests
+        run: npm run test:e2e
+
+      - name: Upload static export
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: static-export
+          path: out
+          retention-days: 7
+
+      # Traces/screenshots from failed specs (playwright.config.ts outputDir).
+      - name: Upload Playwright artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: e2e/.artifacts
+          if-no-files-found: ignore
+          retention-days: 7
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    # Queue Pages deployments rather than cancelling one that is publishing.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - uses: actions/configure-pages@v5
+
+      # A project site lives under /<repo>/, so this needs its own build: the
+      # artifact from the `build` job is rooted at "/" and every asset URL
+      # would 404. BASE_PATH drives next.config.ts (basePath + assetPrefix);
+      # NEXT_PUBLIC_BASE_PATH mirrors it for any future client-side use.
+      - name: Build with base path
+        env:
+          BASE_PATH: /SoftEng
+          NEXT_PUBLIC_BASE_PATH: /SoftEng
+        run: npm run build
+
+      # Belt and braces: keeps anything from treating _next/ as a Jekyll dir.
+      - name: Disable Jekyll processing
+        run: touch out/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
