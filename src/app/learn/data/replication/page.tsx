@@ -2,11 +2,9 @@ import { Lesson } from "@/components/lesson/Lesson";
 import { LessonSection } from "@/components/lesson/LessonSection";
 import { Callout, Lead, P, Strong, Term } from "@/components/lesson/prose";
 import { ReplicationFigure } from "@/lessons/data/replication-figure";
-import type { Metadata } from "next";
+import { lessonMetadata } from "@/lib/curriculum";
 
-export const metadata: Metadata = {
-  title: "Database Replication",
-};
+export const metadata = lessonMetadata("replication");
 
 export default function ReplicationPage() {
   return (
@@ -28,18 +26,27 @@ export default function ReplicationPage() {
 
       <LessonSection id="watch-lag">
         <P>
-          The count chips are <Strong>data versions</Strong>: watch{" "}
+          The badge over each box is its <Strong>data version</Strong>: watch{" "}
           <Term>pg-leader</Term>&apos;s number run ahead while the replicas
           chase it. Violet packets are the replication stream. Crank the{" "}
           <Term>replication lag</Term> slider and the gap becomes impossible
           to miss.
+        </P>
+        <P>
+          Then kill a replica by clicking it. Its version freezes on the spot,
+          the survivor quietly absorbs <Strong>every</Strong> read, and the
+          longer it stays down the further behind it drifts. Revive it and
+          nothing teleports: it replays the backlog entry by entry, over the
+          same wire, at the same finite rate — which is exactly why a replica
+          that has been down for an hour is not ready an instant after it
+          boots.
         </P>
         <ReplicationFigure />
       </LessonSection>
 
       <LessonSection id="stale-reads">
         <P>
-          Amber responses are the payoff of the whole lesson: a client read
+          Orange responses are the payoff of the whole lesson: a client read
           answered by a replica that hasn&apos;t caught up —{" "}
           <Strong>stale data, served with a straight face</Strong>. Nothing
           errored. Nothing is broken. The system is simply telling you the
@@ -57,6 +64,25 @@ export default function ReplicationPage() {
           (pin reads after writes to the leader, session tokens), but only
           if you remember the lag exists.
         </Callout>
+        <P>
+          At <Term>t=22</Term> the leader itself dies, and the same gap turns
+          into something worse than a stale read. For three seconds writes
+          bounce red — there is no node permitted to accept them — and then
+          the most caught-up replica is promoted and traffic resumes against
+          it. Watch the meters at that instant:{" "}
+          <Strong>leader version steps backwards</Strong>, because every write
+          the old leader committed but never shipped is missing from the new
+          leader&apos;s copy, and that copy is the truth now. Those are your{" "}
+          <Strong>lost writes</Strong> — the recovery-point objective of
+          asynchronous replication, counted in rows nobody will ever get back.
+        </P>
+        <P>
+          Note what does <em>not</em> change at the failover: the box is still
+          labelled <Term>replica-1</Term>. Names are identities; leadership is
+          a role that moves. Reads never stopped flowing the whole time — only
+          writes have a single point of failure here, which is precisely the
+          trade this topology makes.
+        </P>
       </LessonSection>
 
     </Lesson>

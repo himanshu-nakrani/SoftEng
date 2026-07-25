@@ -1,0 +1,57 @@
+{
+  "lesson": "distributed/fanout",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:fo-write-cost@16.5",
+      "t": 16.533333,
+      "metrics": {
+        "backlog": 4999466,
+        "followers": 5000000,
+        "readCost": 1,
+        "readOps": 4.049559,
+        "staleness": 2499.733,
+        "writeCost": 5000000,
+        "writesApplied": 1534
+      },
+      "packets": 11,
+      "nextPacketId": 198,
+      "nodes": {
+        "api": "healthy",
+        "fanout-q": "degraded",
+        "poster": "healthy",
+        "posts": "healthy",
+        "reader": "healthy",
+        "tl-1": "healthy",
+        "tl-2": "healthy",
+        "tl-3": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "backlog": 4972533,
+        "followers": 5000000,
+        "readCost": 1,
+        "readOps": 3.749115,
+        "staleness": 2486.2665,
+        "writeCost": 5000000,
+        "writesApplied": 28467
+      },
+      "packets": 18,
+      "nextPacketId": 490,
+      "nodes": {
+        "api": "healthy",
+        "fanout-q": "degraded",
+        "poster": "healthy",
+        "posts": "healthy",
+        "reader": "healthy",
+        "tl-1": "healthy",
+        "tl-2": "healthy",
+        "tl-3": "healthy"
+      }
+    }
+  ]
+}

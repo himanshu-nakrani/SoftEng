@@ -1,9 +1,13 @@
 import {
   advancePackets,
   approach,
+  bounceDrop,
   clamp01,
+  drainQueue,
+  emaRate,
   shouldSpawn,
   spawnPacket,
+  type ServiceQueue,
 } from "@/engine/sim-helpers";
 import type { LessonSim } from "@/engine/types";
 
@@ -11,17 +15,35 @@ import type { LessonSim } from "@/engine/types";
  * Lesson 9 — Message Queues & Backpressure. Producer races consumer with a
  * buffer between them. The PAUSE CONSUMER toggle is the whole lesson:
  * the queue absorbs the outage, then drains.
+ *
+ * The back half scripts the other half of the story — a surge the consumer
+ * cannot outrun, so the buffer runs out of room and the lesson's drops
+ * (backpressure) actually happen instead of merely being modelled.
  */
 
 interface MQState {
-  depth: number;
-  consumeAcc: number;
+  /** The buffer between producer and consumer — the whole lesson. */
+  queue: ServiceQueue;
   inEma: number;
   outEma: number;
   droppedTotal: number;
+  /**
+   * Sim-seconds the scripted surge lapses at; 0 (the initial value) means the
+   * sliders alone set the rates. Same shape as client-server's burst window.
+   */
+  surgeUntil: number;
+  /** `droppedTotal` when the surge opened — the drain beat waits on the delta. */
+  dropsAtSurge: number;
 }
 
 const MAX_DEPTH = 40;
+/** Scripted surge: the two rates it pins, both at their slider extremes. */
+const SURGE_IN = 20;
+const SURGE_OUT = 16;
+/** How long the surge runs before it lapses and the sliders take back over. */
+const SURGE_SECS = 16;
+/** Overflow drops the surge must land before the drain beat calls it off. */
+const SURGE_DROPS = 8;
 
 export const messageQueuesSim: LessonSim<MQState> = {
   id: "message-queues",
@@ -68,20 +90,34 @@ export const messageQueuesSim: LessonSim<MQState> = {
   ],
 
   init: () => ({
-    depth: 0,
-    consumeAcc: 0,
+    queue: { depth: 0, acc: 0 },
     inEma: 0,
     outEma: 0,
     droppedTotal: 0,
+    surgeUntil: 0,
+    dropsAtSurge: 0,
   }),
 
   step: (state, dt, params) => {
     const L = state.lesson;
     const paused = params.paused === true;
 
+    // Rates. While the scripted surge window is open it holds both sides at
+    // the numbers the checkpoint asks about — 20 in against a consumer already
+    // flat out at 16 — as a floor, never a ceiling. The window has a hard end
+    // (`surgeUntil`), after which the sliders are authoritative again.
+    const surging = state.t < L.surgeUntil;
+    const produce = surging
+      ? Math.max(Number(params.produce), SURGE_IN)
+      : Number(params.produce);
+    const consume = surging
+      ? Math.max(Number(params.consume), SURGE_OUT)
+      : Number(params.consume);
+
     // 1. Producer never stops.
     let producedNow = 0;
-    for (let i = 0; i < shouldSpawn(state, Number(params.produce), dt); i++) {
+    const spawns = shouldSpawn(state, produce, dt);
+    for (let i = 0; i < spawns; i++) {
       producedNow += 1;
       spawnPacket(state, "in", "write", { speed: 1.6 });
     }
@@ -90,12 +126,12 @@ export const messageQueuesSim: LessonSim<MQState> = {
     let consumedNow = 0;
     for (const p of advancePackets(state, dt)) {
       if (p.edgeId === "in" && p.type === "write") {
-        if (L.depth >= MAX_DEPTH) {
+        if (L.queue.depth >= MAX_DEPTH) {
           // Queue full — the backpressure moment.
           L.droppedTotal += 1;
-          spawnPacket(state, "in", "drop", { speed: 1.8, reverse: true, size: 3 });
+          bounceDrop(state, "in");
         } else {
-          L.depth += 1;
+          L.queue.depth += 1;
         }
       } else if (p.edgeId === "out" && p.type === "write") {
         consumedNow += 1;
@@ -109,30 +145,27 @@ export const messageQueuesSim: LessonSim<MQState> = {
 
     // 3. Consumer pulls (unless deploying…).
     if (!paused) {
-      L.consumeAcc += Number(params.consume) * dt;
-      while (L.consumeAcc >= 1 && L.depth > 0) {
-        L.consumeAcc -= 1;
-        L.depth -= 1;
+      drainQueue(L.queue, consume, dt, () => {
         spawnPacket(state, "out", "write", { speed: 1.4 });
-      }
-      if (L.depth === 0) L.consumeAcc = Math.min(L.consumeAcc, 1);
+      });
     }
 
     // 4. Readouts.
-    L.inEma = approach(L.inEma, producedNow / dt, 1.5, dt);
-    L.outEma = approach(L.outEma, consumedNow / dt, 1.5, dt);
-    state.nodes.queue.queueDepth = L.depth;
+    const depth = L.queue.depth;
+    L.inEma = emaRate(L.inEma, producedNow, dt);
+    L.outEma = emaRate(L.outEma, consumedNow, dt);
+    state.nodes.queue.queueDepth = depth;
     state.nodes.queue.load = approach(
       state.nodes.queue.load,
-      clamp01(L.depth / MAX_DEPTH),
+      clamp01(depth / MAX_DEPTH),
       6,
       dt,
     );
     state.nodes.consumer.health = paused ? "degraded" : "healthy";
-    state.metrics.depth = L.depth;
+    state.metrics.depth = depth;
     state.metrics.inRate = L.inEma;
     state.metrics.outRate = L.outEma;
-    state.metrics.lagSec = L.outEma > 0.5 ? L.depth / L.outEma : L.depth;
+    state.metrics.lagSec = L.outEma > 0.5 ? depth / L.outEma : depth;
     state.metrics.dropped = L.droppedTotal;
   },
 
@@ -148,9 +181,34 @@ export const messageQueuesSim: LessonSim<MQState> = {
         "Flip PAUSE CONSUMER — deploy time. The producer doesn't notice. That's the point.",
     },
     {
-      at: 18,
+      at: 15.5,
       caption:
         "Un-pause and watch the backlog drain. Delivery lag, not data loss.",
+    },
+    {
+      at: 17,
+      caption:
+        "⚡ Peak hour: the producer surges to 20 msg/s. The consumer is already flat out at its 16 msg/s ceiling.",
+      apply: (s) => {
+        s.lesson.surgeUntil = s.t + SURGE_SECS;
+        s.lesson.dropsAtSurge = s.lesson.droppedTotal;
+      },
+    },
+    {
+      at: 26,
+      caption:
+        "Surge over — consumer catching up. The backlog drains at (out − in) msg/s.",
+      // Waits for the surge to actually overflow — the drain only reads as
+      // relief once the learner has watched the queue bounce messages away —
+      // and for a consumer that is actually running, or the caption would
+      // promise a drain that isn't happening. If neither ever holds, the
+      // window still lapses on its own at `surgeUntil`.
+      when: (s, params) =>
+        params.paused !== true &&
+        s.lesson.droppedTotal - s.lesson.dropsAtSurge >= SURGE_DROPS,
+      apply: (s) => {
+        s.lesson.surgeUntil = 0;
+      },
     },
   ],
 
@@ -171,6 +229,28 @@ export const messageQueuesSim: LessonSim<MQState> = {
       correctChoiceId: "drain",
       explain:
         "Consumption exceeds production by 12−8 = 4 msg/s, so 240 messages take ~60s to work off. The outage became latency instead of loss — the entire value proposition of a queue, provided the backlog fits and the drain rate is positive.",
+    },
+    {
+      id: "mq-overflow",
+      at: 22,
+      question: "Producer at 20 msg/s, consumer max 16. What does the queue do?",
+      choices: [
+        {
+          id: "fills",
+          label: "Climbs to its 40-deep cap, then drops every new message",
+        },
+        {
+          id: "steady",
+          label: "Settles at a steady depth — lag rises, but nothing is lost",
+        },
+        {
+          id: "forever",
+          label: "Grows forever — absorbing the difference is what a buffer is for",
+        },
+      ],
+      correctChoiceId: "fills",
+      explain:
+        "Nothing here throttles the producer, so the surplus is pure accumulation: 20−16 = 4 msg/s into 40 slots fills them in ten seconds, and every arrival after that meets a full queue and bounces. A buffer absorbs bursts, not sustained overload. The only real fixes travel back up the pipe — refuse the write, block the producer, add consumers — and that refusal is backpressure. A bounded queue makes you choose it on purpose; an unbounded one keeps growing until memory chooses for you.",
     },
   ],
 
@@ -201,6 +281,13 @@ export const messageQueuesSim: LessonSim<MQState> = {
       unit: "s",
       decimals: 1,
       dangerAbove: 20,
+    },
+    {
+      // The overflow readout: what a full queue costs, in messages.
+      metricKey: "dropped",
+      label: "dropped",
+      kind: "counter",
+      dangerAbove: 0,
     },
   ],
 };

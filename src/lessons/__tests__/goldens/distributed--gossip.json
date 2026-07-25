@@ -1,0 +1,63 @@
+{
+  "lesson": "distributed/gossip",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:go-rounds@5.6",
+      "t": 5.633333,
+      "metrics": {
+        "coverage": 30,
+        "duplicates": 0,
+        "infected": 3,
+        "live": 10,
+        "lost": 0,
+        "messages": 2,
+        "rounds": 1,
+        "rumor": 1
+      },
+      "packets": 0,
+      "nextPacketId": 3,
+      "nodes": {
+        "n0": "healthy",
+        "n1": "healthy",
+        "n2": "healthy",
+        "n3": "healthy",
+        "n4": "healthy",
+        "n5": "healthy",
+        "n6": "healthy",
+        "n7": "healthy",
+        "n8": "healthy",
+        "n9": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "coverage": 100,
+        "duplicates": 154,
+        "infected": 8,
+        "live": 8,
+        "lost": 49,
+        "messages": 226,
+        "rounds": 16,
+        "rumor": 2
+      },
+      "packets": 16,
+      "nextPacketId": 417,
+      "nodes": {
+        "n0": "healthy",
+        "n1": "healthy",
+        "n2": "healthy",
+        "n3": "dead",
+        "n4": "healthy",
+        "n5": "healthy",
+        "n6": "healthy",
+        "n7": "dead",
+        "n8": "healthy",
+        "n9": "healthy"
+      }
+    }
+  ]
+}

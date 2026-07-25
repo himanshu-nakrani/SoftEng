@@ -1,0 +1,176 @@
+"use client";
+
+import { GlowCard } from "@/components/ui/GlowCard";
+import { accentCssVar } from "@/lib/accent";
+import { cn } from "@/lib/cn";
+import { ArrowRight, Check, RotateCcw, X } from "lucide-react";
+import Link from "next/link";
+import { useId, useState } from "react";
+import type { ReviewItem, ReviewStatus } from "./deck";
+
+/** The chip in the card's top-right — what the STORE says, before any practice. */
+const statusChip: Record<ReviewStatus, { label: string; className: string }> = {
+  missed: {
+    label: "missed first try",
+    className: "bg-glow-red-dim text-glow-red",
+  },
+  unattempted: {
+    label: "not asked yet",
+    className: "bg-raised text-fg-faint",
+  },
+  mastered: {
+    label: "first try",
+    className: "bg-glow-green-dim text-glow-green",
+  },
+};
+
+/**
+ * One checkpoint, re-asked.
+ *
+ * NO WRITES. The answer lives in this component's `useState` and dies with the
+ * page: `recordQuiz` is never called from /review, and neither is any other
+ * store action. That is the whole design of the deck —
+ * `QuizResult.correctFirstTry` is the fact `lessonMastered` is built on, and it
+ * can only be earned once, in the lesson, with the sim paused at the moment the
+ * question is about. Letting a practice answer write here would either launder
+ * a miss into mastery (if it overwrote) or inflate `attempts` with rehearsal
+ * that never happened in a run (if it merged). Practice is rehearsal; the
+ * record stays whatever the lesson recorded. The card says so in its footer, so
+ * a learner is never guessing whether this counts.
+ *
+ * Verdict vocabulary is `PredictionQuiz`'s, deliberately: green + check for the
+ * correct choice, red + X for a wrong one you picked, the others dimmed, the
+ * explanation behind a violet rule, and the verdict mirrored into an sr-only
+ * live region because colour + icon is the only visual signal.
+ */
+export function ReviewCard({ item }: { item: ReviewItem }) {
+  const [choice, setChoice] = useState<string | null>(null);
+  const questionId = useId();
+  const { quiz } = item;
+
+  const revealed = choice !== null;
+  const chip = statusChip[item.status];
+  const correctLabel =
+    quiz.choices.find((c) => c.id === quiz.correctChoiceId)?.label ?? "";
+  const verdict = !revealed
+    ? ""
+    : choice === quiz.correctChoiceId
+      ? "Correct."
+      : `Not quite — the correct answer was ${correctLabel}.`;
+
+  return (
+    <GlowCard
+      accent={item.module.accent}
+      className={cn(
+        "p-5",
+        // An untouched checkpoint is absence of data, not a bad score — the
+        // dashed edge says "outline" rather than "result".
+        item.status === "unattempted" && "border-dashed",
+      )}
+    >
+      <div className="mb-3 flex items-start gap-3">
+        <div className="min-w-0">
+          {/* Kicker: the module in its own accent, then the lesson — the same
+              "where am I" line the lesson map uses, in one row. */}
+          <p className="tech-label mb-1 truncate">
+            <span style={{ color: accentCssVar[item.module.accent] }}>
+              {item.module.title}
+            </span>
+            {" · "}
+            {item.lesson.title}
+          </p>
+          <p
+            id={questionId}
+            className="text-sm leading-relaxed font-medium text-fg"
+          >
+            {quiz.question}
+          </p>
+        </div>
+        <span
+          className={cn(
+            "ml-auto shrink-0 rounded-full px-2.5 py-0.5 font-mono text-[10px] tracking-wide whitespace-nowrap",
+            chip.className,
+          )}
+        >
+          {chip.label}
+        </span>
+      </div>
+
+      <div
+        className="flex flex-col gap-2"
+        role="group"
+        aria-labelledby={questionId}
+      >
+        {quiz.choices.map((c) => {
+          const chosen = choice === c.id;
+          const correct = c.id === quiz.correctChoiceId;
+          return (
+            <button
+              key={c.id}
+              type="button"
+              disabled={revealed}
+              onClick={() => setChoice(c.id)}
+              className={cn(
+                "flex cursor-pointer items-center gap-2.5 rounded-lg border px-3.5 py-2.5 text-left text-[13px] transition-all",
+                !revealed &&
+                  "border-border hover:border-glow-violet/60 hover:bg-raised",
+                revealed &&
+                  correct &&
+                  "border-glow-green/60 bg-glow-green-dim text-glow-green",
+                revealed &&
+                  chosen &&
+                  !correct &&
+                  "border-glow-red/60 bg-glow-red-dim text-glow-red",
+                revealed && !chosen && !correct && "border-border opacity-45",
+                revealed && "cursor-default",
+              )}
+            >
+              {revealed && correct && <Check className="size-4 shrink-0" />}
+              {revealed && chosen && !correct && (
+                <X className="size-4 shrink-0" />
+              )}
+              {c.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Present from first render so the verdict is a content change inside a
+          live region, not a region that appears already populated. */}
+      <p role="status" className="sr-only">
+        {verdict}
+      </p>
+
+      {revealed && (
+        <p className="mt-4 border-l-2 border-glow-violet/50 pl-3 text-[13px] leading-relaxed text-fg-muted">
+          {quiz.explain}
+        </p>
+      )}
+
+      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border pt-3">
+        <Link
+          href={item.href}
+          className="group inline-flex items-center gap-1.5 text-[13px] font-medium text-accent transition-colors hover:brightness-110"
+        >
+          Watch it happen
+          <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+        </Link>
+
+        {revealed && (
+          <button
+            type="button"
+            onClick={() => setChoice(null)}
+            className="inline-flex cursor-pointer items-center gap-1.5 text-[13px] text-fg-faint transition-colors hover:text-fg-muted"
+          >
+            <RotateCcw className="size-3.5" />
+            Ask again
+          </button>
+        )}
+
+        <span className="tech-label ml-auto text-fg-faint">
+          practice · not recorded
+        </span>
+      </div>
+    </GlowCard>
+  );
+}

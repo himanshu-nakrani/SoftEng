@@ -1,7 +1,12 @@
 import { curriculum } from "@/curriculum/registry";
 import type { LessonMeta, Module, Track } from "@/curriculum/types";
+import { shareMetadata } from "@/lib/site";
+import type { Metadata } from "next";
 
 export const tracks: Track[] = curriculum.tracks;
+
+/** Primary track (system-design) — used by the learn-path header and single-track UI. */
+export const track: Track = curriculum.tracks[0];
 
 /** All modules across every track, in curriculum order. */
 export const modules: Module[] = tracks.flatMap((t) => t.modules);
@@ -42,4 +47,29 @@ export function nextLesson(slug: string): LessonMeta | undefined {
 export function prevLesson(slug: string): LessonMeta | undefined {
   const i = allLessons.findIndex((l) => l.slug === slug);
   return i > 0 ? allLessons[i - 1] : undefined;
+}
+
+/**
+ * A lesson page's `<head>`, derived from the registry.
+ *
+ * Same rule as the rendered page: titles and taglines live in the registry
+ * only, so a lesson route is `export const metadata = lessonMetadata("<slug>")`
+ * and never restates its own copy. An unknown slug falls back to the site
+ * defaults from the root layout rather than shipping a wrong title.
+ */
+export function lessonMetadata(slug: string): Metadata {
+  const lesson = bySlug.get(slug);
+  if (!lesson) return {};
+
+  return {
+    title: lesson.title,
+    description: lesson.tagline,
+    ...shareMetadata({
+      title: lesson.title,
+      description: lesson.tagline,
+      path: lessonPath(lesson),
+      type: "article",
+      routeImage: true,
+    }),
+  };
 }

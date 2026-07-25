@@ -1,14 +1,14 @@
 "use client";
 
 import { InteractiveFigure } from "@/engine/components/InteractiveFigure";
-import type { ParamValues } from "@/engine/types";
-import { playgroundSims, type AnyLessonSim } from "@/lessons/index";
+import type { LessonSim } from "@/engine/types";
+import { simBySlug } from "@/lessons/index";
 import { cn } from "@/lib/cn";
-import { decodeParams, encodeShare } from "@/lib/share";
+import { allLessons, getLesson, moduleOf } from "@/lib/curriculum";
 import type { Accent } from "@/curriculum/types";
 import { Check, Dices, Share2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 
 const accentVar: Record<Accent, string> = {
   cyan: "var(--color-glow-cyan)",
@@ -18,46 +18,50 @@ const accentVar: Record<Accent, string> = {
   red: "var(--color-glow-red)",
 };
 
+interface PlaygroundEntry {
+  slug: string;
+  title: string;
+  accent: Accent;
+  sim: LessonSim<unknown>;
+}
+
+/** Every registered sim, titled from the curriculum registry. */
+const playgroundSims: PlaygroundEntry[] = allLessons
+  .filter((l) => l.status === "available" && simBySlug[l.slug])
+  .map((l) => ({
+    slug: l.slug,
+    title: l.title,
+    accent: moduleOf(l).accent,
+    sim: simBySlug[l.slug]!,
+  }));
+
 /** Strip the script: free play means no timeline, no quizzes. */
-function sandbox(sim: AnyLessonSim): AnyLessonSim {
+function sandbox(sim: LessonSim<unknown>): LessonSim<unknown> {
   return { ...sim, timeline: [], quiz: [] };
 }
 
 export function PlaygroundClient() {
   const search = useSearchParams();
 
-  // Initial state from the URL (share links); defaults otherwise.
   const urlSlug = search.get("sim");
   const initialEntry =
     playgroundSims.find((e) => e.slug === urlSlug) ?? playgroundSims[0];
-  const [slug, setSlug] = useState(initialEntry.slug);
+  const [slug, setSlug] = useState(initialEntry?.slug ?? "");
   const [seed, setSeed] = useState(() => {
     const s = Number(search.get("seed"));
     return Number.isFinite(s) && s > 0 ? Math.floor(s) : 42;
   });
   const [copied, setCopied] = useState(false);
 
-  const entry = playgroundSims.find((e) => e.slug === slug)!;
-  const sim = useMemo(() => sandbox(entry.sim), [entry.sim]);
-
-  // Only apply URL params to the sim the link was for.
-  const initialParams = useMemo(
-    () =>
-      entry.slug === urlSlug ? decodeParams(search, entry.sim.params) : {},
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [entry.slug],
+  const entry = playgroundSims.find((e) => e.slug === slug) ?? playgroundSims[0];
+  const sim = useMemo(
+    () => (entry ? sandbox(entry.sim) : null),
+    [entry],
   );
 
-  // Track live params for share links without re-rendering per change.
-  const liveParams = useRef<ParamValues>({});
-
-  const syncUrl = (params: ParamValues) => {
-    const q = encodeShare({ sim: slug, seed, params });
-    window.history.replaceState(null, "", `?${q}`);
-  };
-
   const share = async () => {
-    const q = encodeShare({ sim: slug, seed, params: liveParams.current });
+    if (!entry) return;
+    const q = new URLSearchParams({ sim: slug, seed: String(seed) });
     const url = `${location.origin}${location.pathname}?${q}`;
     window.history.replaceState(null, "", `?${q}`);
     try {
@@ -77,19 +81,29 @@ export function PlaygroundClient() {
 
   const pick = (nextSlug: string) => {
     setSlug(nextSlug);
-    liveParams.current = {};
     window.history.replaceState(null, "", `?sim=${nextSlug}&seed=${seed}`);
   };
 
+  if (!entry || !sim) {
+    return (
+      <p className="text-fg-muted">No simulations registered yet.</p>
+    );
+  }
+
+  // Keep title/accent in sync if the registry has the lesson.
+  const lesson = getLesson(entry.slug);
+  const title = lesson?.title ?? entry.title;
+  const accent = lesson ? moduleOf(lesson).accent : entry.accent;
+
   return (
     <div className="grid gap-8 lg:grid-cols-[220px_1fr]">
-      {/* picker */}
       <nav aria-label="Simulations" className="lg:sticky lg:top-8 lg:self-start">
         <p className="tech-label mb-3">simulations</p>
         <ul className="flex flex-wrap gap-1 lg:flex-col">
           {playgroundSims.map((e) => (
             <li key={e.slug}>
               <button
+                type="button"
                 onClick={() => pick(e.slug)}
                 className={cn(
                   "flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5 text-left font-mono text-xs transition-colors",
@@ -109,15 +123,20 @@ export function PlaygroundClient() {
         </ul>
       </nav>
 
-      {/* stage */}
       <div className="min-w-0">
         <div className="mb-2 flex flex-wrap items-center gap-3">
           <h1 className="font-display text-xl font-bold tracking-tight">
-            {entry.title}
+            {title}
           </h1>
           <span className="tech-label">sandbox — no script, no quizzes</span>
+          <span
+            className="size-1.5 rounded-full"
+            style={{ background: accentVar[accent] }}
+            aria-hidden
+          />
           <div className="ml-auto flex items-center gap-2">
             <button
+              type="button"
               onClick={reseed}
               title="New random seed (deterministic per seed)"
               className="flex cursor-pointer items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 font-mono text-[11px] text-fg-muted transition-colors hover:border-border-bright hover:text-fg"
@@ -126,6 +145,7 @@ export function PlaygroundClient() {
               seed {seed}
             </button>
             <button
+              type="button"
               onClick={share}
               title="Copy a link that reproduces this exact run"
               className="flex cursor-pointer items-center gap-1.5 rounded-md bg-accent px-2.5 py-1.5 font-mono text-[11px] font-medium text-bg transition-all hover:brightness-110"
@@ -144,18 +164,13 @@ export function PlaygroundClient() {
           key={`${slug}:${seed}`}
           sim={sim}
           seed={seed}
-          initialParams={initialParams}
-          onParamsChange={(params) => {
-            liveParams.current = params;
-            syncUrl(params);
-          }}
-          description={`Sandbox: the ${entry.title} simulation with all parameters unlocked and no scripted events.`}
+          description={`Sandbox: the ${title} simulation with all parameters unlocked and no scripted events.`}
         />
 
         <p className="mt-3 font-mono text-[11px] leading-relaxed text-fg-faint">
-          same seed + same params ⇒ identical run. move a slider, hit{" "}
-          <span className="text-fg-muted">share run</span>, and the link
-          reproduces exactly what you&apos;re seeing.
+          same seed ⇒ identical run. hit{" "}
+          <span className="text-fg-muted">share run</span> to copy a link for
+          this sim + seed.
         </p>
       </div>
     </div>

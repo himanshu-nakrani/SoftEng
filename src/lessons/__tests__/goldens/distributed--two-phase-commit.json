@@ -1,0 +1,47 @@
+{
+  "lesson": "distributed/two-phase-commit",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:tpc-blocked@18.5",
+      "t": 18.5,
+      "metrics": {
+        "aborted": 0,
+        "blocked": 3,
+        "committed": 5,
+        "coordDown": 1,
+        "latency": 3033.333333,
+        "tax": 2.935484
+      },
+      "packets": 3,
+      "nextPacketId": 85,
+      "nodes": {
+        "coord": "dead",
+        "p1": "degraded",
+        "p2": "degraded",
+        "p3": "degraded"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "aborted": 3,
+        "blocked": 0,
+        "committed": 8,
+        "coordDown": 0,
+        "latency": 4279.109333,
+        "tax": 4.141074
+      },
+      "packets": 3,
+      "nextPacketId": 151,
+      "nodes": {
+        "coord": "healthy",
+        "p1": "healthy",
+        "p2": "healthy",
+        "p3": "healthy"
+      }
+    }
+  ]
+}

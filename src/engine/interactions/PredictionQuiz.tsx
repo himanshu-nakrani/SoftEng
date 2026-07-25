@@ -3,6 +3,7 @@
 import { cn } from "@/lib/cn";
 import { ArrowRight, Check, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import { useEffect, useId, useRef, type KeyboardEvent } from "react";
 import type { QuizCheckpoint } from "../types";
 
 interface PredictionQuizProps {
@@ -16,6 +17,19 @@ interface PredictionQuizProps {
  * The "predict" interaction: the sim hard-pauses, the learner commits to a
  * prediction, then the sim resumes and *proves* the outcome. Wrong answers
  * are the best teacher — reality contradicts them on screen.
+ *
+ * Accessibility contract:
+ * - the card is an `alertdialog` (it interrupts a running sim and demands an
+ *   answer) labelled by the question, so opening it announces the prompt;
+ * - focus lands on the first choice when a checkpoint fires, and moves to
+ *   "Watch it happen" once answered (the choices become disabled, which would
+ *   otherwise drop focus to the document);
+ * - Up/Down/Home/End move between choices — the whole list is one arrow-able
+ *   set rather than N unrelated tab stops. Selection does NOT follow focus
+ *   here: activating a choice commits the prediction, so it stays on
+ *   Space/Enter/click;
+ * - the verdict is mirrored into an sr-only live region, because the visual
+ *   verdict is colour + icon only.
  */
 export function PredictionQuiz({
   quiz,
@@ -23,6 +37,75 @@ export function PredictionQuiz({
   onAnswer,
   onResume,
 }: PredictionQuizProps) {
+  const titleId = useId();
+  const choiceRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const resumeRef = useRef<HTMLButtonElement | null>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
+  const quizId = quiz?.id ?? null;
+
+  // A checkpoint fired: pull focus into the dialog. Keyed on the quiz id so a
+  // re-render (or a second checkpoint later in the run) re-arms it, while
+  // answering the current one does not yank focus back to the choices. On
+  // close, focus goes back where the checkpoint took it from — otherwise
+  // dismissing the dialog drops a keyboard user at the top of the document.
+  useEffect(() => {
+    if (quizId === null) return;
+    returnFocusRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    choiceRefs.current[0]?.focus();
+    return () => {
+      const previous = returnFocusRef.current;
+      returnFocusRef.current = null;
+      if (previous?.isConnected) previous.focus();
+    };
+  }, [quizId]);
+
+  // Answered: the choices just became disabled, so hand focus to the only
+  // remaining action.
+  useEffect(() => {
+    if (quizId === null || answer === null) return;
+    resumeRef.current?.focus();
+  }, [quizId, answer]);
+
+  const onChoiceKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const count = quiz?.choices.length ?? 0;
+    const current = choiceRefs.current.indexOf(
+      event.target as HTMLButtonElement,
+    );
+    if (current === -1 || count === 0) return;
+    const last = count - 1;
+    let next: number;
+    switch (event.key) {
+      case "ArrowDown":
+        next = current === last ? 0 : current + 1;
+        break;
+      case "ArrowUp":
+        next = current === 0 ? last : current - 1;
+        break;
+      case "Home":
+        next = 0;
+        break;
+      case "End":
+        next = last;
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+    choiceRefs.current[next]?.focus();
+  };
+
+  const correctLabel =
+    quiz?.choices.find((c) => c.id === quiz.correctChoiceId)?.label ?? "";
+  const verdict =
+    quiz === null || answer === null
+      ? ""
+      : answer === quiz.correctChoiceId
+        ? "Correct."
+        : `Not quite — the correct answer was ${correctLabel}.`;
+
   return (
     <AnimatePresence>
       {quiz && (
@@ -30,28 +113,40 @@ export function PredictionQuiz({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="absolute inset-0 z-10 flex items-center justify-center bg-bg/75 p-4 backdrop-blur-sm"
+          // items-start + scroll on phones: the stage is short and its wrapper
+          // clips, so a centred card would have its top and bottom cut off.
+          className="absolute inset-0 z-10 flex items-start justify-center overflow-y-auto bg-bg/75 p-4 backdrop-blur-sm sm:items-center"
         >
           <motion.div
             initial={{ scale: 0.96, y: 8 }}
             animate={{ scale: 1, y: 0 }}
-            className="w-full max-w-md rounded-lg border border-glow-violet/40 bg-surface p-5 shadow-[0_0_40px_-12px_var(--color-glow-violet)]"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            className="max-h-full w-full max-w-md overflow-y-auto rounded-lg border border-glow-violet/40 bg-surface p-5 shadow-[0_0_40px_-12px_var(--color-glow-violet)]"
           >
             <p className="tech-label mb-2 text-glow-violet">
               predict — sim paused
             </p>
-            <p className="mb-4 text-sm leading-relaxed font-medium">
+            <p
+              id={titleId}
+              className="mb-4 text-sm leading-relaxed font-medium"
+            >
               {quiz.question}
             </p>
 
-            <div className="flex flex-col gap-2">
-              {quiz.choices.map((choice) => {
+            <div className="flex flex-col gap-2" onKeyDown={onChoiceKeyDown}>
+              {quiz.choices.map((choice, i) => {
                 const chosen = answer === choice.id;
                 const correct = choice.id === quiz.correctChoiceId;
                 const revealed = answer !== null;
                 return (
                   <button
                     key={choice.id}
+                    ref={(el) => {
+                      choiceRefs.current[i] = el;
+                    }}
+                    type="button"
                     disabled={revealed}
                     onClick={() => onAnswer(choice.id)}
                     className={cn(
@@ -76,6 +171,13 @@ export function PredictionQuiz({
               })}
             </div>
 
+            {/* Present from the moment the dialog opens so the verdict is a
+                content change inside a live region, not a region that appears
+                already populated (which several screen readers skip). */}
+            <p role="status" className="sr-only">
+              {verdict}
+            </p>
+
             <AnimatePresence>
               {answer !== null && (
                 <motion.div
@@ -87,6 +189,8 @@ export function PredictionQuiz({
                     {quiz.explain}
                   </p>
                   <button
+                    ref={resumeRef}
+                    type="button"
                     onClick={onResume}
                     className="mt-4 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-glow-violet px-4 py-2.5 text-sm font-semibold text-bg transition-all hover:brightness-110"
                   >

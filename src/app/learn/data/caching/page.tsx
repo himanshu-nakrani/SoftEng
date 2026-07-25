@@ -2,11 +2,9 @@ import { Lesson } from "@/components/lesson/Lesson";
 import { LessonSection } from "@/components/lesson/LessonSection";
 import { Callout, Lead, P, Strong, Term } from "@/components/lesson/prose";
 import { CachingFigure } from "@/lessons/data/caching-figure";
-import type { Metadata } from "next";
+import { lessonMetadata } from "@/lib/curriculum";
 
-export const metadata: Metadata = {
-  title: "Caching",
-};
+export const metadata = lessonMetadata("caching");
 
 export default function CachingPage() {
   return (
@@ -63,6 +61,18 @@ export default function CachingPage() {
           thundering herd (a hot key expiring and a thousand misses
           stampeding the database at once).
         </Callout>
+        <P>
+          The figure will hand you that second one: click{" "}
+          <Term>redis-1</Term> to kill it. At a 60% hit ratio the database
+          was serving the 40% that missed — now it serves all of it,{" "}
+          <Strong>2.5× the load</Strong>, because 1 / (1 − 0.6) is the
+          amplification a cache is hiding. Watch the queue chip on{" "}
+          <Term>pg-main</Term> climb past anything it can drain: latency
+          stops being the price of a miss and becomes the price of waiting
+          behind everyone else&apos;s. Bring the cache back and the herd
+          keeps running anyway — a cold cache has to be refilled one miss
+          at a time, so the backlog outlives the outage.
+        </P>
       </LessonSection>
 
     </Lesson>

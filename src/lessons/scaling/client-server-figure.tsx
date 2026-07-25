@@ -12,7 +12,7 @@ export function ClientServerFigure() {
   return (
     <SectionFigure
       sim={clientServerSim}
-      description="A client sending request packets across a wire to a single server. Sliders control arrival rate, server speed, and network latency; meters show throughput, latency, queue depth, and drops."
+      description="A client sending request packets across a wire to a single server. Sliders control arrival rate, server speed, and network latency; meters show throughput, latency, queue depth, and drops. The server can be clicked (or focused and activated) to kill it and again to revive it — while it is dead every request bounces back as a drop and its queue stops draining."
     />
   );
 }

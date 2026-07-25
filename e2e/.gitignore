@@ -1,0 +1,3 @@
+# Playwright traces/screenshots from failed runs (see `outputDir` in
+# playwright.config.ts — kept here so nothing lands at the repo root).
+.artifacts/

@@ -2,11 +2,9 @@ import { Lesson } from "@/components/lesson/Lesson";
 import { LessonSection } from "@/components/lesson/LessonSection";
 import { Callout, Lead, P, Strong, Term } from "@/components/lesson/prose";
 import { MessageQueuesFigure } from "@/lessons/distributed/message-queues-figure";
-import type { Metadata } from "next";
+import { lessonMetadata } from "@/lib/curriculum";
 
-export const metadata: Metadata = {
-  title: "Message Queues & Backpressure",
-};
+export const metadata = lessonMetadata("message-queues");
 
 export default function MessageQueuesPage() {
   return (
@@ -33,7 +31,11 @@ export default function MessageQueuesPage() {
           queue hovers near empty. Nudge the producer ahead and watch the
           depth bar — and note that it doesn&apos;t explode instantly. A
           queue turns a rate mismatch into <Strong>growing latency</Strong>{" "}
-          long before it becomes failure.
+          long before it becomes failure. Stay with the run and it scripts
+          the mismatch for you — a surge pins the producer at 20 msg/s
+          against a consumer already flat out at 16, and that 4 msg/s
+          surplus walks the depth bar to 40, where the buffer runs out of
+          room and new messages start bouncing.
         </P>
         <MessageQueuesFigure />
         <Callout kind="insight">

@@ -2,11 +2,9 @@ import { Lesson } from "@/components/lesson/Lesson";
 import { LessonSection } from "@/components/lesson/LessonSection";
 import { Callout, Lead, P, Strong, Term } from "@/components/lesson/prose";
 import { LoadBalancingFigure } from "@/lessons/scaling/load-balancing-figure";
-import type { Metadata } from "next";
+import { lessonMetadata } from "@/lib/curriculum";
 
-export const metadata: Metadata = {
-  title: "Load Balancing",
-};
+export const metadata = lessonMetadata("load-balancing");
 
 export default function LoadBalancingPage() {
   return (
@@ -31,6 +29,12 @@ export default function LoadBalancingPage() {
           trap: <Term>api-2</Term> is a smaller instance than its siblings.
           Watch what <Term>round-robin</Term> — which treats all servers as
           equals — does to it, then try the alternatives.
+        </P>
+        <P>
+          Hold the arithmetic in your head as it runs: round-robin gives each
+          server a third of the traffic, and api-2 can drain only about half
+          what its siblings can. The sim will stop and ask you what that
+          implies.
         </P>
         <LoadBalancingFigure />
         <Callout kind="insight">

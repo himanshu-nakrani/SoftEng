@@ -1,0 +1,55 @@
+{
+  "lesson": "data/cdn-edge",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:cdn-origin-down@23.5",
+      "t": 23.5,
+      "metrics": {
+        "errors": 0,
+        "hitRatio": 72.711195,
+        "lat-apac": 185.288037,
+        "lat-eu": 99.064015,
+        "lat-west": 100.33151,
+        "originRps": 2.352744,
+        "slowest": 185.288037
+      },
+      "packets": 9,
+      "nextPacketId": 724,
+      "nodes": {
+        "cli-apac": "healthy",
+        "cli-eu": "healthy",
+        "cli-west": "healthy",
+        "origin": "dead",
+        "pop-apac": "healthy",
+        "pop-eu": "healthy",
+        "pop-west": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "errors": 11,
+        "hitRatio": 48.881808,
+        "lat-apac": 84.111325,
+        "lat-eu": 83.85159,
+        "lat-west": 84.245224,
+        "originRps": 2.080405,
+        "slowest": 84.245224
+      },
+      "packets": 15,
+      "nextPacketId": 898,
+      "nodes": {
+        "cli-apac": "healthy",
+        "cli-eu": "healthy",
+        "cli-west": "healthy",
+        "origin": "dead",
+        "pop-apac": "healthy",
+        "pop-eu": "healthy",
+        "pop-west": "healthy"
+      }
+    }
+  ]
+}

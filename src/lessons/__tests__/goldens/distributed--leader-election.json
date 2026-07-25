@@ -1,0 +1,55 @@
+{
+  "lesson": "distributed/leader-election",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:le-quorum@24.6",
+      "t": 24.6,
+      "metrics": {
+        "attempts": 4,
+        "committedWrites": 60,
+        "elections": 2,
+        "hasLeader": 0,
+        "leaderless": 4.5,
+        "liveNodes": 2,
+        "rejectedWrites": 17,
+        "term": 2
+      },
+      "packets": 7,
+      "nextPacketId": 437,
+      "nodes": {
+        "app": "healthy",
+        "n1": "healthy",
+        "n2": "dead",
+        "n3": "dead",
+        "n4": "healthy",
+        "n5": "dead"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "attempts": 7,
+        "committedWrites": 64,
+        "elections": 3,
+        "hasLeader": 1,
+        "leaderless": 8.1,
+        "liveNodes": 3,
+        "rejectedWrites": 27,
+        "term": 4
+      },
+      "packets": 8,
+      "nextPacketId": 489,
+      "nodes": {
+        "app": "healthy",
+        "n1": "healthy",
+        "n2": "healthy",
+        "n3": "dead",
+        "n4": "healthy",
+        "n5": "dead"
+      }
+    }
+  ]
+}
