@@ -39,6 +39,24 @@ interface InteractiveFigureProps<L> {
   autoplay?: boolean;
   seed?: number;
   /**
+   * Deep-linked sim moment: replay to this sim-second once on mount and stay
+   * PAUSED there. Set from a `?t=` URL by `SectionFigure` — the review deck
+   * links to the exact second a prediction checkpoint asks about.
+   *
+   * Two rules make it honest, both enforced below:
+   * - it SUPPRESSES scroll-autoplay for the life of the figure. Autoplaying
+   *   after the seek would spend the sought moment before the learner has seen
+   *   it — the deep link is a "look here", so the figure arrives paused and the
+   *   learner presses play to watch it resolve.
+   * - it fires once per distinct value, never on re-render.
+   *
+   * Seeking is not an engagement (see `SimControls.seekTo`), so arriving on a
+   * deep link never completes a section by itself. Values ≤ 0 or non-finite are
+   * ignored: t=0 is where the sim already is, and suppressing autoplay for it
+   * would silently break the "observe" verb.
+   */
+  initialSeekT?: number;
+  /**
    * Extra SVG drawn between edges and nodes — lesson-specific stage
    * decoration (a hash ring, a network-partition divider). Receives the
    * live snapshot so it can react to sim state.
@@ -257,6 +275,7 @@ function FigureBody<L>({
   description,
   autoplay = true,
   seed,
+  initialSeekT,
   stageOverlay,
   nodeOverlay,
   onEngage,
@@ -303,6 +322,32 @@ function FigureBody<L>({
   const statusRef = useRef(simulation.status);
   statusRef.current = simulation.status;
 
+  /**
+   * A deep-linked moment claims the transport (see `initialSeekT`). The flag is
+   * mirrored into a ref because the IntersectionObserver callback below reads
+   * it: `?t=` arrives from an effect one render AFTER mount, by which time the
+   * observer may already be subscribed with a stale closure, and a queued
+   * callback landing after the seek would otherwise autoplay straight over the
+   * state we just replayed to.
+   */
+  const seekRequested =
+    typeof initialSeekT === "number" &&
+    Number.isFinite(initialSeekT) &&
+    initialSeekT > 0;
+  const seekRequestedRef = useRef(seekRequested);
+  seekRequestedRef.current = seekRequested;
+
+  // Fire once per distinct target. Re-running on every render would restart the
+  // world under the learner; keying on the value (rather than a bare "done"
+  // flag) means a client-side navigation to the same lesson at a different `?t=`
+  // still lands where it was asked to.
+  const seekedToRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!seekRequested || seekedToRef.current === initialSeekT) return;
+    seekedToRef.current = initialSeekT ?? null;
+    controlsRef.current.seekTo(initialSeekT!);
+  }, [initialSeekT, seekRequested]);
+
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -312,7 +357,11 @@ function FigureBody<L>({
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          const shouldAutoplay = autoplay && !reduced && !everPlayed;
+          // `pausedByScroll` is exempt from the seek suppression on purpose: it
+          // only becomes true after a *user* pressed play, so resuming what
+          // they started is not the engine overwriting a deep link.
+          const shouldAutoplay =
+            autoplay && !reduced && !everPlayed && !seekRequestedRef.current;
           if (shouldAutoplay || pausedByScroll) {
             everPlayed = true;
             pausedByScroll = false;
