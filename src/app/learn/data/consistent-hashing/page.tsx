@@ -29,11 +29,13 @@ export default function ConsistentHashingPage() {
 
       <LessonSection id="spin-it">
         <P>
-          The violet ticks are 24 keys at their fixed ring positions; the
-          chips show how many each cache owns. Run the same experiment that
-          hurt last lesson — add a node — and read the{" "}
-          <Term>remapped</Term> meter. Then kill one and watch where its
-          keys go.
+          The coloured band is <Strong>ownership</Strong>: each cache holds
+          the arc that ends at it. The ticks outside the ring are 24 keys at
+          their fixed positions, tinted with whoever answers for them right
+          now. Run the same experiment that hurt last lesson — add a node —
+          and read the <Term>remapped</Term> meter as the new arc flashes.
+          Then kill a cache: its arc goes dashed and its keys change colour
+          to the neighbour that swallowed them.
         </P>
         <ConsistentHashingFigure />
         <Callout kind="insight">
@@ -46,13 +48,20 @@ export default function ConsistentHashingPage() {
 
       <LessonSection id="virtual-nodes">
         <P>
-          One honest wrinkle: with a few nodes at random ring positions, the
-          arcs are lumpy — one node can own a far bigger slice than another
-          (you can see it in the chips). Real systems fix this with{" "}
-          <Term>virtual nodes</Term>: each physical machine appears at
-          100–200 points on the ring, so its total share averages out, and
-          a dead node&apos;s load scatters across everyone instead of
-          dumping onto one unlucky neighbour.
+          One honest wrinkle: with a few nodes at fixed ring positions the
+          arcs are lumpy — drop <Term>ring nodes</Term> to 2 and one cache
+          owns three quarters of the keyspace, which the{" "}
+          <Term>arc spread</Term> meter reports. Now flip{" "}
+          <Term>vnodes</Term> and watch the arcs even out: each machine is
+          hashed onto the ring <Strong>three</Strong> times instead of once,
+          so its total share averages out — and when it dies, its load
+          scatters across every neighbour instead of dumping on one unlucky
+          successor.
+        </P>
+        <P>
+          Real clusters use 100–200 virtual nodes per machine, not three;
+          the arithmetic is the same, just smoother. It is also how you
+          give a bigger machine a bigger share — hand it more ring points.
         </P>
         <Callout kind="note">
           This ring is why Cassandra, DynamoDB, and every memcached client
