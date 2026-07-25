@@ -7,6 +7,7 @@ import {
   emaRate,
   isAlive,
   killNode,
+  recordSample,
   shouldSpawn,
   spawnPacket,
   type ServiceQueue,
@@ -19,6 +20,10 @@ import type { LessonSim, SimState } from "@/engine/types";
  * smaller instance. Round-robin drowns it; least-connections adapts.
  * A scripted death at t=12 shows the health-check detection window: the LB
  * keeps routing to a dead server until its checks notice (~1.5s).
+ *
+ * Two prediction checkpoints, one per idea: t=7.05 tests capacity-blindness
+ * (api-2's chip reads 4 while its siblings read 0), t=11.5 tests the in-flight
+ * requests the death is about to strand.
  */
 
 const SERVERS = ["s1", "s2", "s3"] as const;
@@ -32,12 +37,21 @@ interface LBState {
   checkTimer: Record<ServerId, number>;
   droppedTotal: number;
   throughput: number;
+  /** Time banked toward the next latency sample (see LATENCY_SAMPLE). */
+  sampleAcc: number;
 }
 
 // api-2 is deliberately a smaller instance.
 const CAPACITY: Record<ServerId, number> = { s1: 8, s2: 4, s3: 8 };
 const MAX_QUEUE = 10;
 const HEALTH_CHECK_DELAY = 1.5; // seconds before the LB notices a death
+/**
+ * Sim-seconds between latency samples. The meter draws the last ~80, so this
+ * cadence buys a ~20s window — long enough to hold the whole arc (round-robin
+ * sawtooth → least-conn flattening → the failover spike) in one trace. Sampling
+ * every tick would show under 3 seconds of it.
+ */
+const LATENCY_SAMPLE = 0.25;
 
 /** Outstanding work per server: queued + still on the wire toward it. */
 function connections(state: SimState<LBState>, id: ServerId): number {
@@ -121,6 +135,7 @@ export const loadBalancingSim: LessonSim<LBState> = {
     checkTimer: { s1: 0, s2: 0, s3: 0 },
     droppedTotal: 0,
     throughput: 0,
+    sampleAcc: 0,
   }),
 
   step: (state, dt, params) => {
@@ -155,7 +170,7 @@ export const loadBalancingSim: LessonSim<LBState> = {
           const target = pickTarget(state, String(params.strategy));
           if (target === null) {
             L.droppedTotal += 1;
-            bounceDrop(state, "in", { speed: 2 });
+            bounceDrop(state, "in");
           } else {
             spawnPacket(state, `to-${target}`, "request", {
               speed: 1.4,
@@ -218,6 +233,13 @@ export const loadBalancingSim: LessonSim<LBState> = {
     state.metrics.throughput = L.throughput;
     state.metrics.latency = 120 + avgWait * 1000;
     state.metrics.dropped = L.droppedTotal;
+
+    // The latency *shape* is the argument this lesson makes, so trace it.
+    L.sampleAcc += dt;
+    if (L.sampleAcc >= LATENCY_SAMPLE) {
+      L.sampleAcc -= LATENCY_SAMPLE;
+      recordSample(state, "latency", state.metrics.latency);
+    }
   },
 
   timeline: [
@@ -227,8 +249,10 @@ export const loadBalancingSim: LessonSim<LBState> = {
     },
     {
       at: 6,
+      // Sets the premise the t=7.05 checkpoint asks about — deliberately stops
+      // short of naming the consequence, which is the learner's to predict.
       caption:
-        "api-2 is a smaller instance. Round-robin doesn't know that — its queue chip is climbing.",
+        "api-2 is a smaller instance — half the capacity of its siblings. Round-robin gives it an equal share anyway.",
     },
     {
       at: 9,
@@ -247,6 +271,32 @@ export const loadBalancingSim: LessonSim<LBState> = {
   ],
 
   quiz: [
+    {
+      // t=7.05 lands on the tick where api-2's chip reads 4 and both siblings
+      // read 0 (seed 42, round-robin, 12 req/s) — the premise is on screen as
+      // the question is asked. Kept ~4.5s clear of the t=11.5 checkpoint.
+      id: "lb-uneven-capacity",
+      at: 7.05,
+      question:
+        "api-2 is half the size of its siblings, but round-robin hands all three an equal share. What happens to api-2's queue from here?",
+      choices: [
+        {
+          id: "grows",
+          label: "It keeps backing up while the other two sit at zero",
+        },
+        {
+          id: "evens",
+          label: "It evens out — the LB notices the queue and eases off",
+        },
+        {
+          id: "spread",
+          label: "Nothing much — the backlog spreads across all three",
+        },
+      ],
+      correctChoiceId: "grows",
+      explain:
+        "Round-robin counts requests, not capacity. api-2 is handed a third of the traffic and can serve about half of what api-1 and api-3 can, so the surplus has nowhere to go but its queue — and nothing in the strategy can ever notice, because round-robin has no feedback at all. LEAST-CONN is the fix: it routes on outstanding work, so the small machine simply gets asked less often. Switch to it and watch the chip drain.",
+    },
     {
       id: "lb-inflight",
       at: 11.5,
@@ -273,7 +323,7 @@ export const loadBalancingSim: LessonSim<LBState> = {
     {
       metricKey: "latency",
       label: "p50 latency",
-      kind: "counter",
+      kind: "sparkline",
       unit: "ms",
       dangerAbove: 1500,
     },

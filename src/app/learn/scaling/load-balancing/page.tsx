@@ -32,6 +32,12 @@ export default function LoadBalancingPage() {
           Watch what <Term>round-robin</Term> — which treats all servers as
           equals — does to it, then try the alternatives.
         </P>
+        <P>
+          Hold the arithmetic in your head as it runs: round-robin gives each
+          server a third of the traffic, and api-2 can drain only about half
+          what its siblings can. The sim will stop and ask you what that
+          implies.
+        </P>
         <LoadBalancingFigure />
         <Callout kind="insight">
           <Term>round-robin</Term> is blind fairness: equal requests to
