@@ -1,0 +1,67 @@
+{
+  "lesson": "resilience/tail-latency",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:tl-fanout@13.5",
+      "t": 13.533333,
+      "metrics": {
+        "hedges": 0,
+        "latency": 57.35,
+        "p50": 40,
+        "p99": 592,
+        "slowLegs": 8
+      },
+      "packets": 63,
+      "nextPacketId": 1202,
+      "nodes": {
+        "client": "healthy",
+        "lb": "healthy",
+        "s1": "degraded",
+        "s2": "degraded",
+        "s3": "healthy"
+      }
+    },
+    {
+      "label": "quiz:tl-hedge-cost@18.5",
+      "t": 18.5,
+      "metrics": {
+        "hedges": 0,
+        "latency": 61.9,
+        "p50": 46,
+        "p99": 598,
+        "slowLegs": 9
+      },
+      "packets": 53,
+      "nextPacketId": 1891,
+      "nodes": {
+        "client": "healthy",
+        "lb": "healthy",
+        "s1": "healthy",
+        "s2": "healthy",
+        "s3": "degraded"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "hedges": 4,
+        "latency": 43,
+        "p50": 40,
+        "p99": 232,
+        "slowLegs": 14
+      },
+      "packets": 31,
+      "nextPacketId": 2862,
+      "nodes": {
+        "client": "healthy",
+        "lb": "healthy",
+        "s1": "degraded",
+        "s2": "degraded",
+        "s3": "healthy"
+      }
+    }
+  ]
+}

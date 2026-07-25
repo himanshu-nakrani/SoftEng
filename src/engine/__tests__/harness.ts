@@ -33,8 +33,10 @@ import { leaderElectionSim } from "@/lessons/distributed/leader-election";
 import { messageQueuesSim } from "@/lessons/distributed/message-queues";
 import { rateLimitingSim } from "@/lessons/distributed/rate-limiting";
 import { twoPhaseCommitSim } from "@/lessons/distributed/two-phase-commit";
+import { gossipSim } from "@/lessons/distributed/gossip";
 import { circuitBreakerSim } from "@/lessons/resilience/circuit-breaker";
 import { retriesTimeoutsSim } from "@/lessons/resilience/retries-timeouts";
+import { tailLatencySim } from "@/lessons/resilience/tail-latency";
 import { autoscalingSim } from "@/lessons/scaling/autoscaling";
 import { clientServerSim } from "@/lessons/scaling/client-server";
 import { loadBalancingSim } from "@/lessons/scaling/load-balancing";
@@ -79,6 +81,7 @@ const SIM_BY_KEY: Record<string, LessonSim<unknown>> = {
   "data/replication": widen(replicationSim),
   "data/sharding": widen(shardingSim),
   "data/consistent-hashing": widen(consistentHashingSim),
+  "resilience/tail-latency": widen(tailLatencySim),
   "resilience/retries-timeouts": widen(retriesTimeoutsSim),
   "resilience/circuit-breaker": widen(circuitBreakerSim),
   "distributed/rate-limiting": widen(rateLimitingSim),
@@ -87,6 +90,7 @@ const SIM_BY_KEY: Record<string, LessonSim<unknown>> = {
   "distributed/fanout": widen(fanoutSim),
   "distributed/cap-theorem": widen(capTheoremSim),
   "distributed/leader-election": widen(leaderElectionSim),
+  "distributed/gossip": widen(gossipSim),
   "distributed/two-phase-commit": widen(twoPhaseCommitSim),
 };
 

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**syslab** — an interactive system-design learning site. Every lesson is built around a running simulation (animated request packets, live sliders, killable servers) rather than prose. Next.js 15 App Router + React 19 + TypeScript, Tailwind CSS v4, `motion` (import from `"motion/react"`, NOT legacy `framer-motion` — lint-enforced), zustand. Static export (`output: "export"`) — no server, no accounts; progress lives in localStorage. One track, four modules (scaling, data, resilience, distributed), 20 lessons.
+**syslab** — an interactive system-design learning site. Every lesson is built around a running simulation (animated request packets, live sliders, killable servers) rather than prose. Next.js 15 App Router + React 19 + TypeScript, Tailwind CSS v4, `motion` (import from `"motion/react"`, NOT legacy `framer-motion` — lint-enforced), zustand. Static export (`output: "export"`) — no server, no accounts; progress lives in localStorage. One track, four modules (scaling, data, resilience, distributed), 22 lessons.
 
 ## Commands
 
