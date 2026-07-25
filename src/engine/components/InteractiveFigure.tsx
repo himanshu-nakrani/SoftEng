@@ -25,7 +25,11 @@ import { PacketLayer, resolvePacketStyles } from "./PacketLayer";
 import { PacketLegend } from "./PacketLegend";
 import { SystemNode } from "./SystemNode";
 import { PredictionQuiz } from "../interactions/PredictionQuiz";
-import { TransportBar } from "./TransportBar";
+import {
+  TransportBar,
+  type ScrubCheckpoint,
+  type ScrubEvent,
+} from "./TransportBar";
 
 interface InteractiveFigureProps<L> {
   sim: LessonSim<L>;
@@ -207,7 +211,14 @@ function MetersRow({
   );
 }
 
-function Clock({ simulation }: { simulation: Simulation }) {
+function Clock({
+  sim,
+  simulation,
+}: {
+  /** Structural: LessonSimView omits timeline/quiz, and LessonSim is invariant. */
+  sim: { timeline?: readonly ScrubEvent[]; quiz?: readonly ScrubCheckpoint[] };
+  simulation: Simulation;
+}) {
   const snapshot = useSimSnapshot(simulation);
   return (
     <TransportBar
@@ -215,6 +226,9 @@ function Clock({ simulation }: { simulation: Simulation }) {
       speed={simulation.speed}
       t={snapshot.t}
       controls={simulation.controls}
+      furthestT={simulation.furthestT}
+      timeline={sim.timeline}
+      quiz={sim.quiz}
     />
   );
 }
@@ -452,7 +466,7 @@ function FigureBody<L>({
         onChange={simulation.controls.setParam}
         onPress={simulation.controls.pressButton}
       />
-      <Clock simulation={simulation} />
+      <Clock sim={sim} simulation={simulation} />
     </figure>
   );
 }

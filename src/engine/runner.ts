@@ -28,6 +28,16 @@ import { TICK } from "./types";
 /** Sim-seconds a timeline caption stays up (before `setCaptionScale`). */
 export const CAPTION_DURATION = 4;
 
+/**
+ * Ceiling on a single `seekTo` target, in sim-seconds (18,000 ticks).
+ *
+ * A seek is a replay, so its cost is linear in the target: a typo'd or hostile
+ * `seekTo(1e9)` would otherwise wedge the tab in a loop no user gesture can
+ * interrupt. Every lesson's scripted arc ends well inside 30s, so this is
+ * roughly twenty runs' worth of headroom and is never met in practice.
+ */
+export const SEEK_LIMIT = 600;
+
 export interface TickResult {
   /**
    * The quiz checkpoint this tick crossed, if any. At most one per tick — the
@@ -92,6 +102,44 @@ export interface SimRunner {
   runTo: (t: number) => TickResult[];
   /** Fresh state from the same seed; fired sets and caption cleared. */
   restart: () => void;
+  /**
+   * Jump the world to sim-time `t` — the scrubber's verb.
+   *
+   * There is no stored history to rewind into and none is needed: the run is a
+   * pure function of (seed, params, tick count), so a seek is `restart()`
+   * followed by silent ticks up to the first tick where `state.t >= t` —
+   * exactly the tick boundary `runTo(t)` stops on, so `seekTo(t)` and a fresh
+   * runner's `runTo(t)` land on byte-identical state. ~30 ticks per sim-second
+   * (a 30s rewind is ~900 ticks, single-digit milliseconds), which is why this
+   * is replay rather than snapshots.
+   *
+   * PARAMS: the replay runs under the params as they are NOW, not the ones in
+   * force while the learner originally watched. This is deliberate — the honest
+   * reading of a scrubber on a *simulation* is "what does this run look like at
+   * time T with my current settings", a deterministic what-if, not a video.
+   * The consequence is worth stating plainly: change a slider mid-run and then
+   * scrub backwards and the past you replay is NOT the past you watched. Same
+   * for by-hand state changes — a node the learner killed by clicking it comes
+   * back alive unless the lesson's own timeline kills it, because clicks are
+   * not part of (seed, params, ticks). For that reason a seek to the *current*
+   * time is not a no-op either: it re-derives the world from the seed.
+   *
+   * QUIZZES: checkpoints crossed during the replay are marked fired and their
+   * `TickResult`s are discarded, so a seek never opens a quiz overlay (a
+   * checkpoint that popped up because you dragged the handle past it would be
+   * asking you to predict something you just fast-forwarded through). Scrubbing
+   * past an unanswered checkpoint therefore FORFEITS it: it will not fire again
+   * this run. `restart()` — or seeking back before it — restores it, since both
+   * rebuild the fired sets from scratch.
+   *
+   * CAPTIONS: the replay sets and expires captions exactly as a live run would,
+   * so `caption` ends as whatever a fresh run to `t` would be showing.
+   *
+   * `t` is clamped to `[0, SEEK_LIMIT]`; a non-finite target is ignored. Like
+   * `restart()`, this replaces the `state` object — callers holding a reference
+   * (the hook's live ref, PacketLayer) must re-read `.state` afterwards.
+   */
+  seekTo: (t: number) => void;
 }
 
 function defaultParams(specs: LessonSim<unknown>["params"]): ParamValues {
@@ -183,6 +231,15 @@ export function createRunner<L>(
     return { firedQuiz: null, caption: captionText };
   };
 
+  /** Back to tick zero: fresh world, nothing fired, no caption up. */
+  const reset = () => {
+    state = buildInitialState(lesson, seed);
+    firedQuizzes.clear();
+    firedEvents.clear();
+    captionText = null;
+    captionUntil = 0;
+  };
+
   return {
     get state() {
       return state;
@@ -208,12 +265,15 @@ export function createRunner<L>(
       while (state.t < until) results.push(tick());
       return results;
     },
-    restart: () => {
-      state = buildInitialState(lesson, seed);
-      firedQuizzes.clear();
-      firedEvents.clear();
-      captionText = null;
-      captionUntil = 0;
+    restart: reset,
+    seekTo: (targetT) => {
+      if (!Number.isFinite(targetT)) return;
+      const target = Math.min(Math.max(targetT, 0), SEEK_LIMIT);
+      reset();
+      // `tick`'s results are dropped on purpose: this is the quiz-forfeit
+      // rule documented on `SimRunner.seekTo` (they were reported, nobody
+      // listened), and the caption is read off the runner, not off a result.
+      while (state.t < target) tick();
     },
   };
 }
