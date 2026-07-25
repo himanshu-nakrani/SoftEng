@@ -58,7 +58,7 @@ export interface Simulation {
   /** React mirror of params for controlled inputs. */
   params: ParamValues;
   /** Set while status === "quiz". */
-  activeQuiz: QuizCheckpoint | null;
+  activeQuiz: QuizCheckpoint<unknown> | null;
   /** Records the answer; overlay then shows explain + resume button. */
   answerQuiz: (choiceId: string) => void;
   quizAnswer: string | null;
@@ -105,7 +105,9 @@ export function useSimulation<L>(
   const [speed, setSpeedState] = useState(1);
   const speedRef = useRef(1);
 
-  const [activeQuiz, setActiveQuiz] = useState<QuizCheckpoint | null>(null);
+  const [activeQuiz, setActiveQuiz] = useState<QuizCheckpoint<unknown> | null>(
+    null,
+  );
   const [quizAnswer, setQuizAnswer] = useState<string | null>(null);
   const engaged = useRef(false);
 

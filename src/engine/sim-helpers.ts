@@ -9,16 +9,26 @@ export interface SpawnOpts {
   reverse?: boolean;
   size?: number;
   payload?: Record<string, unknown>;
+  /**
+   * Absolute sim-seconds deadline (usually `state.t + timeout`). Packets past
+   * it are reaped by `expirePackets`, which the lesson calls where it wants.
+   */
+  diesAt?: number;
 }
 
 /**
  * Spawn a packet on an edge. Silently no-ops at the pool cap — high load is
  * shown via aggregates (queue bars, glow intensity), never more dots.
+ *
+ * `type` is a `PacketType` or any key the lesson registered in
+ * `packetStyles`; the packet is stamped with `bornAt = state.t`.
  */
 export function spawnPacket(
   state: SimState<unknown>,
   edgeId: string,
-  type: PacketType,
+  // `string & {}` keeps the built-in names in autocomplete while accepting
+  // lesson-defined ones — a plain `string` would drop the suggestions.
+  type: PacketType | (string & {}),
   opts: SpawnOpts = {},
 ): Packet | null {
   if (state.packets.length >= PACKET_POOL) return null;
@@ -31,6 +41,8 @@ export function spawnPacket(
     reverse: opts.reverse,
     size: opts.size,
     payload: opts.payload,
+    bornAt: state.t,
+    diesAt: opts.diesAt,
   };
   state.packets.push(packet);
   return packet;
@@ -53,6 +65,74 @@ export function advancePackets(state: SimState<unknown>, dt: number): Packet[] {
   }
   state.packets = inFlight;
   return arrived;
+}
+
+/**
+ * Remove and return the in-flight packets whose deadline has passed. What an
+ * expiry *means* is the lesson's to decide — count it as a timeout, retry it
+ * on another edge, re-spawn it as a "drop" so it visibly dies.
+ *
+ * Compares against `state.t`, which inside `step` is the tick's *start* time
+ * (the runner advances the clock after stepping), so a packet spawned with
+ * `diesAt: state.t + 2` lives a full 2 sim-seconds.
+ */
+export function expirePackets(state: SimState<unknown>): Packet[] {
+  // Nothing due is the common case (this runs every tick) — scan first so the
+  // quiet path allocates nothing and leaves the packet array untouched.
+  const due = (p: Packet) => p.diesAt !== undefined && state.t >= p.diesAt;
+  if (!state.packets.some(due)) return [];
+  const expired: Packet[] = [];
+  const alive: Packet[] = [];
+  for (const p of state.packets) {
+    if (due(p)) expired.push(p);
+    else alive.push(p);
+  }
+  state.packets = alive;
+  return expired;
+}
+
+/**
+ * Cut a link: every packet currently on `edgeId` either disappears (no
+ * `toType`) or is converted in place to `toType` — keeping its position and
+ * direction, so it dies where the break caught it rather than restarting.
+ * Returns the packets it touched, for the lesson to count as lost.
+ *
+ * The partition verb: call it on the tick a partition opens, and each tick it
+ * stays open, to keep the severed link empty.
+ */
+export function severEdge(
+  state: SimState<unknown>,
+  edgeId: string,
+  toType?: string,
+): Packet[] {
+  const affected = state.packets.filter((p) => p.edgeId === edgeId);
+  if (affected.length === 0) return affected;
+  if (toType === undefined) {
+    state.packets = state.packets.filter((p) => p.edgeId !== edgeId);
+  } else {
+    for (const p of affected) p.type = toType;
+  }
+  return affected;
+}
+
+/**
+ * Append to a bounded sample ring on `state.series[key]`, trimming from the
+ * front past `cap`. For measured *distributions* that a scalar metric cannot
+ * express — per-packet latency, per-tick queue depth, inter-arrival gaps —
+ * and the data behind "sparkline" meters, which read the same key.
+ *
+ * Cheap enough to call every tick; the cap is what keeps the snapshot copy
+ * (and the sparkline) O(1).
+ */
+export function recordSample(
+  state: SimState<unknown>,
+  key: string,
+  value: number,
+  cap = 120,
+): void {
+  const ring = (state.series[key] ??= []);
+  ring.push(value);
+  if (ring.length > cap) ring.splice(0, ring.length - cap);
 }
 
 /** Poisson-ish arrival: expected `rate * dt` spawns this tick. */

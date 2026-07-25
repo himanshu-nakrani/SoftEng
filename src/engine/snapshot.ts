@@ -10,6 +10,12 @@ import type { NodeRuntime, SimState } from "./types";
 export interface SimSnapshot {
   t: number;
   metrics: Record<string, number>;
+  /**
+   * Copies of `SimState.series` (see `recordSample`) — what "sparkline"
+   * meters draw. Bounded rings, so the per-publish copy is cheap and the
+   * React layer never aliases the live arrays.
+   */
+  series: Record<string, number[]>;
   nodes: Record<string, NodeRuntime>;
   caption: string | null;
 }
@@ -38,7 +44,17 @@ export function createSnapshotStore(
     for (const [id, n] of Object.entries(s.nodes)) {
       nodes[id] = { ...n, meta: n.meta ? structuredClone(n.meta) : undefined };
     }
-    return { t: s.t, metrics: { ...s.metrics }, nodes, caption: lastCaption };
+    const series: Record<string, number[]> = {};
+    for (const [key, ring] of Object.entries(s.series)) {
+      series[key] = ring.slice();
+    }
+    return {
+      t: s.t,
+      metrics: { ...s.metrics },
+      series,
+      nodes,
+      caption: lastCaption,
+    };
   };
 
   let snapshot = build();

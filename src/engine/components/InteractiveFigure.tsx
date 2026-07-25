@@ -5,7 +5,7 @@ import { useReducedMotion } from "motion/react";
 import type { ReactNode } from "react";
 import { CornerTicks } from "@/components/ui/CornerTicks";
 import { buildPaths } from "../paths";
-import type { LessonSim, LessonSimView, NodeRuntime } from "../types";
+import type { LessonSim, LessonSimView, NodeRuntime, NodeSpec } from "../types";
 import { STAGE_H, STAGE_W } from "../types";
 import type { SimSnapshot } from "../snapshot";
 import {
@@ -36,6 +36,21 @@ interface InteractiveFigureProps<L> {
    * live snapshot so it can react to sim state.
    */
   stageOverlay?: (snapshot: SimSnapshot) => ReactNode;
+  /**
+   * Extra SVG drawn *inside* each node's group — the node's internals (cache
+   * slots, a token bucket, a replica log). Called per node per snapshot with
+   * that node's runtime; return null for nodes you don't decorate. Coordinates
+   * are node-local (origin = top-left of the 88x60 box; see SystemNode's
+   * render site for the occupied bands).
+   *
+   * Snapshot data ONLY — this renders on the React (10Hz) layer and must never
+   * reach into the live state ref.
+   */
+  nodeOverlay?: (
+    spec: NodeSpec,
+    runtime: SimSnapshot["nodes"][string],
+    snapshot: SimSnapshot,
+  ) => ReactNode;
   /** First meaningful interaction (drives section completion). */
   onEngage?: () => void;
   onQuizResult?: (quizId: string, choiceId: string, correct: boolean) => void;
@@ -48,10 +63,12 @@ function StageContent({
   sim,
   simulation,
   stageOverlay,
+  nodeOverlay,
 }: {
   sim: LessonSimView;
   simulation: Simulation;
   stageOverlay?: (snapshot: SimSnapshot) => ReactNode;
+  nodeOverlay?: InteractiveFigureProps<never>["nodeOverlay"];
 }) {
   const snapshot = useSimSnapshot(simulation);
   const registry = useMemo(() => buildPaths(sim.topology), [sim.topology]);
@@ -100,20 +117,28 @@ function StageContent({
           simulation={simulation}
           registry={registry}
           hidden={Boolean(reduced)}
+          sim={sim}
         />
 
-        {sim.topology.nodes.map((spec) => (
-          <SystemNode
-            key={spec.id}
-            spec={spec}
-            runtime={
-              snapshot.nodes[spec.id] ?? { health: "healthy", load: 0 }
-            }
-            onToggleHealth={
-              spec.breakable ? simulation.controls.toggleNodeHealth : undefined
-            }
-          />
-        ))}
+        {sim.topology.nodes.map((spec) => {
+          const runtime = snapshot.nodes[spec.id] ?? {
+            health: "healthy" as const,
+            load: 0,
+          };
+          return (
+            <SystemNode
+              key={spec.id}
+              spec={spec}
+              runtime={runtime}
+              onToggleHealth={
+                spec.breakable
+                  ? simulation.controls.toggleNodeHealth
+                  : undefined
+              }
+              overlay={nodeOverlay?.(spec, runtime, snapshot)}
+            />
+          );
+        })}
       </svg>
       <CaptionOverlay caption={snapshot.caption} />
     </>
@@ -152,7 +177,11 @@ function MetersRow({
               : "sm:border-l sm:border-border sm:px-6 max-sm:odd:pl-4"
           }
         >
-          <Meter spec={spec} value={snapshot.metrics[spec.metricKey] ?? 0} />
+          <Meter
+            spec={spec}
+            value={snapshot.metrics[spec.metricKey] ?? 0}
+            series={snapshot.series[spec.metricKey]}
+          />
         </div>
       ))}
     </div>
@@ -181,6 +210,7 @@ export function InteractiveFigure<L>({
   autoplay = true,
   seed,
   stageOverlay,
+  nodeOverlay,
   onEngage,
   onQuizResult,
   onSimEvent,
@@ -236,6 +266,7 @@ export function InteractiveFigure<L>({
           sim={sim}
           simulation={simulation}
           stageOverlay={stageOverlay}
+          nodeOverlay={nodeOverlay}
         />
         <CornerTicks />
         {/* figure plate — every sim is a numbered schematic */}

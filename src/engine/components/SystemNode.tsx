@@ -11,6 +11,7 @@ import {
   Zap,
 } from "lucide-react";
 import { motion } from "motion/react";
+import type { ReactNode } from "react";
 import type { NodeKind, NodeRuntime, NodeSpec } from "../types";
 
 const kindIcon: Record<NodeKind, LucideIcon> = {
@@ -37,13 +38,25 @@ interface SystemNodeProps {
   runtime: NodeRuntime;
   /** Break-it interaction (only wired when spec.breakable). */
   onToggleHealth?: (id: string) => void;
+  /**
+   * Lesson-drawn node internals (cache slots, token bucket, replica log),
+   * already rendered by `InteractiveFigure`'s `nodeOverlay` slot from snapshot
+   * data. See the render site below for the coordinate space. Ghost
+   * (unprovisioned) nodes never draw one — there is nothing inside them yet.
+   */
+  overlay?: ReactNode;
 }
 
 /**
  * One system component on the stage: rounded box, kind icon, monospace
  * label, live load bar, health states. Dead nodes desaturate + red-ring.
  */
-export function SystemNode({ spec, runtime, onToggleHealth }: SystemNodeProps) {
+export function SystemNode({
+  spec,
+  runtime,
+  onToggleHealth,
+  overlay,
+}: SystemNodeProps) {
   const Icon = kindIcon[spec.kind];
   const dead = runtime.health === "dead";
   const degraded = runtime.health === "degraded";
@@ -141,6 +154,21 @@ export function SystemNode({ spec, runtime, onToggleHealth }: SystemNodeProps) {
       >
         {spec.label}
       </text>
+
+      {/*
+        Node-internals slot. Local coordinate space: (0,0) is the TOP-LEFT of
+        the node box, which is 88 wide x 60 tall (W x H) — the same space the
+        chrome above is drawn in. What is already occupied:
+          y  9..27   kind icon (centered, 18px)
+          y ~32..40  label text (baseline y=40)
+          y 48..51   load bar (x 12..76)
+          top-right  dead badge; bottom-right  queue-depth chip
+        So the free band inside the box is roughly y 26..46 across x 6..82;
+        draw outside those bounds (negative y, or y > 60) for callouts that
+        hang off the node. Painted after the label and before the load bar, so
+        the bar and the badges always stay legible on top.
+      */}
+      {overlay}
 
       {/* load bar */}
       <rect

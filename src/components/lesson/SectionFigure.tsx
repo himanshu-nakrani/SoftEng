@@ -3,7 +3,7 @@
 import { InteractiveFigure } from "@/engine/components/InteractiveFigure";
 import type { SimSnapshot } from "@/engine/snapshot";
 import type { SimEvent } from "@/engine/useSimulation";
-import type { LessonSim } from "@/engine/types";
+import type { LessonSim, NodeSpec } from "@/engine/types";
 import { quizKey, useProgress } from "@/stores/progress";
 import { useCallback, useRef, type ReactNode } from "react";
 import {
@@ -32,6 +32,11 @@ interface SectionFigureProps<L> {
   autoplay?: boolean;
   seed?: number;
   stageOverlay?: (snapshot: SimSnapshot) => ReactNode;
+  nodeOverlay?: (
+    spec: NodeSpec,
+    runtime: SimSnapshot["nodes"][string],
+    snapshot: SimSnapshot,
+  ) => ReactNode;
   completes?: CompletionRule[];
 }
 
@@ -47,6 +52,7 @@ export function SectionFigure<L>({
   autoplay,
   seed,
   stageOverlay,
+  nodeOverlay,
   completes,
 }: SectionFigureProps<L>) {
   const markComplete = useSectionCompletion();
@@ -86,6 +92,7 @@ export function SectionFigure<L>({
       autoplay={autoplay}
       seed={seed}
       stageOverlay={stageOverlay}
+      nodeOverlay={nodeOverlay}
       onEngage={markComplete}
       onSimEvent={onSimEvent}
       onQuizResult={onQuizResult}

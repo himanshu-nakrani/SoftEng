@@ -34,7 +34,7 @@ export interface TickResult {
    * runner marks it fired and stops scanning; the caller decides what to do
    * (the hook hard-pauses, headless callers keep going).
    */
-  firedQuiz: QuizCheckpoint | null;
+  firedQuiz: QuizCheckpoint<unknown> | null;
   /** Caption visible *after* this tick — null once it has expired. */
   caption: string | null;
 }
@@ -65,6 +65,11 @@ export interface SimRunner {
    * Tick until `state.t >= t`, returning every tick's result in order.
    * Quiz checkpoints are *reported* but never block — headless callers run
    * past them (the browser hook is the thing that hard-pauses).
+   *
+   * Note for golden runs and other tooling: a timeline event or checkpoint
+   * carrying a `when` gate fires only once its condition holds, so a run may
+   * legitimately end with some of `sim.quiz` never reported. Never assert
+   * "every checkpoint fired" — assert on the ones your scenario provokes.
    */
   runTo: (t: number) => TickResult[];
   /** Fresh state from the same seed; fired sets and caption cleared. */
@@ -94,6 +99,7 @@ export function buildInitialState(
     packets: [],
     nodes,
     metrics: {},
+    series: {},
     lesson: sim.init(rng),
     rng,
     nextPacketId: 1,
@@ -129,14 +135,15 @@ export function createRunner<L>(
     s.t += TICK;
 
     // Timeline events crossing t (indexed by array position for the Set).
+    // An event with a `when` gate stays pending until the gate also passes.
     lesson.timeline?.forEach((ev, i) => {
-      if (s.t >= ev.at && !firedEvents.has(i)) {
-        firedEvents.add(i);
-        ev.apply?.(s);
-        if (ev.caption) {
-          captionText = ev.caption;
-          captionUntil = s.t + CAPTION_DURATION;
-        }
+      if (s.t < ev.at || firedEvents.has(i)) return;
+      if (ev.when && !ev.when(s, params)) return; // gate shut — stays pending
+      firedEvents.add(i);
+      ev.apply?.(s);
+      if (ev.caption) {
+        captionText = ev.caption;
+        captionUntil = s.t + CAPTION_DURATION;
       }
     });
     if (captionText && s.t > captionUntil) {
@@ -144,12 +151,14 @@ export function createRunner<L>(
     }
 
     // Quiz checkpoints: report exactly when t crosses, at most one per tick.
+    // Same `when` gate as timeline events — a gated checkpoint waits (possibly
+    // forever) for its condition instead of firing on the clock alone.
     if (lesson.quiz) {
       for (const q of lesson.quiz) {
-        if (s.t >= q.at && !firedQuizzes.has(q.id)) {
-          firedQuizzes.add(q.id);
-          return { firedQuiz: q, caption: captionText };
-        }
+        if (s.t < q.at || firedQuizzes.has(q.id)) continue;
+        if (q.when && !q.when(s, params)) continue; // gate shut — stays pending
+        firedQuizzes.add(q.id);
+        return { firedQuiz: q, caption: captionText };
       }
     }
     return { firedQuiz: null, caption: captionText };
