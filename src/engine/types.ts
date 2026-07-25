@@ -256,6 +256,18 @@ export interface LessonSim<L = Record<string, unknown>> {
    * `"var(--color-glow-cyan)"`, never `"#4dd"`.
    */
   packetStyles?: Record<string, PacketStyle>;
+  /**
+   * The key printed under the stage: which dot means what. Authors list ONLY
+   * the types their sim actually spawns, in narrative order (the order the
+   * learner meets them — request before response before retry), because the
+   * legend reads as a sentence about the scenario, not as a palette dump.
+   *
+   * `type` is a key of the resolved style map (a `PacketType` or one of this
+   * lesson's `packetStyles`); the swatch color is read from there, so legend
+   * and stage can never disagree. Nothing is inferred: a sim without this
+   * field renders no legend at all.
+   */
+  packetLegend?: { type: string; label: string }[];
 }
 
 /**
@@ -265,7 +277,7 @@ export interface LessonSim<L = Record<string, unknown>> {
  */
 export type LessonSimView = Pick<
   LessonSim<unknown>,
-  "id" | "topology" | "meters" | "params" | "packetStyles"
+  "id" | "topology" | "meters" | "params" | "packetStyles" | "packetLegend"
 >;
 
 /* ---------- Engine constants ---------- */

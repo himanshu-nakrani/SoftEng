@@ -19,6 +19,45 @@ function isDanger(spec: MeterSpec, value: number): boolean {
   return false;
 }
 
+/* ---------- danger thresholds ---------- */
+
+/** Where a danger limit sits on a scaled track. */
+interface ThresholdMark {
+  /** The limit's value, in metric units. */
+  value: number;
+  /** Its position on the track, 0..1 (clamped — a limit past `max` pins right). */
+  at: number;
+}
+
+/**
+ * The limits worth drawing on a bar/gauge track.
+ *
+ * "Red past 90" is invisible until it's too late, and the redness itself is a
+ * color-only signal. A tick at the limit is neither: it says where the edge is
+ * *before* the value gets there, and it says it geometrically, so it survives
+ * a screenshot in greyscale and a viewer who can't tell amber from red.
+ *
+ * Only scaled kinds get them — a counter has no track to put a tick on.
+ */
+function thresholdMarks(spec: MeterSpec): ThresholdMark[] {
+  const max = spec.max;
+  if (!max) return [];
+  const marks: ThresholdMark[] = [];
+  for (const value of [spec.dangerAbove, spec.dangerBelow]) {
+    if (value === undefined) continue;
+    marks.push({ value, at: Math.min(Math.max(value / max, 0), 1) });
+  }
+  return marks;
+}
+
+/**
+ * A mark the fill has swallowed has to invert or it disappears into it (red
+ * tick, red bar) — so a crossed limit reads as a notch cut out of the fill.
+ */
+function markColor(mark: ThresholdMark, value: number): string {
+  return value >= mark.value ? "var(--color-bg)" : "var(--color-glow-red)";
+}
+
 /* ---------- sparkline ---------- */
 
 const SPARK_W = 44;
@@ -83,6 +122,95 @@ function sparkRuns(values: number[], dangerAbove?: number): SparkRun[] {
   return runs;
 }
 
+/* ---------- accessible naming ---------- */
+
+/** "62 req/s", plus which side of the limit it's on when that matters. */
+function valueText(spec: MeterSpec, display: string): string {
+  const unit = spec.unit ? ` ${spec.unit}` : "";
+  return `${display}${unit}`;
+}
+
+/** How a limit reads out loud once crossed. */
+function limitText(spec: MeterSpec, value: number): string {
+  if (spec.dangerAbove !== undefined && value > spec.dangerAbove) {
+    return `, above the ${spec.dangerAbove}${spec.unit ? ` ${spec.unit}` : ""} limit`;
+  }
+  if (spec.dangerBelow !== undefined && value < spec.dangerBelow) {
+    return `, below the ${spec.dangerBelow}${spec.unit ? ` ${spec.unit}` : ""} floor`;
+  }
+  return "";
+}
+
+/**
+ * A sparkline's information is a shape, not a point on a scale, so it is
+ * described rather than measured: where the trace is now and how far it has
+ * ranged over the drawn window.
+ */
+function sparklineLabel(
+  spec: MeterSpec,
+  value: number,
+  display: string,
+  series?: number[],
+): string {
+  const head = `${spec.label}: ${valueText(spec, display)}${limitText(spec, value)}`;
+  const window = (series ?? []).slice(-SPARK_WINDOW);
+  if (window.length < 2) return head;
+  const decimals = spec.decimals ?? 0;
+  let lo = Infinity;
+  let hi = -Infinity;
+  for (const v of window) {
+    if (v < lo) lo = v;
+    if (v > hi) hi = v;
+  }
+  const unit = spec.unit ? ` ${spec.unit}` : "";
+  return `${head}. Last ${window.length} samples ranged ${lo.toFixed(decimals)} to ${hi.toFixed(decimals)}${unit}`;
+}
+
+/**
+ * ARIA for one instrument.
+ *
+ * `role="meter"` is the exact role for "a reading inside a known range", and
+ * it is what bar and gauge meters are — they already have a `max` to scale by,
+ * so `aria-valuemin/now/max` are true statements and assistive tech can report
+ * the number, its bounds, and (via `aria-valuetext`) its unit without a live
+ * region firing ten times a second. Where the role is unsupported it degrades
+ * to a labeled group that still exposes the name and value text.
+ *
+ * The two kinds without a range don't get it, because a meter *must* have one:
+ * ARIA defaults `aria-valuemax` to 100, so a max-less counter reading 240 ms
+ * would be announced as 240% of a range that doesn't exist. Those (and the
+ * sparkline, whose value is a distribution) take `role="img"` with a label
+ * that already says everything the widget shows.
+ */
+function meterAria(
+  spec: MeterSpec,
+  value: number,
+  display: string,
+  series?: number[],
+) {
+  if (spec.kind === "sparkline") {
+    return {
+      role: "img" as const,
+      "aria-label": sparklineLabel(spec, value, display, series),
+    };
+  }
+  if (spec.max === undefined) {
+    return {
+      role: "img" as const,
+      "aria-label": `${spec.label}: ${valueText(spec, display)}${limitText(spec, value)}`,
+    };
+  }
+  return {
+    role: "meter" as const,
+    "aria-label": spec.label,
+    // The rounded readout, so speech and screen never disagree.
+    "aria-valuenow": Number(display),
+    "aria-valuemin": 0,
+    "aria-valuemax": spec.max,
+    "aria-valuetext": `${valueText(spec, display)}${limitText(spec, value)}`,
+  };
+}
+
 /**
  * One live instrument. Values arrive at 10Hz; CSS transitions interpolate
  * so the display reads continuous.
@@ -94,9 +222,14 @@ export function Meter({ spec, value, series }: MeterProps) {
   const fraction = spec.max ? Math.min(value / spec.max, 1) : 0;
   const runs =
     spec.kind === "sparkline" ? sparkRuns(series ?? [], spec.dangerAbove) : [];
+  const marks =
+    spec.kind === "bar" || spec.kind === "gauge" ? thresholdMarks(spec) : [];
 
   return (
-    <div className="flex min-w-0 flex-col gap-1">
+    <div
+      className="flex min-w-0 flex-col gap-1"
+      {...meterAria(spec, value, display, series)}
+    >
       <span className="tech-label truncate">{spec.label}</span>
 
       {spec.kind === "counter" && (
@@ -117,7 +250,7 @@ export function Meter({ spec, value, series }: MeterProps) {
 
       {spec.kind === "bar" && (
         <div className="flex items-center gap-2">
-          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-border">
+          <div className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-border">
             <div
               className="h-full rounded-full"
               style={{
@@ -126,6 +259,20 @@ export function Meter({ spec, value, series }: MeterProps) {
                 transition: "width 150ms linear, background 300ms",
               }}
             />
+            {marks.map((mark) => (
+              <span
+                key={mark.value}
+                aria-hidden
+                className="absolute inset-y-0 w-0.5"
+                style={{
+                  // Straddle the limit, and stay inside the clipped track at
+                  // either end (a tick at max would otherwise be cropped away).
+                  left: `calc(${(mark.at * 100).toFixed(2)}% - 1px)`,
+                  background: markColor(mark, value),
+                  transition: "background 300ms",
+                }}
+              />
+            ))}
           </div>
           <span
             className={cn(
@@ -199,6 +346,25 @@ export function Meter({ spec, value, series }: MeterProps) {
                   "stroke-dashoffset 150ms linear, stroke 300ms",
               }}
             />
+            {marks.map((mark) => {
+              // The track is the semicircle r=18 about (22,24), swept from
+              // 180° (left) to 0° (right); the tick is the radius through it.
+              const angle = Math.PI * mark.at;
+              const cos = Math.cos(angle);
+              const sin = Math.sin(angle);
+              return (
+                <line
+                  key={mark.value}
+                  x1={22 - 14.5 * cos}
+                  y1={24 - 14.5 * sin}
+                  x2={22 - 21.5 * cos}
+                  y2={24 - 21.5 * sin}
+                  stroke={markColor(mark, value)}
+                  strokeWidth={1.5}
+                  style={{ transition: "stroke 300ms" }}
+                />
+              );
+            })}
           </svg>
           <span
             className={cn(

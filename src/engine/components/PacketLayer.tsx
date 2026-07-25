@@ -44,6 +44,15 @@ export function resolvePacketStyles(
     : BUILT_IN_PACKET_STYLES;
 }
 
+/**
+ * Radius a fading packet shrinks toward as it dies. Fade alone encodes death
+ * in opacity, which is a color channel — a shed request and a healthy one are
+ * the same dot to anyone who can't separate them by contrast. Shrinking gives
+ * the same fact a second, purely geometric channel. Never shrinks *below* the
+ * packet's own radius (a lesson may already spawn tiny drops).
+ */
+const FADE_MIN_RADIUS = 2;
+
 interface PacketLayerProps {
   simulation: Simulation;
   registry: PathRegistry;
@@ -84,12 +93,22 @@ export function PacketLayer({
         if (!path || !slot) continue;
         const style = styles[p.type] ?? FALLBACK_PACKET_STYLE;
         const { x, y } = pointAt(path, p.progress, p.reverse);
+        const radius = p.size ?? style.size ?? 4;
         slot.setAttribute("transform", `translate(${x} ${y})`);
-        slot.setAttribute("r", String(p.size ?? style.size ?? 4));
         slot.style.fill = style.color;
         slot.style.visibility = "visible";
-        // Fading kinds (drops, and anything a lesson marks) die as they travel.
-        slot.style.opacity = style.fadeOut ? String(1 - p.progress) : "1";
+        // Fading kinds (drops, and anything a lesson marks) die as they travel:
+        // they thin out AND shrink, so the death reads without relying on the
+        // red. `life` is the same 1→0 ramp driving both.
+        if (style.fadeOut) {
+          const life = 1 - Math.min(Math.max(p.progress, 0), 1);
+          const floor = Math.min(FADE_MIN_RADIUS, radius);
+          slot.setAttribute("r", String(floor + (radius - floor) * life));
+          slot.style.opacity = String(life);
+        } else {
+          slot.setAttribute("r", String(radius));
+          slot.style.opacity = "1";
+        }
       }
       for (let i = count; i < PACKET_POOL; i++) {
         slots[i].style.visibility = "hidden";

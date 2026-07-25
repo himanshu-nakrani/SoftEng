@@ -19,7 +19,8 @@ import { ControlPanel } from "./ControlPanel";
 import { EdgeLine } from "./EdgeLine";
 import { FigureErrorBoundary } from "./FigureErrorBoundary";
 import { Meter } from "./Meter";
-import { PacketLayer } from "./PacketLayer";
+import { PacketLayer, resolvePacketStyles } from "./PacketLayer";
+import { PacketLegend } from "./PacketLegend";
 import { SystemNode } from "./SystemNode";
 import { PredictionQuiz } from "../interactions/PredictionQuiz";
 import { TransportBar } from "./TransportBar";
@@ -74,6 +75,9 @@ function StageContent({
   const snapshot = useSimSnapshot(simulation);
   const registry = useMemo(() => buildPaths(sim.topology), [sim.topology]);
   const reduced = useReducedMotion();
+  // One resolution shared by the packets and the edges that stand in for them
+  // under reduced motion, so both read the same colors.
+  const packetStyles = useMemo(() => resolvePacketStyles(sim), [sim]);
 
   return (
     <>
@@ -108,6 +112,12 @@ function StageContent({
               key={edge.id}
               path={path}
               dimmed={target?.health === "dead" || target?.ghost}
+              // Reduced motion hides the packets, so the edges have to say
+              // where the traffic is. Normal motion passes nothing extra and
+              // renders exactly as before.
+              reducedMotion={Boolean(reduced)}
+              activity={reduced ? snapshot.edgeActivity[edge.id] : undefined}
+              packetStyles={packetStyles}
             />
           );
         })}
@@ -300,6 +310,11 @@ function FigureBody<L>({
         />
       </div>
       <figcaption className="sr-only">{description}</figcaption>
+      {/* Directly under the stage, above the instruments: the key belongs next
+          to the thing it explains, and it stays out of the meters row, whose
+          flex dividers and 2-column mobile grid a chip row would break. Renders
+          nothing — not an empty strip — for sims with no `packetLegend`. */}
+      <PacketLegend sim={sim} />
       <MetersRow sim={sim} simulation={simulation} />
       <ControlPanel
         specs={sim.params}
