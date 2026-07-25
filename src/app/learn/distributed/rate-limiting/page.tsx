@@ -31,8 +31,10 @@ export default function RateLimitingPage() {
           The classic mechanism is the <Term>token bucket</Term>: tokens
           drip in at a fixed <Strong>refill rate</Strong> up to a{" "}
           <Strong>bucket size</Strong>; each request spends one or bounces.
-          The chip on the limiter is its live token count — watch it climb
-          when traffic is light and drain when you push the rate up.
+          The gauge inside the limiter is its live token level — watch it
+          fill when traffic is light and bottom out when you push the rate
+          up. Everything it admits lands on <Term>api-1</Term>, which
+          serves 8 req/s and has a queue you can overrun.
         </P>
         <RateLimitingFigure />
         <Callout kind="insight">
@@ -51,6 +53,15 @@ export default function RateLimitingPage() {
           <Term>send burst</Term> with different bucket sizes and watch who
           survives: the deep bucket absorbs the spike silently; the shallow
           one sprays 429s.
+        </P>
+        <P>
+          The run fires that spike for you at <Term>t=15</Term> — the bucket
+          drains in about a second, then the refill rate is the only door
+          left open, so api-1 gets the bucket&apos;s worth and then a
+          trickle, never the spike. Click{" "}
+          <Term>api-1</Term> to kill it and the point sharpens: the limiter
+          keeps spending tokens on a server that isn&apos;t there, so what
+          it admits is exactly what a recovering server has to survive.
         </P>
         <Callout kind="warning">
           The dangerous failure mode isn&apos;t rejecting too much —
