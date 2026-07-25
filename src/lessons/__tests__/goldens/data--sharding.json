@@ -1,0 +1,43 @@
+{
+  "lesson": "data/sharding",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:mod-remap@12",
+      "t": 12.033333,
+      "metrics": {
+        "remapped": 0,
+        "shards": 3
+      },
+      "packets": 28,
+      "nextPacketId": 445,
+      "nodes": {
+        "client": "healthy",
+        "router": "healthy",
+        "s0": "healthy",
+        "s1": "healthy",
+        "s2": "healthy",
+        "s3": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "remapped": 0,
+        "shards": 3
+      },
+      "packets": 27,
+      "nextPacketId": 1068,
+      "nodes": {
+        "client": "healthy",
+        "router": "healthy",
+        "s0": "healthy",
+        "s1": "healthy",
+        "s2": "healthy",
+        "s3": "healthy"
+      }
+    }
+  ]
+}

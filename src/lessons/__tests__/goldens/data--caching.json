@@ -1,0 +1,39 @@
+{
+  "lesson": "data/caching",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:cache-ttl@14",
+      "t": 14.033333,
+      "metrics": {
+        "dbLoad": 61.256802,
+        "hitRatio": 100,
+        "latency": 117.102563
+      },
+      "packets": 15,
+      "nextPacketId": 332,
+      "nodes": {
+        "cache": "healthy",
+        "client": "healthy",
+        "db": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "dbLoad": 2.654193,
+        "hitRatio": 0,
+        "latency": 397.819793
+      },
+      "packets": 18,
+      "nextPacketId": 711,
+      "nodes": {
+        "cache": "healthy",
+        "client": "healthy",
+        "db": "healthy"
+      }
+    }
+  ]
+}

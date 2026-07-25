@@ -1,0 +1,47 @@
+{
+  "lesson": "scaling/scaling-strategies",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:blast-radius@13",
+      "t": 13.033333,
+      "metrics": {
+        "capacity": 12,
+        "cost": 32,
+        "dropped": 0,
+        "throughput": 6.431122
+      },
+      "packets": 20,
+      "nextPacketId": 252,
+      "nodes": {
+        "client": "healthy",
+        "h1": "healthy",
+        "h2": "healthy",
+        "h3": "healthy",
+        "h4": "healthy",
+        "xl": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "capacity": 12,
+        "cost": 32,
+        "dropped": 0,
+        "throughput": 10.482748
+      },
+      "packets": 16,
+      "nextPacketId": 554,
+      "nodes": {
+        "client": "healthy",
+        "h1": "healthy",
+        "h2": "healthy",
+        "h3": "healthy",
+        "h4": "healthy",
+        "xl": "healthy"
+      }
+    }
+  ]
+}

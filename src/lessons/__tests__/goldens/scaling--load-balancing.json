@@ -1,0 +1,43 @@
+{
+  "lesson": "scaling/load-balancing",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:lb-inflight@11.5",
+      "t": 11.533333,
+      "metrics": {
+        "dropped": 0,
+        "latency": 203.333333,
+        "throughput": 13.330186
+      },
+      "packets": 22,
+      "nextPacketId": 497,
+      "nodes": {
+        "client": "healthy",
+        "lb": "healthy",
+        "s1": "healthy",
+        "s2": "healthy",
+        "s3": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "dropped": 22,
+        "latency": 1245,
+        "throughput": 10.653084
+      },
+      "packets": 29,
+      "nextPacketId": 1266,
+      "nodes": {
+        "client": "healthy",
+        "lb": "healthy",
+        "s1": "healthy",
+        "s2": "healthy",
+        "s3": "dead"
+      }
+    }
+  ]
+}

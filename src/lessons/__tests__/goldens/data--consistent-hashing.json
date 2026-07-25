@@ -1,0 +1,41 @@
+{
+  "lesson": "data/consistent-hashing",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:ring-remap@13",
+      "t": 13.033333,
+      "metrics": {
+        "nodes": 3,
+        "remapped": 0
+      },
+      "packets": 9,
+      "nextPacketId": 254,
+      "nodes": {
+        "client": "healthy",
+        "n1": "healthy",
+        "n2": "healthy",
+        "n3": "healthy",
+        "n4": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "nodes": 3,
+        "remapped": 0
+      },
+      "packets": 14,
+      "nextPacketId": 548,
+      "nodes": {
+        "client": "healthy",
+        "n1": "healthy",
+        "n2": "healthy",
+        "n3": "healthy",
+        "n4": "healthy"
+      }
+    }
+  ]
+}

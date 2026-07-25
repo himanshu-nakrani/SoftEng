@@ -1,0 +1,43 @@
+{
+  "lesson": "distributed/message-queues",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:mq-backlog@14",
+      "t": 14.033333,
+      "metrics": {
+        "depth": 0,
+        "dropped": 0,
+        "inRate": 6.012703,
+        "lagSec": 0,
+        "outRate": 6.357238
+      },
+      "packets": 14,
+      "nextPacketId": 228,
+      "nodes": {
+        "consumer": "healthy",
+        "producer": "healthy",
+        "queue": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "depth": 0,
+        "dropped": 0,
+        "inRate": 6.753171,
+        "lagSec": 0,
+        "outRate": 4.592474
+      },
+      "packets": 11,
+      "nextPacketId": 504,
+      "nodes": {
+        "consumer": "healthy",
+        "producer": "healthy",
+        "queue": "healthy"
+      }
+    }
+  ]
+}

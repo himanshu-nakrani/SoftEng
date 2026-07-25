@@ -1,0 +1,39 @@
+{
+  "lesson": "scaling/client-server",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:cs-queue-growth@16.5",
+      "t": 16.533333,
+      "metrics": {
+        "dropped": 9,
+        "latency": 2240,
+        "queue": 24,
+        "throughput": 12.454401
+      },
+      "packets": 6,
+      "nextPacketId": 264,
+      "nodes": {
+        "client": "healthy",
+        "server": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "dropped": 49,
+        "latency": 240,
+        "queue": 0,
+        "throughput": 4.404734
+      },
+      "packets": 3,
+      "nextPacketId": 560,
+      "nodes": {
+        "client": "healthy",
+        "server": "healthy"
+      }
+    }
+  ]
+}
