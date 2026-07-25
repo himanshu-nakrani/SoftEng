@@ -1,5 +1,6 @@
 import {
   absoluteUrl,
+  ogImage,
   siteDescription,
   siteName,
   siteTitle,
@@ -61,11 +62,15 @@ export const metadata: Metadata = {
     description: siteDescription,
     url: absoluteUrl("/"),
     locale: "en_US",
+    // Explicit rather than file-injected: auto-injection joins basePath onto
+    // a metadataBase that already carries it, doubling the prefix on Pages.
+    images: [ogImage],
   },
   twitter: {
     card: "summary_large_image",
     title: siteTitle,
     description: siteDescription,
+    images: [ogImage],
   },
 };
 

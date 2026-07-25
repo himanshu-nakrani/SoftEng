@@ -43,6 +43,37 @@ export const ogImage = {
 } as const;
 
 /**
+ * The card a route renders from its own `opengraph-image.tsx`, addressed the
+ * same relative way as `ogImage` above.
+ *
+ * Next's file convention also *auto-injects* this image — but only into a
+ * segment whose metadata leaves `openGraph.images` unset, and it builds the
+ * URL as `basePath + segment` resolved against `metadataBase`. Since
+ * `metadataBase` here already carries the base path (see `siteUrl`), that
+ * auto-injected URL comes out doubled (`/SoftEng/SoftEng/...`) on the Pages
+ * build. Naming the image explicitly keeps every share URL going through the
+ * one resolution rule this file documents, at both base paths.
+ */
+export function ogImageFor(page: { path: string; alt: string }) {
+  return {
+    url: `${page.path}/opengraph-image`,
+    width: 1200,
+    height: 630,
+    alt: page.alt,
+    type: "image/png",
+  } as const;
+}
+
+/**
+ * Alt text for a route's own share card. Lives here rather than beside the
+ * renderer so the `<meta>` value and the image module's `alt` export (see
+ * src/lib/og.tsx) are the same string by construction.
+ */
+export function shareCardAlt(title: string, description: string): string {
+  return `${siteName} — ${title}: ${description}`;
+}
+
+/**
  * The canonical + social block for one page.
  *
  * Next merges metadata per *key*, not deeply: a route that declares
@@ -57,8 +88,24 @@ export function shareMetadata(page: {
   /** Root-relative route, e.g. "/learn/data/caching". */
   path: string;
   type?: "website" | "article";
+  /**
+   * Set by routes that ship their own `opengraph-image.tsx` — the block then
+   * points at that card instead of the site-wide one. See `ogImageFor` for
+   * why the URL is stated rather than left to Next's auto-injection.
+   */
+  routeImage?: boolean;
 }): Metadata {
   const url = absoluteUrl(page.path);
+  const images = {
+    images: [
+      page.routeImage
+        ? ogImageFor({
+            path: page.path,
+            alt: shareCardAlt(page.title, page.description),
+          })
+        : ogImage,
+    ],
+  };
 
   return {
     alternates: { canonical: url },
@@ -69,13 +116,13 @@ export function shareMetadata(page: {
       title: page.title,
       description: page.description,
       url,
-      images: [ogImage],
+      ...images,
     },
     twitter: {
       card: "summary_large_image",
       title: page.title,
       description: page.description,
-      images: [ogImage],
+      ...images,
     },
   };
 }

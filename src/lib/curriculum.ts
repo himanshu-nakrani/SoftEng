@@ -62,6 +62,7 @@ export function lessonMetadata(slug: string): Metadata {
       description: lesson.tagline,
       path: lessonPath(lesson),
       type: "article",
+      routeImage: true,
     }),
   };
 }
