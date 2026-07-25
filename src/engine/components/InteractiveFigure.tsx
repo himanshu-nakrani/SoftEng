@@ -17,6 +17,7 @@ import {
 import { CaptionOverlay } from "./CaptionOverlay";
 import { ControlPanel } from "./ControlPanel";
 import { EdgeLine } from "./EdgeLine";
+import { FigureErrorBoundary } from "./FigureErrorBoundary";
 import { Meter } from "./Meter";
 import { PacketLayer } from "./PacketLayer";
 import { SystemNode } from "./SystemNode";
@@ -203,8 +204,23 @@ function Clock({ simulation }: { simulation: Simulation }) {
 /**
  * THE single entry point for lesson visualizations: stage + meters +
  * controls + transport + quiz overlay. Lesson pages compose nothing else.
+ *
+ * The whole figure — including the `useSimulation` call that owns the runner —
+ * lives inside a `FigureErrorBoundary`. That placement is load-bearing: a
+ * lesson `step` that throws is captured in the rAF loop and re-thrown during
+ * `FigureBody`'s render, so the boundary must sit *above* the component
+ * holding the hook. Restarting the boundary remounts `FigureBody`, which
+ * builds a fresh runner from the seed.
  */
-export function InteractiveFigure<L>({
+export function InteractiveFigure<L>(props: InteractiveFigureProps<L>) {
+  return (
+    <FigureErrorBoundary label={props.sim.id}>
+      <FigureBody {...props} />
+    </FigureErrorBoundary>
+  );
+}
+
+function FigureBody<L>({
   sim,
   description,
   autoplay = true,

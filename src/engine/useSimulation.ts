@@ -110,6 +110,7 @@ export function useSimulation<L>(
   );
   const [quizAnswer, setQuizAnswer] = useState<string | null>(null);
   const engaged = useRef(false);
+  const [tickError, setTickError] = useState<Error | null>(null);
 
   const store = useMemo(() => createSnapshotStore(liveRef), [liveRef]);
 
@@ -134,6 +135,24 @@ export function useSimulation<L>(
 
   const emit = useCallback((ev: SimEvent) => {
     optsRef.current.onSimEvent?.(ev);
+  }, []);
+
+  /**
+   * A lesson's `step` is ordinary authored code running inside the rAF loop —
+   * where a throw is invisible to React: it kills this figure's animation
+   * frame and nothing else happens. So catch it here, hard-pause, and stash
+   * it; the render pass below re-throws it, which is the only form React can
+   * route to `FigureErrorBoundary`. First error wins (later frames of a
+   * corrupted world would only report noise).
+   */
+  const fail = useCallback((cause: unknown) => {
+    setStatus("paused");
+    // The loop reads the ref, not the state — stop it before the next frame
+    // rather than a render later.
+    statusRef.current = "paused";
+    setTickError((prev) =>
+      prev ?? (cause instanceof Error ? cause : new Error(String(cause))),
+    );
   }, []);
 
   /** One logical tick, plus this layer's policy: a crossed quiz hard-pauses. */
@@ -163,11 +182,19 @@ export function useSimulation<L>(
 
       if (statusRef.current === "playing") {
         acc += wallDt * speedRef.current;
-        while (acc >= TICK && statusRef.current === "playing") {
-          tick();
-          acc -= TICK;
+        try {
+          while (acc >= TICK && statusRef.current === "playing") {
+            tick();
+            acc -= TICK;
+          }
+          store.maybePublish(now, runner.caption);
+        } catch (err) {
+          // Stop the loop dead: no successor frame is scheduled, so a
+          // half-stepped world is never advanced or drawn again. The next
+          // render throws into FigureErrorBoundary and unmounts this subtree.
+          fail(err);
+          return;
         }
-        store.maybePublish(now, runner.caption);
       } else {
         // Hard pause (quiz or user): drop banked wall time so resuming can't
         // spend it all in one frame.
@@ -182,7 +209,7 @@ export function useSimulation<L>(
 
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [tick, store, runner]);
+  }, [tick, store, runner, fail]);
 
   const controls = useMemo<SimControls>(
     () => ({
@@ -200,8 +227,12 @@ export function useSimulation<L>(
       stepOnce: () => {
         engage();
         if (statusRef.current === "playing") return;
-        tick();
-        store.publish(runner.caption);
+        try {
+          tick();
+          store.publish(runner.caption);
+        } catch (err) {
+          fail(err);
+        }
       },
       restart: () => {
         runner.restart();
@@ -231,13 +262,18 @@ export function useSimulation<L>(
         engage();
         const node = liveRef.current.nodes[nodeId];
         if (!node) return;
-        node.health = node.health === "dead" ? "healthy" : "dead";
-        if (node.health === "dead") node.load = 0;
-        store.publish();
-        if (node.health === "dead") emit({ kind: "node-kill", id: nodeId });
+        try {
+          node.health = node.health === "dead" ? "healthy" : "dead";
+          if (node.health === "dead") node.load = 0;
+          store.publish();
+          if (node.health === "dead") emit({ kind: "node-kill", id: nodeId });
+        } catch (err) {
+          // React does not route event-handler throws to boundaries either.
+          fail(err);
+        }
       },
     }),
-    [emit, engage, liveRef, runner, store, tick],
+    [emit, engage, fail, liveRef, runner, store, tick],
   );
 
   const answerQuiz = useCallback(
@@ -257,6 +293,13 @@ export function useSimulation<L>(
     setQuizAnswer(null);
     setStatus("playing");
   }, []);
+
+  // A tick that threw is re-thrown HERE, during render, after every hook has
+  // run (so React's hook order stays intact on the failing pass). Rendering is
+  // the only phase error boundaries observe — the throw propagates from the
+  // component calling this hook up to the nearest boundary, which
+  // `InteractiveFigure` mounts immediately above it (FigureErrorBoundary).
+  if (tickError) throw tickError;
 
   return {
     stateRef: liveRef,
