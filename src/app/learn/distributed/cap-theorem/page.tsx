@@ -1,6 +1,14 @@
 import { Lesson } from "@/components/lesson/Lesson";
 import { LessonSection } from "@/components/lesson/LessonSection";
-import { Callout, Lead, P, Strong, Term } from "@/components/lesson/prose";
+import {
+  Callout,
+  Compare,
+  CompareCol,
+  Lead,
+  P,
+  Strong,
+  Term,
+} from "@/components/lesson/prose";
 import { CapTheoremFigure } from "@/lessons/distributed/cap-theorem-figure";
 import { lessonMetadata } from "@/lib/curriculum";
 
@@ -41,14 +49,19 @@ export default function CapTheoremPage() {
       </LessonSection>
 
       <LessonSection id="cp-vs-ap">
-        <P>
-          While split, toggle the mode. <Term>CP</Term>: db-east turns
-          amber and refuses writes — red bounces, availability craters,
-          but the surviving side&apos;s data is authoritative.{" "}
-          <Term>AP</Term>: both sides accept and the{" "}
-          <Term>diverged writes</Term> counter climbs — everyone gets
-          service, and you now owe the universe a reconciliation.
-        </P>
+        <P>While split, toggle the mode.</P>
+        <Compare>
+          <CompareCol title="CP">
+            db-east turns amber and refuses writes — red bounces,
+            availability craters, but the surviving side&apos;s data is
+            authoritative.
+          </CompareCol>
+          <CompareCol title="AP">
+            Both sides accept and the <Term>diverged writes</Term> counter
+            climbs — everyone gets service, and you now owe the universe a
+            reconciliation.
+          </CompareCol>
+        </Compare>
         <P>
           Heal the partition in AP mode and watch divergence drain: this
           sim resolves by last-write-wins, which is a polite way of saying{" "}

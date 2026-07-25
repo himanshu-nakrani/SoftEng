@@ -1,13 +1,5 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
+import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
+import nextTypescript from "eslint-config-next/typescript";
 
 /**
  * Flat config REPLACES a rule's options rather than merging them, so any block
@@ -41,7 +33,10 @@ const NODE_GLOBALS = {
 };
 
 const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  // eslint-config-next 16 ships flat config natively (arrays of config
+  // objects), so these are spread directly — no FlatCompat/eslintrc shim.
+  ...nextCoreWebVitals,
+  ...nextTypescript,
   {
     ignores: [
       "node_modules/**",
@@ -128,6 +123,35 @@ const eslintConfig = [
           ],
         },
       ],
+    },
+  },
+
+  /* ---------------------------------------------------------------------
+     The render-loop layer: refs ARE the store, deliberately.
+
+     react-hooks 7 (React Compiler lint) reports `react-hooks/refs` for reading
+     or writing `ref.current` during render. That is the right default for
+     product code, but it is the load-bearing mechanism of this engine's two
+     update disciplines: the packet layer runs one rAF loop that reads live
+     state, status and speed through refs so React never re-renders per frame,
+     and the observer/event callbacks mirror props into refs to stay
+     referentially stable (re-subscribing the IntersectionObserver would reset
+     the autoplay-once bookkeeping it closes over).
+
+     Restructuring to satisfy the rule would mean animating from React state —
+     which breaks pause/step/speed, since packet positions must be computed
+     from the sim clock, not wall time. So the rule is off for exactly these
+     three files, listed rather than globbed so a new file has to opt in
+     consciously. Everything else react-hooks 7 checks stays on here.
+  --------------------------------------------------------------------- */
+  {
+    files: [
+      "src/engine/useSimulation.ts",
+      "src/engine/components/InteractiveFigure.tsx",
+      "src/components/lesson/SectionFigure.tsx",
+    ],
+    rules: {
+      "react-hooks/refs": "off",
     },
   },
 

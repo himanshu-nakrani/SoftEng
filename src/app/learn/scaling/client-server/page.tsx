@@ -1,6 +1,14 @@
 import { Lesson } from "@/components/lesson/Lesson";
 import { LessonSection } from "@/components/lesson/LessonSection";
-import { Callout, Lead, P, Strong, Term } from "@/components/lesson/prose";
+import {
+  Callout,
+  LI,
+  Lead,
+  P,
+  Strong,
+  Term,
+  TryThis,
+} from "@/components/lesson/prose";
 import { ClientServerFigure } from "@/lessons/scaling/client-server-figure";
 import { lessonMetadata } from "@/lib/curriculum";
 
@@ -25,11 +33,16 @@ export default function ClientServerPage() {
       </LessonSection>
 
       <LessonSection id="drive-it">
-        <P>
-          This is a live system. Press play, then drag the sliders — the
-          simulation reacts instantly. Around the 14-second mark, a traffic
-          spike hits and you&apos;ll be asked to predict what happens.
-        </P>
+        <TryThis>
+          <LI>Press play — this is a live system.</LI>
+          <LI>
+            Drag the sliders while it runs; the simulation reacts instantly.
+          </LI>
+          <LI>
+            Around the 14-second mark a traffic spike hits, and you&apos;ll be
+            asked to predict what happens.
+          </LI>
+        </TryThis>
         <ClientServerFigure />
         <Callout kind="insight">
           Watch the <Term>server queue</Term> bar. As long as arrivals stay

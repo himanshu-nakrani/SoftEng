@@ -48,10 +48,15 @@ export function MobileNav() {
   const panelRef = useRef<HTMLDivElement>(null);
 
   // Navigating always dismisses the drawer (links inside it also call close()
-  // directly, which covers a tap on the lesson already open).
-  useEffect(() => {
+  // directly, which covers a tap on the lesson already open). Adjusting during
+  // render rather than from an effect is React's documented pattern for
+  // "reset state when a value changes": the effect version commits — and can
+  // paint — one frame with the drawer still open over the new route.
+  const [lastPathname, setLastPathname] = useState(pathname);
+  if (pathname !== lastPathname) {
+    setLastPathname(pathname);
     setOpen(false);
-  }, [pathname]);
+  }
 
   // Everything an open drawer owns: scroll lock, focus trap, Escape, the
   // breakpoint escape hatch, and focus restoration on the way out.

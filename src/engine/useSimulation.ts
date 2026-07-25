@@ -37,6 +37,22 @@ export interface SimControls {
   stepOnce: () => void;
   /** Re-run init with the same seed — deterministic replay. */
   restart: () => void;
+  /**
+   * Scrub to sim-time `t`: pause, replay from the seed, publish. See
+   * `SimRunner.seekTo` for the semantics that matter (the replay runs under
+   * the CURRENT params, and checkpoints crossed on the way are forfeited).
+   *
+   * This layer adds three rules of its own:
+   * - **Pause first.** Playing is stopped *before* the replay, via the ref the
+   *   rAF loop reads, so no banked tick can interleave with (or land after) the
+   *   jump. Status stays "paused" afterwards — a scrub is a look, not a resume.
+   * - **No-op during a quiz.** A fired checkpoint owns the transport; seeking
+   *   out of it would skip the prediction the overlay is waiting on.
+   * - **Not an engagement.** Unlike play/param/kill, seeking neither calls
+   *   `onEngage` nor emits a `SimEvent`: scrubbing re-watches the system, it
+   *   does not manipulate it, so it must not complete a section on its own.
+   */
+  seekTo: (t: number) => void;
   setSpeed: (multiplier: number) => void;
   setParam: (key: string, value: ParamValue) => void;
   /** Momentary "button" params: sets true; the lesson's step resets it. */
@@ -55,6 +71,15 @@ export interface Simulation {
   controls: SimControls;
   status: SimStatus;
   speed: number;
+  /**
+   * High-water mark of `state.t` for this run — how far the learner has
+   * actually seen, which is what a scrub track measures itself against.
+   * Unchanged by a backwards seek (that is the whole point) and reset to 0 by
+   * `restart`. Mirrored into React only when the whole second changes, so it
+   * costs ~1 re-render/sec instead of one per tick and may trail the live
+   * clock by up to a second — a scrub track's right edge, not a readout.
+   */
+  furthestT: number;
   /** React mirror of params for controlled inputs. */
   params: ParamValues;
   /** Set while status === "quiz". */
@@ -104,6 +129,15 @@ export function useSimulation<L>(
   statusRef.current = status;
   const [speed, setSpeedState] = useState(1);
   const speedRef = useRef(1);
+
+  // Furthest sim-time this run has reached. The authority is a ref (the rAF
+  // loop must not re-render), mirrored into React state only when the whole
+  // second changes — the number decides how far the scrub track extends, where
+  // sub-second precision buys nothing and 30 re-renders/sec would cost the
+  // whole figure subtree.
+  const [furthestT, setFurthestT] = useState(0);
+  const furthestRef = useRef(0);
+  const mirroredFurthestRef = useRef(0);
 
   const [activeQuiz, setActiveQuiz] = useState<QuizCheckpoint<unknown> | null>(
     null,
@@ -155,9 +189,36 @@ export function useSimulation<L>(
     );
   }, []);
 
+  /**
+   * Raise the high-water mark and decide whether React needs to hear about it.
+   * `flush` forces the mirror (discrete jumps — seek, restart — should land
+   * immediately rather than waiting for the next whole second).
+   */
+  const markProgress = useCallback((t: number, flush = false) => {
+    if (t > furthestRef.current) furthestRef.current = t;
+    const next = furthestRef.current;
+    if (flush || Math.floor(next) !== Math.floor(mirroredFurthestRef.current)) {
+      mirroredFurthestRef.current = next;
+      setFurthestT(next);
+    }
+  }, []);
+
+  /**
+   * Back to zero. Separate from `markProgress`, which only ever raises the
+   * mark — a restart is the one thing that legitimately un-sees a run, and
+   * folding "lower it" into the tick path would be a footgun for the seek that
+   * must NOT lower it.
+   */
+  const resetProgress = useCallback(() => {
+    furthestRef.current = 0;
+    mirroredFurthestRef.current = 0;
+    setFurthestT(0);
+  }, []);
+
   /** One logical tick, plus this layer's policy: a crossed quiz hard-pauses. */
   const tick = useCallback(() => {
     const { firedQuiz } = runner.tick();
+    markProgress(runner.state.t);
     if (firedQuiz) {
       setActiveQuiz(firedQuiz);
       setQuizAnswer(null);
@@ -167,7 +228,7 @@ export function useSimulation<L>(
       // however many ticks are still banked (up to ~11 at 2x).
       statusRef.current = "quiz";
     }
-  }, [runner]);
+  }, [markProgress, runner]);
 
   // The single rAF loop.
   useEffect(() => {
@@ -240,7 +301,31 @@ export function useSimulation<L>(
         setActiveQuiz(null);
         setQuizAnswer(null);
         setStatus("paused");
+        resetProgress();
         store.publish(null);
+      },
+      seekTo: (t) => {
+        // A fired checkpoint owns the transport (see the doc on SimControls).
+        if (statusRef.current === "quiz") return;
+        // Stop the loop through the ref it actually reads, BEFORE the replay:
+        // a `setStatus` alone lands a render later, which is long enough for
+        // the next frame to spend its banked time on the world we are about to
+        // throw away (and to land ticks *after* the jump).
+        statusRef.current = "paused";
+        setStatus("paused");
+        try {
+          runner.seekTo(t);
+        } catch (err) {
+          // Replay runs the lesson's `step` thousands of times outside the rAF
+          // loop's try — same policy: first throw wins and reaches the boundary
+          // through the render pass.
+          fail(err);
+          return;
+        }
+        // seekTo replaces the state object, exactly as restart does.
+        liveRef.current = runner.state;
+        markProgress(runner.state.t, true);
+        store.publish(runner.caption);
       },
       setSpeed: (x) => {
         speedRef.current = x;
@@ -284,7 +369,7 @@ export function useSimulation<L>(
         }
       },
     }),
-    [emit, engage, fail, liveRef, runner, store, tick],
+    [emit, engage, fail, liveRef, markProgress, resetProgress, runner, store, tick],
   );
 
   const answerQuiz = useCallback(
@@ -319,6 +404,7 @@ export function useSimulation<L>(
     controls,
     status,
     speed,
+    furthestT,
     params,
     activeQuiz,
     answerQuiz,
