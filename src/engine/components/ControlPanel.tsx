@@ -117,7 +117,13 @@ export function ControlPanel({
                 // the unit is what makes it a rate, a percentage, a count.
                 aria-valuetext={`${value}${spec.unit ?? ""}`}
                 onChange={(e) => onChange(spec.key, Number(e.target.value))}
-                className="h-1 w-full cursor-pointer appearance-none rounded-full bg-border accent-accent"
+                className="sim-slider h-1 w-full cursor-pointer appearance-none rounded-full bg-border accent-accent"
+                // Drives the filled-track gradient in globals.css.
+                style={
+                  {
+                    "--fill": `${((Number(value) - (spec.min ?? 0)) / ((spec.max ?? 100) - (spec.min ?? 0))) * 100}%`,
+                  } as React.CSSProperties
+                }
               />
             </label>
           );

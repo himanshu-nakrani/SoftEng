@@ -199,12 +199,10 @@ body::after {
      (~16px) plus the column's 6px gap plus the panel's 12px `gap-y` put 34px
      of cushion between the track and anything on the row above.
 
-     FILLED TRACK (handoff, one line, ControlPanel's owner): add
-     `style={{ "--fill": `${((n - spec.min) / (spec.max - spec.min)) * 100}%` }}`
-     to the range input and a `linear-gradient(to right, var(--color-accent) 0
-     var(--fill), transparent var(--fill))` background-image can be switched on
-     here. Deliberately not shipped: without that inline value the gradient has
-     nothing to read.
+     FILLED TRACK: ControlPanel sets `--fill` inline (value/min/max as a
+     percentage); the gradient below paints the travelled side of the track
+     amber. Scoped to `.sim-slider` so sliders without the inline var (the
+     landing vignette) keep their plain track.
   ------------------------------------------------------------------------- */
   .sim-slider,
   input[type="range"].accent-accent {
@@ -213,6 +211,14 @@ body::after {
     padding-block: 20px;
     margin-block: -20px;
     background-clip: content-box;
+  }
+
+  .sim-slider {
+    background-image: linear-gradient(
+      to right,
+      var(--color-accent) 0 var(--fill, 0%),
+      transparent var(--fill, 0%)
+    );
   }
 
   .sim-slider::-webkit-slider-runnable-track,
