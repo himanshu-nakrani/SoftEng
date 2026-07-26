@@ -2,47 +2,49 @@
 
 /* ---------------------------------------------------------------------------
    syslab design tokens — dark, technical, refined.
-   Warm graphite surfaces, phosphor-amber primary, hairline borders, glow accents.
-   These CSS variables are shared verbatim by UI *and* SVG visualizations so
-   the whole site speaks one visual language.
+   Arctic console: cool Polar Night surfaces, frost-cyan primary, hairline
+   borders, glow accents. CSS variables are shared verbatim by UI *and* SVG
+   visualizations so the whole site speaks one visual language.
 --------------------------------------------------------------------------- */
 
 @theme {
-  /* surfaces — warm graphite, night-shift control room */
-  --color-bg: oklch(13.5% 0.01 70);
-  --color-surface: oklch(16.5% 0.012 70);
-  --color-raised: oklch(20% 0.014 70);
-  --color-overlay: oklch(23% 0.016 70);
+  /* surfaces — Polar Night cool graphite (hue ~255) */
+  --color-bg: oklch(18% 0.014 255);
+  --color-surface: oklch(27% 0.018 255);
+  --color-raised: oklch(33% 0.02 255);
+  --color-overlay: oklch(38% 0.022 255);
 
   /* hairlines */
-  --color-border: oklch(27% 0.016 70);
-  --color-border-bright: oklch(36% 0.02 70);
+  --color-border: oklch(42% 0.024 255);
+  --color-border-bright: oklch(52% 0.028 255);
 
-  /* text — warm off-whites */
-  --color-fg: oklch(93% 0.008 80);
-  --color-fg-muted: oklch(66% 0.014 75);
-  --color-fg-faint: oklch(47% 0.014 75);
+  /* text — cool snow whites */
+  --color-fg: oklch(94% 0.008 250);
+  --color-fg-muted: oklch(74% 0.018 250);
+  --color-fg-faint: oklch(56% 0.02 255);
 
-  /* PRIMARY — phosphor amber: CTAs, request packets, rings, outlined type */
-  --color-accent: oklch(80% 0.15 80);
-  --color-accent-dim: oklch(80% 0.15 80 / 12%);
+  /* PRIMARY — frost cyan (Nord nord8): CTAs, request packets, rings, outline */
+  --color-accent: oklch(78% 0.055 215);
+  --color-accent-dim: oklch(78% 0.055 215 / 14%);
 
-  /* semantic glow accents (glow-amber === accent; orange is the WARNING
-     hue so degraded states never impersonate the brand color) */
-  --color-glow-amber: oklch(80% 0.15 80);
-  --color-glow-orange: oklch(72% 0.16 50);
-  --color-glow-cyan: oklch(80% 0.11 210); /* demoted: info, misses */
-  --color-glow-violet: oklch(74% 0.14 300);
-  --color-glow-green: oklch(80% 0.15 150);
-  --color-glow-red: oklch(66% 0.19 28);
+  /* semantic glow accents. glow-amber tracks the brand primary (legacy key
+     name for the scaling module accent) so CTAs and "amber" modules share
+     frost. Orange is the WARNING hue so degraded states never impersonate
+     brand. Info/misses use a deeper cool blue, distinct from brand frost. */
+  --color-glow-amber: oklch(78% 0.055 215);
+  --color-glow-orange: oklch(72% 0.1 45);
+  --color-glow-cyan: oklch(68% 0.05 240); /* demoted: info, misses */
+  --color-glow-violet: oklch(72% 0.08 320);
+  --color-glow-green: oklch(76% 0.07 140);
+  --color-glow-red: oklch(62% 0.12 20);
 
   /* dimmed accent surfaces (chips, badges, meter tracks) */
-  --color-glow-amber-dim: oklch(80% 0.15 80 / 12%);
-  --color-glow-orange-dim: oklch(72% 0.16 50 / 12%);
-  --color-glow-cyan-dim: oklch(80% 0.11 210 / 12%);
-  --color-glow-violet-dim: oklch(74% 0.14 300 / 12%);
-  --color-glow-green-dim: oklch(80% 0.15 150 / 12%);
-  --color-glow-red-dim: oklch(66% 0.19 28 / 12%);
+  --color-glow-amber-dim: oklch(78% 0.055 215 / 14%);
+  --color-glow-orange-dim: oklch(72% 0.1 45 / 14%);
+  --color-glow-cyan-dim: oklch(68% 0.05 240 / 14%);
+  --color-glow-violet-dim: oklch(72% 0.08 320 / 14%);
+  --color-glow-green-dim: oklch(76% 0.07 140 / 14%);
+  --color-glow-red-dim: oklch(62% 0.12 20 / 14%);
 
   /* typography */
   --font-display: var(--font-bricolage);
@@ -74,7 +76,7 @@ body {
 }
 
 ::selection {
-  background: oklch(80% 0.15 80 / 25%);
+  background: oklch(78% 0.055 215 / 28%);
   color: var(--color-fg);
 }
 
@@ -109,7 +111,7 @@ body::after {
 /* dot-grid backdrop — hero, lesson map */
 .dot-grid {
   background-image: radial-gradient(
-    oklch(36% 0.02 70 / 55%) 1px,
+    oklch(52% 0.028 255 / 45%) 1px,
     transparent 1px
   );
   background-size: 24px 24px;
@@ -201,8 +203,8 @@ body::after {
 
      FILLED TRACK: ControlPanel sets `--fill` inline (value/min/max as a
      percentage); the gradient below paints the travelled side of the track
-     amber. Scoped to `.sim-slider` so sliders without the inline var (the
-     landing vignette) keep their plain track.
+     in brand frost. Scoped to `.sim-slider` so sliders without the inline
+     var (the landing vignette) keep their plain track.
   ------------------------------------------------------------------------- */
   .sim-slider,
   input[type="range"].accent-accent {

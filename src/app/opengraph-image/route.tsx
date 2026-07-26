@@ -19,10 +19,10 @@ export const dynamic = "force-static";
 
 const size = { width: 1200, height: 630 };
 
-const BG = "#1a1712";
-const AMBER = "#f0b135";
-const FG = "#eee6da";
-const FAINT = "#8a8075";
+const BG = "#2e3440";
+const FROST = "#88c0d0";
+const FG = "#eceff4";
+const FAINT = "#8a93a6";
 
 export function GET() {
   const live = allLessons.filter((l) => l.status === "available").length;
@@ -39,7 +39,7 @@ export function GET() {
           background: BG,
           padding: "68px 76px",
           color: FG,
-          borderTop: `6px solid ${AMBER}`,
+          borderTop: `6px solid ${FROST}`,
         }}
       >
         {/* wordmark row */}
@@ -60,7 +60,7 @@ export function GET() {
               width: 10,
               height: 10,
               borderRadius: 10,
-              background: AMBER,
+              background: FROST,
               marginLeft: 10,
               marginTop: 10,
             }}
@@ -80,7 +80,7 @@ export function GET() {
               display: "flex",
               fontSize: 92,
               lineHeight: 1.05,
-              color: AMBER,
+              color: FROST,
             }}
           >
             breaking them.
@@ -89,7 +89,7 @@ export function GET() {
             style={{
               width: 190,
               height: 5,
-              background: AMBER,
+              background: FROST,
               marginTop: 38,
             }}
           />

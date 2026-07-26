@@ -1,0 +1,737 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>syslab · alternate theme mockups</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root,
+      [data-theme="amber"] {
+        --bg: oklch(13.5% 0.01 70);
+        --surface: oklch(16.5% 0.012 70);
+        --raised: oklch(20% 0.014 70);
+        --overlay: oklch(23% 0.016 70);
+        --border: oklch(27% 0.016 70);
+        --border-bright: oklch(36% 0.02 70);
+        --fg: oklch(93% 0.008 80);
+        --fg-muted: oklch(66% 0.014 75);
+        --fg-faint: oklch(47% 0.014 75);
+        --accent: oklch(80% 0.15 80);
+        --accent-dim: oklch(80% 0.15 80 / 14%);
+        --orange: oklch(72% 0.16 50);
+        --cyan: oklch(80% 0.11 210);
+        --violet: oklch(74% 0.14 300);
+        --green: oklch(80% 0.15 150);
+        --red: oklch(66% 0.19 28);
+        --label: "CURRENT · phosphor amber";
+      }
+
+      [data-theme="arctic"] {
+        --bg: #242933;
+        --surface: #2e3440;
+        --raised: #3b4252;
+        --overlay: #434c5e;
+        --border: #4c566a;
+        --border-bright: #6b758a;
+        --fg: #eceff4;
+        --fg-muted: #d8dee9;
+        --fg-faint: #7b8496;
+        --accent: #88c0d0;
+        --accent-dim: rgb(136 192 208 / 16%);
+        --orange: #d08770;
+        --cyan: #8fbcbb;
+        --violet: #b48ead;
+        --green: #a3be8c;
+        --red: #bf616a;
+        --label: "ARCTIC · nord frost";
+      }
+
+      [data-theme="mocha"] {
+        --bg: #11111b;
+        --surface: #181825;
+        --raised: #1e1e2e;
+        --overlay: #313244;
+        --border: #45475a;
+        --border-bright: #585b70;
+        --fg: #cdd6f4;
+        --fg-muted: #a6adc8;
+        --fg-faint: #6c7086;
+        --accent: #cba6f7;
+        --accent-dim: rgb(203 166 247 / 16%);
+        --orange: #fab387;
+        --cyan: #89dceb;
+        --violet: #b4befe;
+        --green: #a6e3a1;
+        --red: #f38ba8;
+        --label: "MOCHA · catppuccin mauve";
+      }
+
+      [data-theme="fluent"] {
+        --bg: #141414;
+        --surface: #1c1c1c;
+        --raised: #202020;
+        --overlay: #2a2a2a;
+        --border: #3a3a3a;
+        --border-bright: #525252;
+        --fg: #f3f3f3;
+        --fg-muted: #c8c8c8;
+        --fg-faint: #8a8a8a;
+        --accent: #9184ee;
+        --accent-dim: rgb(145 132 238 / 16%);
+        --orange: #ffb900;
+        --cyan: #61d6d6;
+        --violet: #b4a7ff;
+        --green: #6ccb5f;
+        --red: #f1707b;
+        --label: "FLUENT · lavender primary";
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: "IBM Plex Sans", system-ui, sans-serif;
+        color-scheme: dark;
+      }
+
+      body {
+        transition:
+          background 0.25s ease,
+          color 0.25s ease;
+      }
+
+      .page {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 28px 24px 64px;
+      }
+
+      .hero {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px 24px;
+        align-items: end;
+        justify-content: space-between;
+        margin-bottom: 28px;
+      }
+
+      .hero h1 {
+        font-family: "Bricolage Grotesque", system-ui, sans-serif;
+        font-size: clamp(1.6rem, 2.4vw, 2.1rem);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin: 0 0 6px;
+      }
+
+      .hero p {
+        margin: 0;
+        color: var(--fg-muted);
+        max-width: 46ch;
+        line-height: 1.55;
+      }
+
+      .badge {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 10px;
+      }
+
+      .themes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .themes button {
+        appearance: none;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--fg-muted);
+        border-radius: 999px;
+        padding: 8px 14px;
+        font: 500 12px/1 "IBM Plex Mono", monospace;
+        letter-spacing: 0.04em;
+        cursor: pointer;
+        transition:
+          border-color 0.15s ease,
+          color 0.15s ease,
+          background 0.15s ease,
+          box-shadow 0.15s ease;
+      }
+
+      .themes button:hover {
+        color: var(--fg);
+        border-color: var(--border-bright);
+      }
+
+      .themes button[aria-pressed="true"] {
+        color: var(--bg);
+        background: var(--accent);
+        border-color: var(--accent);
+        box-shadow: 0 0 0 1px var(--bg), 0 0 18px -4px var(--accent);
+      }
+
+      .shell {
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        gap: 0;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        overflow: hidden;
+        background: var(--surface);
+        box-shadow: 0 24px 60px -30px rgb(0 0 0 / 55%);
+      }
+
+      @media (max-width: 860px) {
+        .shell {
+          grid-template-columns: 1fr;
+        }
+        .sidebar {
+          display: none;
+        }
+      }
+
+      .sidebar {
+        border-right: 1px solid var(--border);
+        background: color-mix(in oklab, var(--surface) 92%, black);
+        padding: 18px 12px;
+      }
+
+      .logo {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        padding: 4px 10px 16px;
+        font-family: "Bricolage Grotesque", system-ui, sans-serif;
+        font-weight: 700;
+        font-size: 1.05rem;
+      }
+
+      .logo i {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: var(--accent);
+        box-shadow: 0 0 10px var(--accent);
+      }
+
+      .nav-label {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 10px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--fg-faint);
+        padding: 12px 10px 6px;
+      }
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        color: var(--fg-muted);
+        font-size: 13px;
+      }
+
+      .nav-item.active {
+        background: var(--raised);
+        color: var(--fg);
+      }
+
+      .ring {
+        width: 14px;
+        height: 14px;
+        border-radius: 999px;
+        border: 1.5px solid var(--border-bright);
+        position: relative;
+        flex-shrink: 0;
+      }
+
+      .nav-item.active .ring {
+        border-color: var(--accent);
+        box-shadow: inset 0 0 0 3px color-mix(in oklab, var(--accent) 35%, transparent);
+      }
+
+      .main {
+        padding: 22px 22px 18px;
+        background: var(--bg);
+      }
+
+      .crumb {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 11px;
+        color: var(--fg-faint);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+      }
+
+      .lesson-title {
+        font-family: "Bricolage Grotesque", system-ui, sans-serif;
+        font-size: 1.55rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin: 0 0 8px;
+      }
+
+      .tagline {
+        color: var(--fg-muted);
+        margin: 0 0 18px;
+        max-width: 56ch;
+        line-height: 1.55;
+        font-size: 14px;
+      }
+
+      .figure {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: var(--surface);
+        overflow: hidden;
+      }
+
+      .stage {
+        position: relative;
+        height: 280px;
+        background:
+          radial-gradient(ellipse at 50% 40%, var(--accent-dim), transparent 55%),
+          var(--raised);
+        border-bottom: 1px solid var(--border);
+      }
+
+      svg.sim {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      .meters {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        padding: 14px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .meter {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px 12px;
+      }
+
+      .meter .k {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--fg-faint);
+        margin-bottom: 6px;
+      }
+
+      .meter .v {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 18px;
+        font-weight: 500;
+        margin-bottom: 8px;
+      }
+
+      .track {
+        height: 4px;
+        border-radius: 999px;
+        background: var(--overlay);
+        overflow: hidden;
+      }
+
+      .fill {
+        height: 100%;
+        border-radius: inherit;
+        background: var(--accent);
+        box-shadow: 0 0 12px -2px var(--accent);
+      }
+
+      .fill.warn {
+        background: var(--orange);
+        box-shadow: 0 0 12px -2px var(--orange);
+      }
+
+      .fill.ok {
+        background: var(--green);
+        box-shadow: 0 0 12px -2px var(--green);
+      }
+
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        padding: 12px 14px;
+      }
+
+      .btn {
+        appearance: none;
+        border: 0;
+        border-radius: 9px;
+        padding: 9px 14px;
+        font: 600 12px/1 "IBM Plex Sans", system-ui, sans-serif;
+        cursor: pointer;
+      }
+
+      .btn.primary {
+        background: var(--accent);
+        color: var(--bg);
+        box-shadow: 0 0 20px -6px var(--accent);
+      }
+
+      .btn.ghost {
+        background: transparent;
+        color: var(--fg-muted);
+        border: 1px solid var(--border);
+      }
+
+      .chip {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 11px;
+        color: var(--fg-faint);
+        margin-left: auto;
+      }
+
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        padding: 0 14px 14px;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 11px;
+        color: var(--fg-muted);
+      }
+
+      .legend span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+      }
+
+      .gallery {
+        margin-top: 48px;
+      }
+
+      .gallery h2 {
+        font-family: "Bricolage Grotesque", system-ui, sans-serif;
+        font-size: 1.25rem;
+        margin: 0 0 8px;
+      }
+
+      .gallery > p {
+        color: var(--fg-muted);
+        margin: 0 0 18px;
+        font-size: 14px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+      }
+
+      figure.card {
+        margin: 0;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        overflow: hidden;
+        background: var(--surface);
+      }
+
+      figure.card img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 16 / 10;
+        object-fit: cover;
+        background: var(--raised);
+      }
+
+      figure.card.square img {
+        aspect-ratio: 1;
+      }
+
+      figcaption {
+        padding: 12px 14px 14px;
+      }
+
+      figcaption strong {
+        display: block;
+        font-size: 13px;
+        margin-bottom: 4px;
+      }
+
+      figcaption span {
+        color: var(--fg-muted);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .note {
+        margin-top: 28px;
+        padding: 14px 16px;
+        border: 1px dashed var(--border-bright);
+        border-radius: 12px;
+        color: var(--fg-muted);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .note code {
+        font-family: "IBM Plex Mono", monospace;
+        color: var(--accent);
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body data-theme="arctic">
+    <div class="page">
+      <header class="hero">
+        <div>
+          <div class="badge" id="themeLabel">ARCTIC · nord frost</div>
+          <h1>syslab alternate theme mockups</h1>
+          <p>
+            Live token swap on a lesson shell, plus concept images. Brand
+            primary changes; warning / fault / success hues stay semantic.
+          </p>
+        </div>
+        <div class="themes" role="group" aria-label="Theme">
+          <button type="button" data-theme-btn="amber">Amber (current)</button>
+          <button type="button" data-theme-btn="arctic" aria-pressed="true">
+            Arctic
+          </button>
+          <button type="button" data-theme-btn="mocha">Mocha</button>
+          <button type="button" data-theme-btn="fluent">Fluent</button>
+        </div>
+      </header>
+
+      <section class="shell" aria-label="Lesson UI mockup">
+        <aside class="sidebar">
+          <div class="logo">syslab <i></i></div>
+          <div class="nav-label">Scaling</div>
+          <div class="nav-item"><span class="ring"></span>Client &amp; Server</div>
+          <div class="nav-item"><span class="ring"></span>Load Balancing</div>
+          <div class="nav-item active">
+            <span class="ring"></span>Realtime Delivery
+          </div>
+          <div class="nav-label">Distributed</div>
+          <div class="nav-item"><span class="ring"></span>Leader Election</div>
+          <div class="nav-item"><span class="ring"></span>Gossip</div>
+        </aside>
+
+        <div class="main">
+          <div class="crumb">track 01 · scaling · interactive</div>
+          <h2 class="lesson-title">Realtime Delivery</h2>
+          <p class="tagline">
+            Polling, long-polling, websockets — and the reconnect storm when
+            the server restarts. Drive the transport and watch the load change.
+          </p>
+
+          <div class="figure">
+            <div class="stage" aria-hidden="true">
+              <svg class="sim" viewBox="0 0 720 280" role="img">
+                <!-- edges -->
+                <path
+                  d="M120 140 C 220 60, 320 60, 420 140"
+                  fill="none"
+                  stroke="var(--border-bright)"
+                  stroke-width="1.25"
+                />
+                <path
+                  d="M120 140 C 220 220, 320 220, 420 140"
+                  fill="none"
+                  stroke="var(--border-bright)"
+                  stroke-width="1.25"
+                />
+                <path
+                  d="M420 140 C 500 90, 560 90, 620 140"
+                  fill="none"
+                  stroke="var(--border-bright)"
+                  stroke-width="1.25"
+                />
+                <path
+                  d="M420 140 C 500 190, 560 190, 620 140"
+                  fill="none"
+                  stroke="var(--border-bright)"
+                  stroke-width="1.25"
+                />
+
+                <!-- packets -->
+                <circle cx="210" cy="88" r="4" fill="var(--accent)">
+                  <animate attributeName="cx" values="150;300;420" dur="2.8s" repeatCount="indefinite" />
+                  <animate attributeName="cy" values="125;70;140" dur="2.8s" repeatCount="indefinite" />
+                </circle>
+                <circle cx="260" cy="190" r="4" fill="var(--accent)">
+                  <animate attributeName="cx" values="160;300;410" dur="3.2s" begin="0.4s" repeatCount="indefinite" />
+                  <animate attributeName="cy" values="155;210;145" dur="3.2s" begin="0.4s" repeatCount="indefinite" />
+                </circle>
+                <circle cx="500" cy="105" r="3.5" fill="var(--green)">
+                  <animate attributeName="cx" values="430;520;610" dur="2.4s" begin="0.2s" repeatCount="indefinite" />
+                  <animate attributeName="cy" values="140;100;140" dur="2.4s" begin="0.2s" repeatCount="indefinite" />
+                </circle>
+                <circle cx="540" cy="175" r="3.5" fill="var(--cyan)">
+                  <animate attributeName="cx" values="430;530;610" dur="2.9s" begin="0.8s" repeatCount="indefinite" />
+                  <animate attributeName="cy" values="145;185;145" dur="2.9s" begin="0.8s" repeatCount="indefinite" />
+                </circle>
+                <circle cx="340" cy="95" r="3.2" fill="var(--red)" opacity="0.9">
+                  <animate attributeName="opacity" values="0.95;0.2;0.95" dur="1.6s" repeatCount="indefinite" />
+                </circle>
+
+                <!-- nodes -->
+                <g>
+                  <rect x="70" y="108" width="88" height="56" rx="10" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.5" />
+                  <text x="114" y="132" text-anchor="middle" fill="var(--fg)" font-family="IBM Plex Mono" font-size="11">client</text>
+                  <text x="114" y="148" text-anchor="middle" fill="var(--fg-faint)" font-family="IBM Plex Mono" font-size="9">ws open</text>
+                </g>
+                <g>
+                  <rect x="376" y="108" width="88" height="56" rx="10" fill="var(--surface)" stroke="var(--border-bright)" stroke-width="1.25" />
+                  <text x="420" y="132" text-anchor="middle" fill="var(--fg)" font-family="IBM Plex Mono" font-size="11">gateway</text>
+                  <text x="420" y="148" text-anchor="middle" fill="var(--fg-faint)" font-family="IBM Plex Mono" font-size="9">lb · rr</text>
+                </g>
+                <g>
+                  <rect x="576" y="108" width="88" height="56" rx="10" fill="var(--surface)" stroke="var(--green)" stroke-width="1.25" />
+                  <text x="620" y="132" text-anchor="middle" fill="var(--fg)" font-family="IBM Plex Mono" font-size="11">server</text>
+                  <text x="620" y="148" text-anchor="middle" fill="var(--green)" font-family="IBM Plex Mono" font-size="9">healthy</text>
+                </g>
+              </svg>
+            </div>
+
+            <div class="meters">
+              <div class="meter">
+                <div class="k">requests / s</div>
+                <div class="v" style="color: var(--accent)">142</div>
+                <div class="track"><div class="fill" style="width: 72%"></div></div>
+              </div>
+              <div class="meter">
+                <div class="k">p99 latency</div>
+                <div class="v" style="color: var(--orange)">210ms</div>
+                <div class="track"><div class="fill warn" style="width: 58%"></div></div>
+              </div>
+              <div class="meter">
+                <div class="k">open sockets</div>
+                <div class="v" style="color: var(--green)">98%</div>
+                <div class="track"><div class="fill ok" style="width: 98%"></div></div>
+              </div>
+            </div>
+
+            <div class="controls">
+              <button class="btn primary" type="button">Play</button>
+              <button class="btn ghost" type="button">Step</button>
+              <button class="btn ghost" type="button">Kill gateway</button>
+              <span class="chip">fig · realtime-delivery · seed 42</span>
+            </div>
+
+            <div class="legend">
+              <span><i class="dot" style="background: var(--accent)"></i>request</span>
+              <span><i class="dot" style="background: var(--green)"></i>response</span>
+              <span><i class="dot" style="background: var(--cyan)"></i>info / miss</span>
+              <span><i class="dot" style="background: var(--orange)"></i>degraded</span>
+              <span><i class="dot" style="background: var(--red)"></i>drop / fault</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gallery">
+        <h2>Concept images</h2>
+        <p>
+          Generated vision frames (text may be imperfect — use the live shell
+          above for accurate layout).
+        </p>
+        <div class="grid">
+          <figure class="card square">
+            <img src="01.jpg" alt="Raft leader-election stage in arctic cyan theme" />
+            <figcaption>
+              <strong>Stage plate · Raft ring</strong>
+              <span>Ice-cyan heartbeats, violet votes, green grants; red dead node; client write stays warm amber for semantic contrast.</span>
+            </figcaption>
+          </figure>
+          <figure class="card">
+            <img src="02.jpg" alt="Side-by-side CURRENT amber vs ARCTIC cyan lesson UI" />
+            <figcaption>
+              <strong>CURRENT vs ARCTIC</strong>
+              <span>Same lesson shell, swapped temperature: phosphor amber on the left, frost cyan on the right.</span>
+            </figcaption>
+          </figure>
+          <figure class="card">
+            <img src="03.jpg" alt="Lavender mocha landing page concept" />
+            <figcaption>
+              <strong>Mocha landing</strong>
+              <span>Catppuccin-like lavender brand, soft violet surfaces, product-marketing layout.</span>
+            </figcaption>
+          </figure>
+          <figure class="card">
+            <img src="04.jpg" alt="Full arctic console lesson UI with live routing sim" />
+            <figcaption>
+              <strong>Arctic console · full shell</strong>
+              <span>Cool Polar Night surfaces, ice-cyan chrome, semantic red for failure — full sidebar + stage + meters.</span>
+            </figcaption>
+          </figure>
+        </div>
+
+        <div class="note">
+          Implementation path: remap only <code>@theme</code> tokens in
+          <code>src/app/globals.css</code> (and OG hex copies in
+          <code>src/lib/og.tsx</code>). Keep
+          <code>--color-glow-orange</code> / red / green / cyan for semantic
+          packet and meter roles.
+        </div>
+      </section>
+    </div>
+
+    <script>
+      const labels = {
+        amber: "CURRENT · phosphor amber",
+        arctic: "ARCTIC · nord frost",
+        mocha: "MOCHA · catppuccin mauve",
+        fluent: "FLUENT · lavender primary",
+      };
+
+      const buttons = document.querySelectorAll("[data-theme-btn]");
+      const label = document.getElementById("themeLabel");
+
+      function setTheme(name) {
+        document.body.dataset.theme = name;
+        label.textContent = labels[name] || name;
+        buttons.forEach((btn) => {
+          btn.setAttribute(
+            "aria-pressed",
+            btn.dataset.themeBtn === name ? "true" : "false",
+          );
+        });
+        history.replaceState(null, "", `#${name}`);
+      }
+
+      buttons.forEach((btn) => {
+        btn.addEventListener("click", () => setTheme(btn.dataset.themeBtn));
+      });
+
+      const fromHash = location.hash.replace("#", "");
+      if (labels[fromHash]) setTheme(fromHash);
+    </script>
+  </body>
+</html>
