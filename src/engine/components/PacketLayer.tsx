@@ -21,6 +21,7 @@ export const BUILT_IN_PACKET_STYLES: Record<PacketType, PacketStyle> = {
   replication: { color: "var(--color-glow-violet)" },
   drop: { color: "var(--color-glow-red)", fadeOut: true },
   limited: { color: "var(--color-glow-red)" },
+  heartbeat: { color: "var(--color-glow-cyan)", size: 2.5 },
 };
 
 /** Drawn for a `Packet.type` no one registered — visible beats invisible. */
