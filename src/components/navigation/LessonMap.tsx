@@ -37,7 +37,7 @@ export function TrackProgress() {
   const pct = Math.round(track.fraction * 100);
 
   return (
-    <GlowCard className="mb-10 px-5 py-4">
+    <GlowCard className="surface-card mb-10 px-5 py-4 sm:px-6">
       <div className="mb-3 flex items-baseline gap-3">
         <span className="tech-label">track progress</span>
         <div className="tech-rule min-w-6 flex-1" />
@@ -191,7 +191,7 @@ function ResumeCard({
 }) {
   return (
     <Link href={href} className="group block">
-      <GlowCard active className="mb-12 flex items-center gap-4 px-5 py-4">
+        <GlowCard active className="surface-card mb-12 flex items-center gap-4 px-5 py-4 sm:px-6">
         <div className="min-w-0">
           <p className="tech-label mb-0.5">{label}</p>
           <p className="font-display truncate text-lg font-semibold">{title}</p>
@@ -223,10 +223,10 @@ function MapNode({
   const row = (
     <div
       className={cn(
-        "flex-1 rounded-md border border-transparent px-4 py-3.5 transition-all",
+        "flex-1 rounded-xl border border-transparent bg-surface/15 px-4 py-4 shadow-[inset_0_1px_0_oklch(94%_0.008_250_/_3%)] transition-all",
         soon
           ? "opacity-40"
-          : "group-hover:border-border-bright group-hover:bg-surface/60",
+          : "group-hover:border-border-bright group-hover:bg-surface/70 group-hover:shadow-[0_1rem_2rem_-1.5rem_oklch(5%_0.02_255_/_85%)]",
       )}
     >
       <div className="mb-1 flex items-baseline gap-2.5">
@@ -301,7 +301,7 @@ export function LessonMap() {
         // id + scroll-mt is a contract with the landing page, which links
         // straight to /learn#<module-slug>.
         <section key={mod.slug} id={mod.slug} className="mb-12 scroll-mt-24">
-          <div className="mb-5 flex items-center gap-3">
+          <div className="section-heading mb-5">
             <span
               className="size-1.5 rounded-full"
               style={{

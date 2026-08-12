@@ -68,7 +68,10 @@ html {
 }
 
 body {
-  background: var(--color-bg);
+  background:
+    radial-gradient(circle at 78% -10%, oklch(78% 0.055 215 / 8%), transparent 34rem),
+    radial-gradient(circle at -8% 42%, oklch(72% 0.08 320 / 4%), transparent 30rem),
+    var(--color-bg);
   color: var(--color-fg);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -378,6 +381,121 @@ input[type="range"].accent-accent:focus-visible {
 
 .vignette-packet {
   animation: vignette-flow 2.7s linear infinite;
+}
+
+/* ---------------------------------------------------------------------------
+   Editorial surfaces — shared page chrome and hierarchy
+--------------------------------------------------------------------------- */
+
+@layer components {
+  .site-header-shell {
+    border-bottom: 1px solid oklch(42% 0.024 255 / 46%);
+    background: linear-gradient(to bottom, oklch(18% 0.014 255 / 92%), oklch(18% 0.014 255 / 58%));
+    backdrop-filter: blur(16px);
+  }
+
+  .status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    border: 1px solid oklch(76% 0.07 140 / 22%);
+    border-radius: 999px;
+    padding: 0.35rem 0.65rem;
+    background: oklch(76% 0.07 140 / 7%);
+    color: var(--color-fg-muted);
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .hero-copy {
+    text-wrap: balance;
+  }
+
+  .hero-surface {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid oklch(52% 0.028 255 / 45%);
+    border-radius: 1.25rem;
+    background:
+      linear-gradient(145deg, oklch(33% 0.02 255 / 54%), oklch(18% 0.014 255 / 25%)),
+      radial-gradient(circle at 80% 50%, oklch(78% 0.055 215 / 9%), transparent 58%);
+    box-shadow: 0 2rem 5rem -3rem oklch(5% 0.02 255 / 80%), inset 0 1px 0 oklch(94% 0.008 250 / 7%);
+  }
+
+  .hero-surface::after {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    content: "";
+    background: linear-gradient(115deg, transparent 0 42%, oklch(94% 0.008 250 / 4%) 50%, transparent 58%);
+    opacity: 0.7;
+  }
+
+  .section-heading {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-bottom: 1px solid oklch(42% 0.024 255 / 55%);
+    padding-bottom: 0.8rem;
+  }
+
+  .module-row {
+    position: relative;
+    overflow: hidden;
+    border-block: 1px solid oklch(42% 0.024 255 / 55%);
+    margin-top: -1px;
+    background: linear-gradient(90deg, transparent, oklch(27% 0.018 255 / 18%));
+    transition: background 180ms var(--ease-out-soft), transform 180ms var(--ease-out-soft), border-color 180ms var(--ease-out-soft);
+  }
+
+  .module-row:hover {
+    z-index: 1;
+    background: linear-gradient(90deg, oklch(33% 0.02 255 / 48%), oklch(33% 0.02 255 / 12%));
+    border-color: oklch(52% 0.028 255 / 68%);
+    transform: translateX(0.25rem);
+  }
+
+  .module-row::after {
+    position: absolute;
+    inset-block: 0;
+    right: 0;
+    width: 22%;
+    pointer-events: none;
+    content: "";
+    background: linear-gradient(90deg, transparent, oklch(78% 0.055 215 / 4%));
+    opacity: 0;
+    transition: opacity 180ms ease;
+  }
+
+  .module-row:hover::after {
+    opacity: 1;
+  }
+
+  .surface-card {
+    border: 1px solid oklch(52% 0.028 255 / 42%);
+    border-radius: 0.9rem;
+    background: linear-gradient(145deg, oklch(33% 0.02 255 / 44%), oklch(27% 0.018 255 / 58%));
+    box-shadow: inset 0 1px 0 oklch(94% 0.008 250 / 5%);
+  }
+
+  .lesson-shell {
+    position: relative;
+  }
+
+  .lesson-shell::before {
+    position: absolute;
+    top: -2.5rem;
+    right: -8rem;
+    width: 20rem;
+    height: 20rem;
+    pointer-events: none;
+    content: "";
+    background: radial-gradient(circle, oklch(78% 0.055 215 / 7%), transparent 68%);
+    filter: blur(12px);
+  }
 }
 
 /* ---------------------------------------------------------------------------

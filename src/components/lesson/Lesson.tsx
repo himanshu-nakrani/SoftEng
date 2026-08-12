@@ -108,17 +108,17 @@ export function Lesson({ slug, children }: LessonProps) {
     <LessonContext.Provider value={meta}>
       <LessonCompletionContext.Provider value={completeLessonSection}>
         <article>
-          <header className="relative mb-14">
+          <header className="surface-card relative mb-14 overflow-hidden px-5 py-6 sm:px-8 sm:py-8">
             {/* ghost index numeral */}
             <span
               aria-hidden
-              className="font-display pointer-events-none absolute -top-8 -left-2 text-[8rem] leading-none font-bold text-fg/[0.04] select-none"
+              className="font-display pointer-events-none absolute -top-6 -left-1 text-[8rem] leading-none font-bold text-accent/[0.06] select-none"
             >
               {nn}
             </span>
 
             <div className="relative">
-              <div className="mb-4 flex items-center gap-3">
+              <div className="mb-5 flex items-center gap-3">
                 <span className="tech-label">{mod.title}</span>
                 <div className="tech-rule flex-1" />
                 <MasteryMark meta={meta} />
@@ -127,7 +127,7 @@ export function Lesson({ slug, children }: LessonProps) {
                 </span>
               </div>
 
-              <h1 className="font-display mb-3 text-3xl font-bold tracking-tight sm:text-4xl">
+              <h1 className="hero-copy font-display mb-3 text-3xl font-bold tracking-tight sm:text-4xl">
                 {meta.title}
               </h1>
               <p className="mb-6 max-w-xl leading-relaxed text-fg-muted">

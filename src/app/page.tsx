@@ -9,25 +9,27 @@ import Link from "next/link";
 
 function SiteHeader() {
   return (
-    <header className="mx-auto flex max-w-6xl items-center gap-6 px-6 py-5">
-      <Link href="/" className="flex items-baseline gap-1">
-        <span className="font-display text-xl font-bold tracking-tight">
-          syslab
+    <header className="site-header-shell sticky top-0 z-40">
+      <div className="mx-auto flex max-w-6xl items-center gap-4 px-6 py-4">
+        <Link href="/" className="group flex items-baseline gap-1.5">
+          <span className="font-display text-xl font-bold tracking-tight transition-colors group-hover:text-accent">
+            syslab
+          </span>
+          <span className="size-1.5 rounded-full bg-accent shadow-[0_0_8px_var(--color-accent)] transition-shadow group-hover:shadow-[0_0_14px_var(--color-accent)]" />
+        </Link>
+        <span className="status-chip hidden sm:inline-flex">
+          <span className="size-1.5 animate-pulse rounded-full bg-glow-green" />
+          all systems nominal
         </span>
-        <span className="size-1.5 rounded-full bg-accent shadow-[0_0_6px_var(--color-accent)]" />
-      </Link>
-      <span className="tech-label hidden items-center gap-1.5 sm:flex">
-        <span className="size-1.5 animate-pulse rounded-full bg-glow-green" />
-        all systems nominal
-      </span>
-      <nav className="ml-auto flex items-center gap-5 text-sm text-fg-muted">
-        <Link href="/learn" className="transition-colors hover:text-fg">
-          Learning path
-        </Link>
-        <Link href="/about" className="transition-colors hover:text-fg">
-          About
-        </Link>
-      </nav>
+        <nav aria-label="Primary navigation" className="ml-auto flex items-center gap-1 text-sm text-fg-muted">
+          <Link href="/learn" className="rounded-full px-3 py-1.5 transition-colors hover:bg-surface/70 hover:text-fg">
+            Learning path
+          </Link>
+          <Link href="/about" className="rounded-full px-3 py-1.5 transition-colors hover:bg-surface/70 hover:text-fg">
+            About
+          </Link>
+        </nav>
+      </div>
     </header>
   );
 }
@@ -62,7 +64,12 @@ export default function Home() {
         {/* ---- hero: the product, running ---- */}
         <section className="mx-auto grid max-w-6xl items-center gap-12 px-6 pt-16 pb-28 lg:grid-cols-[1fr_1.05fr]">
           <div>
-            <h1 className="font-display mb-6 text-[2.7rem] leading-[1.02] font-bold tracking-tight text-balance sm:text-6xl lg:text-[4.2rem]">
+            <div className="mb-5 flex items-center gap-3 font-mono text-[10px] tracking-[0.18em] text-fg-faint uppercase">
+              <span className="text-accent">syslab / interactive systems</span>
+              <span className="h-px w-10 bg-border-bright" />
+              <span>01</span>
+            </div>
+            <h1 className="hero-copy font-display mb-6 text-[2.7rem] leading-[1.02] font-bold tracking-tight text-balance sm:text-6xl lg:text-[4.2rem]">
               Learn systems by{" "}
               <span className="text-outline">breaking</span> them.
             </h1>
@@ -93,7 +100,7 @@ export default function Home() {
               className="glow-blob absolute inset-0 -z-10"
               style={{ ["--glow-color" as string]: "var(--color-accent)" }}
             />
-            <div className="relative">
+              <div className="hero-surface relative px-3 pt-8 pb-4 sm:px-5">
               <CornerTicks inset={0} />
               <span
                 aria-hidden
@@ -141,7 +148,7 @@ export default function Home() {
                 <Link
                   key={mod.slug}
                   href={`/learn#${mod.slug}`}
-                  className="group relative grid items-baseline gap-x-8 gap-y-2 border-t border-border py-6 transition-colors last:border-b hover:bg-surface/60 md:grid-cols-[110px_240px_1fr_auto]"
+                  className="module-row group relative grid items-baseline gap-x-8 gap-y-2 py-6 md:grid-cols-[110px_240px_1fr_auto]"
                 >
                   <span
                     className="absolute top-0 bottom-0 left-0 w-0.5 opacity-0 transition-opacity group-hover:opacity-100"
@@ -176,7 +183,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="border-t border-border">
+      <footer className="border-t border-border bg-surface/15">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-6 py-8">
           <p className="font-mono text-xs text-fg-faint">
             syslab — learn systems by breaking them
