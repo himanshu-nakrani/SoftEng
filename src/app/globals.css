@@ -489,8 +489,8 @@ input[type="range"].accent-accent:focus-visible {
   .lesson-shell::before {
     position: absolute;
     top: -2.5rem;
-    right: -8rem;
-    width: 20rem;
+    right: 0;
+    width: 16rem;
     height: 20rem;
     pointer-events: none;
     content: "";
