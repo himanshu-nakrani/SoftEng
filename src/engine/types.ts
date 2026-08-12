@@ -57,7 +57,8 @@ export type PacketType =
   | "write"
   | "replication"
   | "drop"
-  | "limited";
+  | "limited"
+  | "heartbeat";
 
 /**
  * How a packet type is drawn. Lessons register extra ones through
