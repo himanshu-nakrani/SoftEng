@@ -268,6 +268,62 @@ export const curriculum: Curriculum = {
           ],
         },
         {
+          slug: "observability",
+          title: "Observability & Incident Response",
+          description: "Signals, objectives, and safe response under production pressure.",
+          accent: "amber",
+          lessons: [
+            {
+              slug: "metrics-logs-traces",
+              moduleSlug: "observability",
+              title: "Metrics, Logs & Traces",
+              tagline:
+                "One slow checkout request, three kinds of evidence — learn which signal finds the dependency that matters.",
+              difficulty: "intermediate",
+              estimatedMinutes: 14,
+              prerequisites: ["tail-latency", "retries-timeouts"],
+              status: "available",
+              sections: [
+                { id: "three-signals", title: "Three complementary signals", kind: "concept" },
+                { id: "inspect-incident", title: "Inspect the incident", kind: "interactive" },
+                { id: "follow-trace", title: "Follow the slow span", kind: "interactive" },
+              ],
+            },
+            {
+              slug: "slos-error-budgets",
+              moduleSlug: "observability",
+              title: "SLOs & Error Budgets",
+              tagline:
+                "A rollout burns the budget faster than the calendar can forgive — decide when reliability must stop the release.",
+              difficulty: "intermediate",
+              estimatedMinutes: 14,
+              prerequisites: ["metrics-logs-traces", "tail-latency"],
+              status: "available",
+              sections: [
+                { id: "availability-target", title: "The user-facing target", kind: "concept" },
+                { id: "burn-rate", title: "Watch the budget burn", kind: "interactive" },
+                { id: "release-decision", title: "Pause the rollout", kind: "interactive" },
+              ],
+            },
+            {
+              slug: "incident-triage",
+              moduleSlug: "observability",
+              title: "Incident Triage",
+              tagline:
+                "Payments fails, retries multiply, and checkout slows — contain the feedback loop before it becomes the outage.",
+              difficulty: "advanced",
+              estimatedMinutes: 16,
+              prerequisites: ["slos-error-budgets", "circuit-breaker", "retries-timeouts"],
+              status: "available",
+              sections: [
+                { id: "symptoms", title: "Symptoms are a system", kind: "concept" },
+                { id: "find-feedback", title: "Find the feedback loop", kind: "interactive" },
+                { id: "mitigate", title: "Reduce the blast radius", kind: "interactive" },
+              ],
+            },
+          ],
+        },
+        {
           slug: "distributed",
           title: "Distributed Systems",
           description: "Queues, limits, partitions — coordination under failure.",

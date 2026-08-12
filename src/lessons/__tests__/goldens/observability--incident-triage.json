@@ -1,0 +1,45 @@
+{
+  "lesson": "observability/incident-triage",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:triage-retry-storm@18",
+      "t": 18,
+      "metrics": {
+        "errors": 52.112676,
+        "p99": 2132,
+        "retries": 42,
+        "shedding": 0,
+        "throughput": 0.00011
+      },
+      "packets": 34,
+      "nextPacketId": 1312,
+      "nodes": {
+        "api": "healthy",
+        "gateway": "healthy",
+        "payments": "dead",
+        "users": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "errors": 71.092077,
+        "p99": 2132,
+        "retries": 42,
+        "shedding": 0,
+        "throughput": 0
+      },
+      "packets": 32,
+      "nextPacketId": 2048,
+      "nodes": {
+        "api": "healthy",
+        "gateway": "healthy",
+        "payments": "dead",
+        "users": "healthy"
+      }
+    }
+  ]
+}

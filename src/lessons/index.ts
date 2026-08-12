@@ -31,6 +31,9 @@ import { cdnEdgeSim } from "@/lessons/data/cdn-edge";
 import { consistentHashingSim } from "@/lessons/data/consistent-hashing";
 import { replicationSim } from "@/lessons/data/replication";
 import { shardingSim } from "@/lessons/data/sharding";
+import { incidentTriageSim } from "@/lessons/observability/incident-triage";
+import { metricsLogsTracesSim } from "@/lessons/observability/metrics-logs-traces";
+import { slosErrorBudgetsSim } from "@/lessons/observability/slos-error-budgets";
 import { capTheoremSim } from "@/lessons/distributed/cap-theorem";
 import { deliveryGuaranteesSim } from "@/lessons/distributed/delivery-guarantees";
 import { fanoutSim } from "@/lessons/distributed/fanout";
@@ -74,6 +77,10 @@ export const simBySlug: Record<string, LessonSim<unknown>> = {
   replication: widen(replicationSim),
   sharding: widen(shardingSim),
   "consistent-hashing": widen(consistentHashingSim),
+  // observability
+  "metrics-logs-traces": widen(metricsLogsTracesSim),
+  "slos-error-budgets": widen(slosErrorBudgetsSim),
+  "incident-triage": widen(incidentTriageSim),
   // resilience
   "tail-latency": widen(tailLatencySim),
   "retries-timeouts": widen(retriesTimeoutsSim),
