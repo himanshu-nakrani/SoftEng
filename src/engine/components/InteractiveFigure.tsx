@@ -105,6 +105,8 @@ function StageContent({
   // One resolution shared by the packets and the edges that stand in for them
   // under reduced motion, so both read the same colors.
   const packetStyles = useMemo(() => resolvePacketStyles(sim), [sim]);
+  const interactive = sim.topology.nodes.some((node) => node.breakable);
+  const description = liveDescription(snapshot.nodes, sim);
 
   return (
     <>
@@ -114,8 +116,14 @@ function StageContent({
         // where preserveAspectRatio's default centres the drawing for us. Same
         // viewBox either way, so nothing in the sim knows the difference.
         className={fill ? "block size-full" : "block h-auto w-full"}
-        role="img"
-        aria-label={liveDescription(snapshot.nodes, sim)}
+        data-sim-stage
+        role={interactive ? "group" : "img"}
+        aria-roledescription={interactive ? "interactive system diagram" : undefined}
+        aria-label={
+          interactive
+            ? `${description} Activate a component to toggle its failure state.`
+            : description
+        }
       >
         <defs>
           <pattern
@@ -469,7 +477,7 @@ function FigureBody<L>({
         <div className="absolute top-2 right-2.5 flex items-center gap-2.5">
           <span
             aria-hidden
-            className="pointer-events-none font-mono text-[9px] tracking-[0.12em] text-fg-faint/80 uppercase"
+            className="pointer-events-none font-mono text-[9px] tracking-[0.12em] text-fg-muted uppercase"
           >
             fig · {sim.id} · seed {seed ?? 42}
           </span>

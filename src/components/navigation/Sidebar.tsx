@@ -21,7 +21,7 @@ export function Sidebar() {
 
       <SidebarTree />
 
-      <p className="mt-auto border-t border-border/65 px-2.5 pt-4 font-mono text-[9px] tracking-widest text-fg-faint/70 uppercase">
+      <p className="mt-auto border-t border-border/65 px-2.5 pt-4 font-mono text-[9px] tracking-widest text-fg-muted uppercase">
         v0.1 · progress in localStorage
       </p>
     </aside>

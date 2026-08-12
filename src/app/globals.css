@@ -21,7 +21,8 @@
   /* text — cool snow whites */
   --color-fg: oklch(94% 0.008 250);
   --color-fg-muted: oklch(74% 0.018 250);
-  --color-fg-faint: oklch(56% 0.02 255);
+  /* Faint copy remains secondary but must clear WCAG AA on Polar Night surfaces. */
+  --color-fg-faint: oklch(66% 0.018 255);
 
   /* PRIMARY — frost cyan (Nord nord8): CTAs, request packets, rings, outline */
   --color-accent: oklch(78% 0.055 215);

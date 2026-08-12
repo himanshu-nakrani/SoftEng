@@ -37,6 +37,7 @@ const basePath = rawBasePath
 const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
   variable: "--font-bricolage",
+  display: "swap",
 });
 
 // 700 is currently unused — every `font-bold` in the app sits on a
@@ -48,18 +49,17 @@ const plexSans = IBM_Plex_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-plex-sans",
+  display: "swap",
 });
 
-// Plex Mono is NOT variable — each weight and style is its own set of files,
-// and the italic files share nothing with the normal ones. The site has no
-// italic monospace (`<em>` only appears in body prose, never inside `<Term>`,
-// `.tech-label` or `.tech-num`, and no `italic` utility lands on a mono
-// element), so requesting the italic face downloaded 15 woff2 files — 112 KiB,
-// 3 of them preloaded on every page — to render nothing. Dropped.
+// Plex Mono is not variable: each requested weight is a distinct resource.
+// Interface labels use only regular and medium weights, so omitting 600 avoids
+// shipping an unused face on every static route. Italics are omitted as well.
 const plexMono = IBM_Plex_Mono({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500"],
   variable: "--font-plex-mono",
+  display: "swap",
 });
 
 /**
@@ -75,6 +75,21 @@ export const metadata: Metadata = {
   },
   description: siteDescription,
   applicationName: siteName,
+  alternates: { canonical: absoluteUrl("/") },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+  creator: siteName,
+  publisher: siteName,
+  referrer: "strict-origin-when-cross-origin",
   // Unlike icons and OG images, Next emits `manifest` verbatim — it is not
   // resolved against `metadataBase`. So it has to carry the base path itself,
   // and it cannot be document-relative: `manifest.webmanifest` on
@@ -88,6 +103,11 @@ export const metadata: Metadata = {
     "caching",
     "load balancing",
     "learn by doing",
+    "software engineering education",
+    "system architecture course",
+    "distributed systems course",
+    "observability training",
+    "resilience engineering",
   ],
   category: "education",
   openGraph: {

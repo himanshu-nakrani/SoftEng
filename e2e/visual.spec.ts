@@ -301,9 +301,9 @@ async function readClock(clock: Locator): Promise<number> {
 }
 
 /**
- * The stage: the one `svg[role="img"]` in the figure. Every other svg inside
- * (lucide icons, including the ones nested in `SystemNode`) ships without a
- * role, which is what makes this selector unambiguous.
+ * The stage: the one `svg[data-sim-stage]` in the figure. The explicit marker
+ * stays stable even when accessibility semantics differ between an interactive
+ * diagram group and a static image.
  *
  * WORTH KNOWING: an element screenshot is the page screenshot CLIPPED to the
  * element's box — not an isolated render of its subtree. So the "stage" shots
@@ -314,7 +314,7 @@ async function readClock(clock: Locator): Promise<number> {
  * every shot, not just the composites.
  */
 const stageOf = (figure: Locator): Locator =>
-  figure.locator('svg[role="img"]').first();
+  figure.locator("svg[data-sim-stage]").first();
 
 /**
  * Hide the timeline caption card before every shot.

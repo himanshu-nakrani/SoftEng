@@ -37,72 +37,15 @@ import { getLesson, lessonPath } from "@/lib/curriculum";
  * output alone.
  *
  * ─────────────────────────────────────────────────────────────────────────
- * OPEN FINDINGS  (found by the first run of this suite; NOT fixed here)
+ * FORMER FINDINGS  (fixed and now enforced)
  * ─────────────────────────────────────────────────────────────────────────
- * Two rules fail today. Both are product-code bugs with a single root cause
- * each, both are pinned below as `test.fixme` so the suite lands green while
- * they stay visible, and both are excluded from the live assertions by
- * `KNOWN_FINDINGS` — everything else is asserted for real, so a THIRD rule
- * appearing goes red immediately.
- *
- * 1. [color-contrast] impact=serious — 10-18 nodes on every route scanned.
- *    https://dequeuniversity.com/rules/axe/4.12/color-contrast
- *    One root cause: `--color-fg-faint` (#605a52) as body text on the app's
- *    backgrounds. Verbatim samples:
- *
- *      target: [".items-end > .tech-num"]                                (/)
- *      html:   <p class="tech-num text-xs text-fg-faint">23 lessons · 4 modules</p>
- *      why:    insufficient color contrast of 2.93 (fg #605a52, bg #0b0805,
- *              9.0pt (12px), normal). Expected 4.5:1
- *
- *      target: [".gap-y-4.py-7…:nth-child(1) > .text-3xl.text-fg-faint\\/50…"] (/)
- *      html:   <span class="font-display text-3xl font-bold text-fg-faint/50 tabular-nums">01</span>
- *      why:    insufficient color contrast of 1.54 (fg #35312c, bg #0b0805,
- *              22.5pt (30px), bold). Expected 3:1
- *
- *      target: [".mt-auto"]                                    (/learn, lessons)
- *      html:   <p class="mt-auto px-2.5 pt-4 font-mono text-[9px] tracking-widest
- *              text-fg-faint/70 uppercase">v0.1 · progress in localStorage</p>
- *      why:    insufficient color contrast of 1.97 (fg #47423c, bg #0f0b07,
- *              6.8pt (9px), normal). Expected 4.5:1
- *
- *      target: ["a[href$=\"#scaling\"] > .group-hover\\:text-fg"]        (/learn)
- *      html:   <span class="group-hover:text-fg">Scaling</span>
- *      why:    insufficient color contrast of 2.83 (fg #605a52, bg #120d09,
- *              8.3pt (11px), normal). Expected 4.5:1
- *
- *    Note the two decorative-looking cases are NOT exempt: the ghost index
- *    numerals ("01") and the sidebar module names are real text conveying real
- *    information, so 1.5:1 is a genuine AA failure, not a false positive. The
- *    fix is a token change (lighten `--color-fg-faint`, or stop using it for
- *    text below `--color-fg-muted`), which belongs in globals.css.
- *
- * 2. [nested-interactive] impact=serious — exactly 1 node per page with a
- *    figure, plus the landing vignette.
- *    https://dequeuniversity.com/rules/axe/4.12/nested-interactive
- *
- *      target: [".h-auto"]                    (every lesson with a breakable node)
- *      html:   <svg viewBox="0 0 800 450" class="block h-auto w-full" role="img"
- *              aria-label="System diagram. All components healthy.">
- *      why:    Element has focusable descendants
- *
- *      target: [".block"]                                                    (/)
- *      html:   <svg viewBox="0 0 760 420" class="block h-auto w-full" role="img"
- *              aria-label="Live simulation: a load balancer routing request
- *              packets to three servers. Click a server to kill it; …">
- *      why:    Element has focusable descendants
- *
- *    This one is structural and axe is right about it. `role="img"` is a LEAF
- *    role: assistive tech is told "this subtree is one image, described by the
- *    label", and is then free not to expose anything inside it — including
- *    `SystemNode`'s breakable `<g role="button" tabIndex={0}>`, which is the
- *    lesson's whole break-it verb. A keyboard user can still Tab to those
- *    nodes (the mobile suite proves focus works), but a screen-reader user is
- *    told they are not there. The fix is a real design decision — drop
- *    `role="img"` in favour of a labelled `role="group"`/`figure` when the
- *    stage has interactive children, or move the kill affordance to a real
- *    button outside the svg — so it is deliberately left to whoever owns the
- *    engine's a11y model rather than patched from a test file.
+ * The initial scan identified two serious WCAG failures: low-contrast
+ * secondary text and focusable server controls nested under an SVG `img` role.
+ * Product code now uses an accessible faint-text token, avoids low-opacity
+ * status copy, and gives interactive SVG stages a labelled `group` role so
+ * their server controls remain available to assistive technology. The
+ * suppression list below is intentionally empty; any recurrence fails this
+ * suite on every sampled route.
  */
 
 /**
@@ -123,7 +66,10 @@ const WCAG_TAGS = ["wcag2a", "wcag2aa"] as const;
  * Deleting an entry from this list is the last step of fixing it — do that,
  * drop the matching `test.fixme`, and the rule is enforced from then on.
  */
-const KNOWN_FINDINGS: string[] = ["color-contrast", "nested-interactive"];
+// Contrast tokens and interactive-stage semantics are fixed in product code.
+// Keep this list empty so every WCAG A/AA rule, including the former findings,
+// is enforced on every sampled route.
+const KNOWN_FINDINGS: string[] = [];
 
 /** Static hub routes. */
 const HUB_ROUTES = ["/", "/learn"];
@@ -330,7 +276,7 @@ test.describe("review route", () => {
  * known rule stays ignored, so the output is just that rule's offending nodes,
  * on every sampled route, with selectors and html.
  */
-test.describe("open findings (documented above, not fixed here)", () => {
+test.describe("former findings remain clean", () => {
   for (const rule of KNOWN_FINDINGS) {
     const others = KNOWN_FINDINGS.filter((id) => id !== rule);
 

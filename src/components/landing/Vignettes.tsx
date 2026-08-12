@@ -306,7 +306,7 @@ export function Vignettes() {
           key={verb.label}
           className="grid items-center gap-x-8 gap-y-4 border-t border-border py-7 md:grid-cols-[72px_1fr_minmax(220px,260px)] last:border-b"
         >
-          <span className="font-display text-3xl font-bold text-fg-faint/50 tabular-nums">
+          <span className="font-display text-3xl font-bold text-fg-muted/85 tabular-nums">
             {verb.n}
           </span>
           <div>

@@ -28,8 +28,10 @@ export function HeroSim() {
     <svg
       viewBox="0 0 760 420"
       className="block h-auto w-full"
-      role="img"
-      aria-label="Live simulation: a load balancer routing request packets to three servers. Click a server to kill it; the cluster heals itself."
+      data-sim-stage
+      role="group"
+      aria-roledescription="interactive system diagram"
+      aria-label="Live simulation: a load balancer routing request packets to three servers. Activate a server to toggle its failure state; the cluster heals itself."
     >
       {heroSim.topology.edges.map((edge) => (
         <EdgeLine

@@ -193,7 +193,7 @@ export function MobileNav() {
             <SidebarTree onNavigate={close} />
           </div>
 
-          <p className="border-t border-border bg-bg/20 px-4 py-3 font-mono text-[9px] tracking-widest text-fg-faint/70 uppercase">
+          <p className="border-t border-border bg-bg/20 px-4 py-3 font-mono text-[9px] tracking-widest text-fg-muted uppercase">
             v0.1 · progress in localStorage
           </p>
         </motion.div>

@@ -100,7 +100,7 @@ export class FigureErrorBoundary extends Component<
 
             <span
               aria-hidden
-              className="pointer-events-none absolute top-2.5 right-5 font-mono text-[9px] tracking-[0.12em] text-fg-faint/80 uppercase"
+              className="pointer-events-none absolute top-2.5 right-5 font-mono text-[9px] tracking-[0.12em] text-fg-muted uppercase"
             >
               fig · {this.props.label ?? "sim"} · halted
             </span>

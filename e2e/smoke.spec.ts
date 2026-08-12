@@ -111,7 +111,7 @@ test.describe("the simulation engine runs in the browser", () => {
     // `:visible` is Playwright's own check — pooled slots parked with
     // `visibility: hidden` do not count.
     const livePackets = figure.locator(
-      'svg[role="img"] > g[aria-hidden="true"] > circle:visible',
+      'svg[data-sim-stage] > g[aria-hidden="true"] > circle:visible',
     );
 
     // The figure autoplays from an effect once 35% of it is on screen, so the
@@ -174,7 +174,7 @@ test.describe("the simulation engine runs in the browser", () => {
 
       // Stage, meters and transport are all present; only the animated packet
       // layer opts out (PacketLayer hides its pool under reduced motion).
-      const stage = figure.locator('svg[role="img"]');
+      const stage = figure.locator("svg[data-sim-stage]");
       await expect(stage).toBeVisible();
       await expect(stage.locator("text")).not.toHaveCount(0);
       await expect(figure.getByText(/^t=\d+(\.\d+)?s$/)).toBeVisible();

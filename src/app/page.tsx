@@ -4,6 +4,7 @@ import { Vignettes } from "@/components/landing/Vignettes";
 import { CornerTicks } from "@/components/ui/CornerTicks";
 import { accentCssVar } from "@/lib/accent";
 import { allLessons, modules, track } from "@/lib/curriculum";
+import { absoluteUrl, siteDescription, siteName } from "@/lib/site";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
@@ -52,9 +53,58 @@ export default function Home() {
     (l) => l.status === "available",
   ).length;
   const allLive = availableCount === allLessons.length;
+  const totalMinutes = allLessons
+    .filter((lesson) => lesson.status === "available")
+    .reduce((sum, lesson) => sum + lesson.estimatedMinutes, 0);
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": `${absoluteUrl("/")}#website`,
+        name: siteName,
+        url: absoluteUrl("/"),
+        description: siteDescription,
+        inLanguage: "en-US",
+      },
+      {
+        "@type": "Organization",
+        "@id": `${absoluteUrl("/")}#organization`,
+        name: siteName,
+        url: absoluteUrl("/"),
+      },
+      {
+        "@type": "Course",
+        "@id": `${absoluteUrl("/learn")}#course`,
+        name: track.title,
+        description:
+          "A self-paced interactive course in system design, distributed systems, data infrastructure, resilience, and observability.",
+        url: absoluteUrl("/learn"),
+        inLanguage: "en-US",
+        educationalLevel: "Beginner to advanced",
+        timeRequired: `PT${totalMinutes}M`,
+        provider: { "@id": `${absoluteUrl("/")}#organization` },
+        hasPart: modules.map((module, index) => ({
+          "@type": "Course",
+          position: index + 1,
+          name: module.title,
+          description: module.description,
+          numberOfItems: module.lessons.filter(
+            (lesson) => lesson.status === "available",
+          ).length,
+        })),
+      },
+    ],
+  };
 
   return (
     <div className="relative">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),
+        }}
+      />
       <div className="dot-grid dot-grid-fade pointer-events-none absolute inset-x-0 top-0 -z-10 h-[90vh]" />
       <SiteHeader />
 
@@ -104,7 +154,7 @@ export default function Home() {
               <CornerTicks inset={0} />
               <span
                 aria-hidden
-                className="pointer-events-none absolute top-1.5 right-4 font-mono text-[9px] tracking-[0.12em] text-fg-faint/80 uppercase"
+                className="pointer-events-none absolute top-1.5 right-4 font-mono text-[9px] tracking-[0.12em] text-fg-muted uppercase"
               >
                 fig · 00 — lb-cluster · self-healing
               </span>
