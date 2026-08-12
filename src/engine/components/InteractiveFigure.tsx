@@ -208,7 +208,7 @@ function MetersRow({
   const snapshot = useSimSnapshot(simulation);
   if (sim.meters.length === 0) return null;
   return (
-    <div className="grid grid-cols-2 gap-y-3 border-t border-border px-4 py-3 sm:flex sm:flex-wrap sm:items-stretch">
+    <div className="sim-meters grid grid-cols-2 gap-y-3 border-t border-border px-4 py-3 sm:flex sm:flex-wrap sm:items-stretch">
       {sim.meters.map((spec, i) => (
         <div
           key={spec.metricKey}
@@ -444,16 +444,16 @@ function FigureBody<L>({
       // same node in the very same position, so React reconciles in place and
       // the running sim (runner, RNG cursor, quiz progress) is untouched.
       className={cn(
-        "border-border bg-surface",
+        "sim-figure border-border bg-surface",
         expanded
           ? "fixed inset-0 z-50 m-0 flex flex-col overflow-y-auto rounded-none border-0"
-          : "my-6 overflow-hidden rounded-lg border",
+          : "my-8 overflow-hidden rounded-xl border",
       )}
       tabIndex={0}
       onKeyDown={onFigureKeyDown}
       aria-keyshortcuts="Space . R 1 2 3"
     >
-      <div className={cn("relative bg-bg/40", expanded && "min-h-0 flex-1")}>
+      <div className={cn("sim-figure-stage relative", expanded && "min-h-0 flex-1")}>
         <StageContent
           sim={sim}
           simulation={simulation}
@@ -484,7 +484,7 @@ function FigureBody<L>({
             }
             title={expanded ? "Exit full screen (Esc)" : "Expand to full screen"}
             className={cn(
-              "size-7 shrink-0 cursor-pointer items-center justify-center rounded-md border border-border bg-surface/80 text-fg-muted backdrop-blur transition-colors hover:border-border-bright hover:text-fg",
+              "size-7 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-border bg-surface/80 text-fg-muted shadow-[inset_0_1px_0_oklch(94%_0.008_250_/_6%)] backdrop-blur transition-colors hover:border-border-bright hover:bg-raised hover:text-fg",
               // Small stages always get it; a stage you are meant to *poke*
               // gets it at every width. Expanded always shows the way out.
               expanded || hasBreakable ? "flex" : "flex lg:hidden",

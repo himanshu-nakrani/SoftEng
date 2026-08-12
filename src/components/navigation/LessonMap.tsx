@@ -301,21 +301,23 @@ export function LessonMap() {
         // id + scroll-mt is a contract with the landing page, which links
         // straight to /learn#<module-slug>.
         <section key={mod.slug} id={mod.slug} className="mb-12 scroll-mt-24">
-          <div className="section-heading mb-5">
+          <div className="section-heading mb-6">
             <span
-              className="size-1.5 rounded-full"
+              className="size-1.5 shrink-0 rounded-full"
               style={{
                 background: accentCssVar[mod.accent],
                 boxShadow: `0 0 8px ${accentCssVar[mod.accent]}`,
               }}
             />
-            <span className="tech-num text-xs text-fg-faint">
+            <span className="tech-num shrink-0 text-xs text-fg-faint">
               mod.{String(i + 1).padStart(2, "0")}
             </span>
-            <h2 className="font-display text-xl font-bold">{mod.title}</h2>
-            <div className="tech-rule min-w-8 flex-1" />
-            <span className="hidden font-mono text-[11px] text-fg-faint sm:inline">
-              {mod.description}
+            <div className="min-w-0">
+              <h2 className="font-display text-xl font-bold tracking-tight">{mod.title}</h2>
+              <p className="mt-0.5 hidden text-xs text-fg-faint sm:block">{mod.description}</p>
+            </div>
+            <span className="tech-num ml-auto shrink-0 rounded-full border border-border bg-surface/45 px-2.5 py-1 text-[10px] text-fg-faint">
+              {mod.lessons.length} lessons
             </span>
           </div>
 

@@ -500,6 +500,57 @@ input[type="range"].accent-accent:focus-visible {
 }
 
 /* ---------------------------------------------------------------------------
+   Second-pass refinement — navigation depth and interactive focus
+--------------------------------------------------------------------------- */
+
+@layer components {
+  .sidebar-shell {
+    background:
+      linear-gradient(180deg, oklch(27% 0.018 255 / 54%), oklch(18% 0.014 255 / 78%)),
+      var(--color-bg);
+    box-shadow: inset -1px 0 0 oklch(94% 0.008 250 / 4%), 1.5rem 0 3.5rem -3.5rem oklch(5% 0.02 255 / 88%);
+  }
+
+  .sidebar-module {
+    position: relative;
+    padding-top: 0.15rem;
+  }
+
+  .sidebar-module::before {
+    position: absolute;
+    top: 0.45rem;
+    left: 0.15rem;
+    width: 2px;
+    height: 0.75rem;
+    border-radius: 999px;
+    content: "";
+    background: var(--module-accent, var(--color-accent));
+    box-shadow: 0 0 8px -1px var(--module-accent, var(--color-accent));
+  }
+
+  .sidebar-active-row {
+    box-shadow: inset 2px 0 0 var(--module-accent, var(--color-accent)), inset 0 1px 0 oklch(94% 0.008 250 / 5%);
+  }
+
+  .sim-figure {
+    background:
+      linear-gradient(150deg, oklch(33% 0.02 255 / 58%), oklch(18% 0.014 255 / 68%)),
+      var(--color-surface);
+    box-shadow: 0 1.8rem 4.5rem -3.5rem oklch(5% 0.02 255 / 88%), inset 0 1px 0 oklch(94% 0.008 250 / 6%);
+  }
+
+  .sim-figure-stage {
+    background:
+      radial-gradient(circle at 74% 22%, oklch(78% 0.055 215 / 8%), transparent 42%),
+      linear-gradient(180deg, oklch(18% 0.014 255 / 68%), oklch(18% 0.014 255 / 32%));
+  }
+
+  .sim-meters {
+    background: linear-gradient(90deg, oklch(18% 0.014 255 / 32%), transparent 72%);
+  }
+}
+
+/* ---------------------------------------------------------------------------
    Reduced motion — motion becomes optional, information stays
 --------------------------------------------------------------------------- */
 
