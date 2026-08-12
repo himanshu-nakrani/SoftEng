@@ -16,7 +16,7 @@ const statusChip: Record<ReviewStatus, { label: string; className: string }> = {
   },
   unattempted: {
     label: "not asked yet",
-    className: "bg-raised text-fg-faint",
+    className: "bg-raised text-fg-muted",
   },
   mastered: {
     label: "first try",

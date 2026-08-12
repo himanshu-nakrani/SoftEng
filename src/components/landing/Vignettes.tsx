@@ -259,7 +259,7 @@ function BreakWidget() {
       <span className="font-mono text-xs text-fg">
         {dead ? "api-1 · DEAD" : "api-1 · healthy"}
       </span>
-      <span className="ml-1 font-mono text-[10px] text-fg-faint">
+      <span className="ml-1 font-mono text-[10px] text-fg-muted">
         {dead ? "healing…" : "click to kill"}
       </span>
     </button>
