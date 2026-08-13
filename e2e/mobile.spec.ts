@@ -184,6 +184,26 @@ test.describe("mobile nav drawer", () => {
     await expect(targetLink).toBeVisible();
     await expect(targetLink).toHaveAttribute("href", TARGET.route);
     await expect(drawer.getByRole("link", { name: "Learning path" })).toBeVisible();
+
+    // The appearance control lives in the drawer footer. Its own Escape key
+    // closes the preference panel, not the navigation context that contains it.
+    await drawer
+      .getByRole("button", { name: "Customize color and reading size" })
+      .click();
+    const preferences = drawer.getByRole("region", { name: "Appearance preferences" });
+    await expect(preferences).toBeVisible();
+    await preferences.getByRole("radio", { name: "Teal accent" }).click();
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          document.documentElement.style.getPropertyValue("--user-accent"),
+        ),
+      )
+      .toBe("#167C7A");
+    await page.keyboard.press("Escape");
+    await expect(preferences).toHaveCount(0);
+    await expect(drawer).toBeVisible();
+
     // A modal drawer that pushes the page sideways would be worse than none,
     // and the lesson behind it must not scroll under the learner's thumb.
     await expectNoHorizontalScroll(page, "lesson page with the drawer open");

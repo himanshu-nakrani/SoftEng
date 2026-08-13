@@ -279,7 +279,7 @@ export function TransportBar({
                 ? "Pause simulation (Space)"
                 : "Play simulation (Space)"
           }
-          className="flex size-8 cursor-pointer items-center justify-center rounded-lg bg-accent text-bg transition-[transform,filter] hover:brightness-110 active:scale-95 disabled:opacity-40"
+          className="flex size-8 cursor-pointer items-center justify-center rounded-lg bg-accent text-accent-ink transition-[transform,filter] hover:brightness-110 active:scale-95 disabled:opacity-40"
         >
           {playing ? (
             <Pause className="size-4" fill="currentColor" strokeWidth={0} />

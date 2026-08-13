@@ -59,7 +59,7 @@ export default function NotFound() {
         <div className="flex flex-wrap items-center gap-3">
           <Link
             href="/learn"
-            className="flex items-center gap-2 rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-bg transition-all hover:shadow-[0_0_28px_-6px_var(--color-accent)] hover:brightness-110"
+            className="flex items-center gap-2 rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-accent-ink transition-all hover:shadow-[0_0_28px_-6px_var(--color-accent)] hover:brightness-110"
           >
             Back to the track
             <ArrowRight className="size-4" />

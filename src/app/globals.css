@@ -27,6 +27,7 @@
   /* PRIMARY — frost cyan (Nord nord8): CTAs, request packets, rings, outline */
   --color-accent: oklch(78% 0.055 215);
   --color-accent-dim: oklch(78% 0.055 215 / 14%);
+  --color-accent-ink: var(--color-bg);
 
   /* semantic glow accents. glow-amber tracks the brand primary (legacy key
      name for the scaling module accent) so CTAs and "amber" modules share
@@ -75,6 +76,7 @@
   --color-fg-faint: oklch(47% 0.012 180);
   --color-accent: oklch(51% 0.09 235);
   --color-accent-dim: oklch(51% 0.09 235 / 12%);
+  --color-accent-ink: var(--color-bg);
   --color-glow-amber: oklch(46% 0.11 55);
   --color-glow-orange: oklch(46% 0.11 55);
   --color-glow-cyan: oklch(46% 0.08 230);
@@ -102,6 +104,7 @@
   --color-fg-faint: oklch(61% 0.012 180);
   --color-accent: oklch(71% 0.08 230);
   --color-accent-dim: oklch(71% 0.08 230 / 15%);
+  --color-accent-ink: var(--color-bg);
   --color-glow-amber: oklch(73% 0.12 60);
   --color-glow-orange: oklch(72% 0.12 55);
   --color-glow-cyan: oklch(73% 0.08 225);
@@ -123,6 +126,15 @@
 html {
   scroll-behavior: smooth;
   background: var(--color-bg);
+  font-size: 16px;
+}
+
+html[data-reading-size="compact"] {
+  font-size: 15px;
+}
+
+html[data-reading-size="comfortable"] {
+  font-size: 17px;
 }
 
 body {
@@ -693,6 +705,186 @@ input[type="range"].accent-accent:focus-visible {
 [data-theme="dark"] .theme-toggle-thumb {
   transform: translateX(0.8rem);
   background: oklch(97% 0.005 95);
+}
+
+.appearance-controls {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.appearance-settings-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-raised);
+  color: var(--color-fg-muted);
+  box-shadow: 0 1px 1px oklch(20% 0.01 180 / 6%);
+  transition: border-color 160ms var(--ease-out-soft), color 160ms var(--ease-out-soft), transform 160ms var(--ease-out-soft);
+}
+
+.appearance-settings-trigger:hover,
+.appearance-settings-trigger[aria-expanded="true"] {
+  border-color: var(--color-border-bright);
+  color: var(--color-fg);
+}
+
+.appearance-settings-trigger:active {
+  transform: scale(0.95);
+}
+
+.appearance-personalization-panel {
+  position: absolute;
+  z-index: 80;
+  top: calc(100% + 0.6rem);
+  right: 0;
+  width: min(18rem, calc(100vw - 2rem));
+  border: 1px solid var(--color-border);
+  border-radius: 0.85rem;
+  padding: 0.9rem;
+  background: color-mix(in oklch, var(--color-raised) 94%, transparent);
+  box-shadow: 0 1.2rem 2.8rem -1.4rem oklch(20% 0.01 180 / 36%);
+  backdrop-filter: blur(18px);
+}
+
+.appearance-panel-heading,
+.appearance-panel-label,
+.appearance-swatch-row,
+.appearance-size-row {
+  display: flex;
+  align-items: center;
+}
+
+.appearance-panel-heading {
+  justify-content: space-between;
+  margin-bottom: 0.85rem;
+}
+
+.appearance-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border-radius: 999px;
+  padding: 0.2rem 0.4rem;
+  color: var(--color-fg-faint);
+  font-size: 0.6875rem;
+  transition: color 160ms var(--ease-out-soft), background 160ms var(--ease-out-soft);
+}
+
+.appearance-reset:hover {
+  background: var(--color-surface);
+  color: var(--color-fg);
+}
+
+.appearance-panel-group + .appearance-panel-group {
+  margin-top: 0.85rem;
+}
+
+.appearance-panel-label {
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-fg-muted);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.appearance-swatch-row {
+  gap: 0.45rem;
+}
+
+.appearance-swatch,
+.appearance-custom-swatch {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in oklch, var(--swatch, var(--color-border)) 60%, var(--color-border));
+  border-radius: 999px;
+  background: var(--swatch, conic-gradient(from 180deg, #2f73a8, #167c7a, #7453a6, #b95c42, #2f73a8));
+  box-shadow: inset 0 0 0 2px var(--color-raised);
+  transition: transform 150ms var(--ease-out-soft), box-shadow 150ms var(--ease-out-soft);
+}
+
+.appearance-swatch:hover,
+.appearance-custom-swatch:hover {
+  transform: translateY(-1px);
+}
+
+.appearance-swatch[aria-checked="true"] {
+  box-shadow: inset 0 0 0 2px var(--color-raised), 0 0 0 2px var(--color-accent);
+}
+
+.appearance-custom-swatch input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.appearance-size-row {
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 0.55rem;
+}
+
+.appearance-size-option {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
+  border-right: 1px solid var(--color-border);
+  color: var(--color-fg-muted);
+  font-family: var(--font-display);
+  font-weight: 700;
+  transition: background 150ms var(--ease-out-soft), color 150ms var(--ease-out-soft);
+}
+
+.appearance-size-option:last-child {
+  border-right: 0;
+}
+
+.appearance-size-option:hover {
+  background: var(--color-surface);
+  color: var(--color-fg);
+}
+
+.appearance-size-option[aria-checked="true"] {
+  background: var(--color-accent-dim);
+  color: var(--color-fg);
+  box-shadow: inset 0 -2px 0 var(--color-accent);
+}
+
+.appearance-panel-note {
+  margin-top: 0.75rem;
+  color: var(--color-fg-faint);
+  font-size: 0.6875rem;
+}
+
+@media (max-width: 30rem) {
+  .appearance-personalization-panel {
+    right: auto;
+    left: 0;
+  }
+}
+
+#mobile-nav-drawer .appearance-personalization-panel {
+  top: auto;
+  bottom: calc(100% + 0.6rem);
 }
 
 @layer components {

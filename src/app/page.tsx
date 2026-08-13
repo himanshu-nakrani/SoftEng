@@ -12,7 +12,7 @@ import Link from "next/link";
 function SiteHeader() {
   return (
     <header className="site-header-shell sticky top-0 z-40">
-      <div className="mx-auto flex max-w-6xl items-center gap-4 px-6 py-4">
+      <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 sm:gap-4 sm:px-6 sm:py-4">
         <Link href="/" className="group flex items-baseline gap-1.5">
           <span className="font-display text-xl font-bold tracking-tight transition-colors group-hover:text-accent">
             syslab
@@ -23,11 +23,11 @@ function SiteHeader() {
           <span className="size-1.5 animate-pulse rounded-full bg-glow-green" />
           all systems nominal
         </span>
-          <nav aria-label="Primary navigation" className="ml-auto flex items-center gap-1 text-sm text-fg-muted">
-            <Link href="/learn" className="rounded-full px-3 py-1.5 transition-colors hover:bg-surface/70 hover:text-fg">
+          <nav aria-label="Primary navigation" className="ml-auto flex items-center gap-0 text-sm text-fg-muted sm:gap-1">
+            <Link href="/learn" className="rounded-full px-1.5 py-1.5 transition-colors hover:bg-surface/70 hover:text-fg sm:px-3">
               Learning path
             </Link>
-            <Link href="/about" className="rounded-full px-3 py-1.5 transition-colors hover:bg-surface/70 hover:text-fg">
+            <Link href="/about" className="rounded-full px-1.5 py-1.5 transition-colors hover:bg-surface/70 hover:text-fg sm:px-3">
               About
             </Link>
             <ThemeToggle className="ml-1" />

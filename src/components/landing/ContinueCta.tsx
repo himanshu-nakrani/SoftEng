@@ -12,7 +12,7 @@ import Link from "next/link";
 
 /** The hero's primary button shape — shared so the swap can't drift. */
 const CTA =
-  "flex items-center gap-2 rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-bg transition-all hover:shadow-[0_0_28px_-6px_var(--color-accent)] hover:brightness-110";
+  "flex items-center gap-2 rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-accent-ink transition-all hover:shadow-[0_0_28px_-6px_var(--color-accent)] hover:brightness-110";
 
 /**
  * The pre-hydration / first-visit CTA. This is the markup that ships in the

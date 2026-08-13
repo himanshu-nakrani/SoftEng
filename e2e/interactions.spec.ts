@@ -92,6 +92,39 @@ test.describe("interactive learning flows", () => {
     await expect(root).toHaveAttribute("data-theme", after);
   });
 
+  test("personalization panel saves a custom accent and reading size", async ({
+    page,
+  }) => {
+    await gotoAndSettle(page, "/");
+
+    await page
+      .getByRole("button", { name: "Customize color and reading size" })
+      .click();
+
+    await page.getByRole("radio", { name: "Plum accent" }).click();
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          document.documentElement.style.getPropertyValue("--user-accent"),
+        ),
+      )
+      .toBe("#7453A6");
+
+    await page.getByTitle("Comfortable").click();
+    await expect(page.locator("html")).toHaveAttribute("data-reading-size", "comfortable");
+
+    await page.reload();
+    await page.waitForLoadState("networkidle");
+    await expect(page.locator("html")).toHaveAttribute("data-reading-size", "comfortable");
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          document.documentElement.style.getPropertyValue("--user-accent"),
+        ),
+      )
+      .toBe("#7453A6");
+  });
+
   test("review answers reveal explanation and can be retried without recording progress", async ({
     page,
   }) => {

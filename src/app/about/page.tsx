@@ -83,7 +83,7 @@ export default function AboutPage() {
 
         <Link
           href="/learn"
-          className="mt-12 inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-bg transition-all hover:brightness-110"
+          className="mt-12 inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-accent-ink transition-all hover:brightness-110"
         >
           Start the track
           <ArrowRight className="size-4" />

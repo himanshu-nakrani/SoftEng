@@ -189,7 +189,7 @@ function ColdStart({ total }: { total: number }) {
           </p>
           <Link
             href="/learn"
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-bg transition-all hover:brightness-110"
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-ink transition-all hover:brightness-110"
           >
             Start the track
             <ArrowRight className="size-4" />
