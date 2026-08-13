@@ -120,21 +120,47 @@ test.describe("interactive learning flows", () => {
     await figure.getByRole("button", { name: "Play simulation" }).click();
     const quiz = figure.getByRole("alertdialog");
     await expect(quiz).toBeVisible();
-    await quiz
-      .getByRole("button", {
-        name: "Vertical — the one big box IS the fleet: capacity → 0",
-      })
-      .click();
+    await expect(quiz).toHaveAttribute("aria-modal", "true");
+    await expect(quiz).toHaveAccessibleDescription(
+      "Choose one prediction. The simulation is paused until you answer.",
+    );
 
-    await expect(quiz.getByText(/Vertical concentrates every request/)).toBeVisible();
-    await expect(quiz.getByRole("button", { name: "Close and inspect" })).toBeVisible();
+    const firstChoice = quiz.getByRole("button", {
+      name: "Vertical — the one big box IS the fleet: capacity → 0",
+    });
+    const lastChoice = quiz.getByRole("button", {
+      name: "Same either way: capacity is capacity",
+    });
+    await expect(firstChoice).toBeFocused();
+    await page.keyboard.press("Shift+Tab");
+    await expect(lastChoice).toBeFocused();
+    await page.keyboard.press("Tab");
+    await expect(firstChoice).toBeFocused();
+    await firstChoice.click();
+
+    await expect(
+      quiz.locator("p:not(.sr-only)").filter({
+        hasText: /Vertical concentrates every request/,
+      }),
+    ).toBeVisible();
+    const close = quiz.getByRole("button", { name: "Close and inspect" });
+    const resume = quiz.getByRole("button", { name: "Watch it happen" });
+    await expect(close).toBeVisible();
+    await expect(resume).toBeFocused();
+    await page.keyboard.press("Tab");
+    await expect(close).toBeFocused();
+    await page.keyboard.press("Shift+Tab");
+    await expect(resume).toBeFocused();
+
     const clock = figure.locator("span.tech-num").filter({
       hasText: /^t=\d+(\.\d+)?s$/,
     });
-    await quiz.getByRole("button", { name: "Close and inspect" }).click();
+    await page.keyboard.press("Escape");
 
     await expect(quiz).toHaveCount(0);
-    await expect(figure.getByRole("button", { name: "Play simulation" })).toBeVisible();
+    const play = figure.getByRole("button", { name: "Play simulation" });
+    await expect(play).toBeVisible();
+    await expect(figure).toBeFocused();
     // Snapshot publication can land one final 10Hz readout just as the dialog
     // closes. Sample after the new paused state is visible, then prove it holds.
     const pausedAt = await clock.textContent();

@@ -319,7 +319,7 @@ function FigureBody<L>({
     onQuizResult,
     onSimEvent,
   });
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLElement>(null);
   const reduced = useReducedMotion();
   const snapshot = useSimSnapshot(simulation);
   const workbench = sim.workbench;
@@ -362,6 +362,14 @@ function FigureBody<L>({
     setActiveFocusId(focus.id);
     if (focus.nodes?.[0]) setSelectedNodeId(focus.nodes[0]);
     if (seek && focus.at !== undefined) simulation.controls.seekTo(focus.at);
+  };
+
+  const dismissQuizAndReturnToFigure = () => {
+    simulation.dismissQuiz();
+    // The quiz exits through AnimatePresence. The figure survives that exit and
+    // is the stable, labelled keyboard surface where a learner can inspect the
+    // paused system or invoke its documented shortcuts.
+    requestAnimationFrame(() => containerRef.current?.focus());
   };
 
   const startExperiment = () => {
@@ -592,7 +600,7 @@ function FigureBody<L>({
           quiz={simulation.activeQuiz}
           answer={simulation.quizAnswer}
           onAnswer={simulation.answerQuiz}
-          onDismiss={simulation.dismissQuiz}
+          onDismiss={dismissQuizAndReturnToFigure}
           onResume={simulation.resumeFromQuiz}
         />
       </div>
