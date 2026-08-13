@@ -191,6 +191,71 @@ export const slosErrorBudgetsSim: LessonSim<SloState> = {
     };
   },
 
+  workbench: {
+    experiment: {
+      id: "measure-a-release-constraint",
+      title: "Measure a release constraint",
+      prompt:
+        "Start the baseline, then observe how a canary changes availability, error-budget burn, and the operational decision that follows.",
+      actionLabel: "Start the service",
+      focusId: "slo-baseline",
+      action: { kind: "play" },
+    },
+    focuses: [
+      {
+        id: "slo-baseline",
+        label: "An SLO turns reliability into a budget",
+        phase: "baseline",
+        at: 1.5,
+        nodes: ["users", "edge", "api", "index"],
+        edges: ["users-edge", "edge-api", "api-index"],
+        metrics: ["availability", "budget", "burn"],
+        summary:
+          "The availability target defines an allowed failure budget; normal traffic uses that budget slowly enough to support ongoing service and change.",
+        nextAction: "Keep availability and burn rate visible as the new release enters the path.",
+      },
+      {
+        id: "canary-change",
+        label: "A canary makes release risk measurable",
+        phase: "change",
+        at: 8,
+        nodes: ["edge", "api", "index"],
+        edges: ["edge-api", "api-index"],
+        metrics: ["availability", "rollout", "burn"],
+        summary:
+          "The canary shifts part of traffic to the new search-api release, exposing its defect rate as measurable failed requests rather than an abstract deployment risk.",
+        nextAction: "Increase release traffic in small steps and compare the resulting burn rate with availability.",
+        trigger: { kind: "param-change", id: "canary" },
+      },
+      {
+        id: "budget-burn",
+        label: "A high burn rate is an early warning",
+        phase: "impact",
+        at: 17,
+        nodes: ["users", "edge", "api"],
+        edges: ["users-edge", "edge-api"],
+        metrics: ["availability", "budget", "burn", "rollout"],
+        summary:
+          "Availability can still appear near target while the error budget is being consumed unsustainably fast, making burn rate the signal that the rollout is no longer safe to continue.",
+        nextAction: "Choose a longer or shorter SLO window and observe how the same failures change the burn interpretation.",
+        trigger: { kind: "param-change", id: "window" },
+      },
+      {
+        id: "pause-mitigation",
+        label: "Stopping rollout stops compounding harm",
+        phase: "resolution",
+        at: 25,
+        nodes: ["edge", "api", "index"],
+        edges: ["edge-api", "api-index"],
+        metrics: ["budget", "burn", "rollout"],
+        summary:
+          "Pausing the rollout removes the defective release traffic from the path, preventing the current incident from consuming additional error budget while investigation begins.",
+        nextAction: "Pause the rollout and verify that release traffic falls to zero before judging recovery.",
+        trigger: { kind: "button-press", id: "pause-rollout" },
+      },
+    ],
+  },
+
   timeline: [
     {
       at: 1.5,

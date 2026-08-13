@@ -475,6 +475,70 @@ export const cacheStampedeSim: LessonSim<StampedeState> = {
     state.metrics.failed = L.errors;
   },
 
+  workbench: {
+    experiment: {
+      id: "force-one-expiry",
+      title: "Force one hot-key expiry",
+      prompt:
+        "Start the warm cache, then increase traffic and expire the hot key to see how one missing value can multiply database work.",
+      actionLabel: "Start the cache",
+      focusId: "warm-hot-key",
+      action: { kind: "play" },
+    },
+    focuses: [
+      {
+        id: "warm-hot-key",
+        label: "One hot key normally shields the database",
+        phase: "baseline",
+        at: 2,
+        nodes: ["client", "cache", "db"],
+        edges: ["front", "back"],
+        metrics: ["fetches", "hitRatio", "dbLoad"],
+        summary:
+          "While the hot key is fresh, many readers are served by redis-1 and pg-main sees neither the repeated lookup nor its latency.",
+        nextAction: "Wait for an expiry, then compare fetches per expiry with the number of readers.",
+      },
+      {
+        id: "hot-key-expiry",
+        label: "An expiry turns identical reads into a herd",
+        phase: "change",
+        at: 12,
+        nodes: ["client", "cache", "db"],
+        edges: ["front", "back"],
+        metrics: ["fetches", "latency", "dbLoad"],
+        summary:
+          "Expiring the shared value during traffic removes the common answer, so every arriving reader has an opportunity to start the same database fetch.",
+        nextAction: "Raise traffic and press expire hot key, then count fetches before the key refills.",
+        trigger: { kind: "button-press", id: "expire" },
+      },
+      {
+        id: "dogpile-pressure",
+        label: "Duplicate fetches become collateral damage",
+        phase: "impact",
+        at: 19,
+        nodes: ["cache", "db"],
+        edges: ["back"],
+        metrics: ["fetches", "latency", "dbLoad", "failed"],
+        summary:
+          "The dogpile sends many copies of one read to pg-main, growing its queue and delaying unrelated traffic until the database degrades or fails.",
+        nextAction: "Use fetches per expiry to connect the one missing value to the database queue.",
+      },
+      {
+        id: "single-flight-and-stale",
+        label: "Mitigate work and waiting separately",
+        phase: "resolution",
+        at: 27,
+        nodes: ["client", "cache", "db"],
+        edges: ["front", "back"],
+        metrics: ["fetches", "latency", "dbLoad"],
+        summary:
+          "Coalescing lets one fetch refresh the value while other readers wait at the cache; stale-while-revalidate serves the old value immediately while refresh work continues.",
+        nextAction: "Enable coalescing, expire the key again, then add stale-while-revalidate and compare load with latency.",
+        trigger: { kind: "param-change", id: "coalesce" },
+      },
+    ],
+  },
+
   timeline: [
     {
       at: 2,

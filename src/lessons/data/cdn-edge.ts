@@ -498,6 +498,70 @@ export const cdnEdgeSim: LessonSim<CdnState> = {
     state.metrics.slowest = Math.max(...REGIONS.map((r) => L.lat[r]));
   },
 
+  workbench: {
+    experiment: {
+      id: "warm-the-edge-fleet",
+      title: "Warm the edge fleet",
+      prompt:
+        "Start the regional requests and watch each point of presence turn a long origin trip into a short local response.",
+      actionLabel: "Start regional traffic",
+      focusId: "cold-edges",
+      action: { kind: "play" },
+    },
+    focuses: [
+      {
+        id: "cold-edges",
+        label: "Cold edges still depend on one origin",
+        phase: "baseline",
+        at: 1.5,
+        nodes: ["cli-west", "cli-eu", "cli-apac", "pop-west", "pop-eu", "pop-apac", "origin"],
+        edges: ["hop-west", "hop-eu", "hop-apac", "long-west", "long-eu", "long-apac"],
+        metrics: ["hitRatio", "originRps", "slowest"],
+        summary:
+          "Before the PoPs hold a fresh copy, regional requests traverse from the edge fleet to the single origin and back.",
+        nextAction: "Wait for the cache fills, then compare origin requests with the slowest regional latency.",
+      },
+      {
+        id: "warm-edges",
+        label: "A local copy removes the long haul",
+        phase: "change",
+        at: 6,
+        nodes: ["cli-west", "cli-eu", "cli-apac", "pop-west", "pop-eu", "pop-apac"],
+        edges: ["hop-west", "hop-eu", "hop-apac"],
+        metrics: ["hitRatio", "originRps", "slowest"],
+        summary:
+          "Once a PoP is warm, it serves its local region in one short hop and shields the origin from repeated reads.",
+        nextAction: "Switch content to dynamic and verify that cacheability, not distance alone, determines the path.",
+        trigger: { kind: "param-change", id: "content" },
+      },
+      {
+        id: "regional-bypass",
+        label: "One failed PoP changes one region’s path",
+        phase: "impact",
+        at: POP_KILL_AT,
+        nodes: ["cli-apac", "pop-apac", "origin"],
+        edges: ["hop-apac", "far-apac"],
+        metrics: ["slowest", "originRps", "errors"],
+        summary:
+          "When pop-sin fails, only APAC bypasses the edge and talks directly to origin; the other regional paths remain local.",
+        nextAction: "Use the slowest-region metric to identify the localized blast radius.",
+      },
+      {
+        id: "origin-shield",
+        label: "Copies buy a timed grace period",
+        phase: "resolution",
+        at: ORIGIN_KILL_AT,
+        nodes: ["pop-west", "pop-eu", "pop-apac", "origin"],
+        edges: ["long-west", "long-eu", "long-apac"],
+        metrics: ["hitRatio", "originRps", "errors"],
+        summary:
+          "After origin fails, fresh edge copies continue serving users until their independent TTLs expire; cached data is a temporary availability buffer, not a permanent substitute for origin.",
+        nextAction: "Adjust edge TTL and observe the trade-off between a longer grace period and older content.",
+        trigger: { kind: "param-change", id: "ttl" },
+      },
+    ],
+  },
+
   timeline: [
     {
       at: 1.5,

@@ -220,6 +220,68 @@ export const scalingStrategiesSim: LessonSim<ScalingState> = {
         : 10 * scale;
   },
 
+  workbench: {
+    experiment: {
+      id: "compare-failure-domains",
+      title: "Compare the failure domain",
+      prompt:
+        "Start the system, then switch between one large machine and a small fleet before the scripted failure arrives.",
+      actionLabel: "Start comparison",
+      focusId: "same-capacity",
+      action: { kind: "play" },
+    },
+    focuses: [
+      {
+        id: "same-capacity",
+        label: "Same capacity, different shape",
+        phase: "baseline",
+        at: 2,
+        nodes: ["client", "xl", "h1", "h2", "h3", "h4"],
+        edges: ["e-xl", "e-h1", "e-h2", "e-h3", "e-h4"],
+        metrics: ["throughput", "capacity", "cost"],
+        summary:
+          "Vertical and horizontal modes can begin with the same total capacity; the important distinction is where that capacity is concentrated.",
+        nextAction: "Switch strategy before the failure beat and compare the live-capacity meter.",
+      },
+      {
+        id: "cost-shape",
+        label: "Capacity changes its price",
+        phase: "change",
+        at: 9,
+        nodes: ["client", "xl", "h1", "h2", "h3", "h4"],
+        edges: ["e-xl", "e-h1", "e-h2", "e-h3", "e-h4"],
+        metrics: ["capacity", "cost"],
+        summary:
+          "The scale control changes available capacity, while the selected strategy determines the cost and operational shape used to provide it.",
+        nextAction: "Increase scale once in each mode and compare cost before looking at throughput.",
+        trigger: { kind: "param-change", id: "mode" },
+      },
+      {
+        id: "failure-domain",
+        label: "One failure removes a different share",
+        phase: "impact",
+        at: 15,
+        nodes: ["client", "xl", "h1", "h2", "h3", "h4"],
+        edges: ["e-xl", "e-h1", "e-h2", "e-h3", "e-h4"],
+        metrics: ["capacity", "throughput", "dropped"],
+        summary:
+          "A single machine failure removes all capacity when it is concentrated, but only one slice when the same capacity is distributed across a fleet.",
+        nextAction: "Pause here and use live capacity to state the blast radius before resuming.",
+      },
+      {
+        id: "fleet-restored",
+        label: "Restore, then test deliberately",
+        phase: "resolution",
+        at: 21,
+        nodes: ["client", "xl", "h1", "h2", "h3", "h4"],
+        metrics: ["capacity", "throughput", "dropped"],
+        summary:
+          "The scripted node returns so the system can recover; resilience is then a property the learner can test intentionally in both strategies.",
+        nextAction: "Kill one live node yourself in each mode and compare the recovery story.",
+      },
+    ],
+  },
+
   timeline: [
     {
       at: 2,

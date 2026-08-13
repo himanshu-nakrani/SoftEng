@@ -337,6 +337,71 @@ export const circuitBreakerSim: LessonSim<CBState> = {
     state.metrics.errors = L.errorPct;
   },
 
+  workbench: {
+    experiment: {
+      id: "watch-a-breaker-trip",
+      title: "Watch the breaker change the failure path",
+      prompt:
+        "Start the calls and compare a dependency timeout with the fast refusal that follows an open circuit.",
+      actionLabel: "Start calls",
+      focusId: "closed-forwarding",
+      action: { kind: "play" },
+    },
+    focuses: [
+      {
+        id: "closed-forwarding",
+        label: "Closed means observe while forwarding",
+        phase: "baseline",
+        at: 2,
+        nodes: ["client", "breaker", "svc"],
+        edges: ["in", "out"],
+        metrics: ["latency", "errors", "trips"],
+        summary:
+          "A closed circuit forwards ordinary calls to svc-1 while tracking consecutive failures; successful replies reset the streak rather than treating normal noise as an outage.",
+        nextAction: "Increase the service failure rate and watch the breaker’s failure streak approach its threshold.",
+        trigger: { kind: "param-change", id: "failRate" },
+      },
+      {
+        id: "timeout-cost",
+        label: "Before the trip, failures still consume the timeout",
+        phase: "change",
+        at: 12,
+        nodes: ["breaker", "svc"],
+        edges: ["out"],
+        metrics: ["latency", "errors", "trips"],
+        summary:
+          "When svc-1 fails while the circuit is closed, calls are still forwarded and hang until timeout, giving the breaker evidence at a high latency cost.",
+        nextAction: "Change the failure threshold and observe how many slow failures are required before protection begins.",
+        trigger: { kind: "param-change", id: "threshold" },
+      },
+      {
+        id: "fast-fail-open",
+        label: "Open protects the dependency and the caller",
+        phase: "impact",
+        at: 15,
+        nodes: ["client", "breaker", "svc"],
+        edges: ["in", "out"],
+        metrics: ["latency", "shed", "trips", "errors"],
+        summary:
+          "Once open, the breaker stops forwarding new calls to svc-1 and returns a fast failure at the entry path instead of allowing every caller to wait for a timeout.",
+        nextAction: "Compare the latency trace before and after the trip, then wait for the controlled probe.",
+      },
+      {
+        id: "half-open-trust",
+        label: "A bounded probe decides whether traffic returns",
+        phase: "resolution",
+        at: 23,
+        nodes: ["breaker", "svc"],
+        edges: ["out"],
+        metrics: ["latency", "shed", "trips", "errors"],
+        summary:
+          "After the open window, a limited number of probes test svc-1; a failed probe reopens protection, while enough successful probes safely return the breaker to closed.",
+        nextAction: "Change the probe budget and open duration, then compare the cost and confidence of recovery.",
+        trigger: { kind: "param-change", id: "probes" },
+      },
+    ],
+  },
+
   timeline: [
     {
       at: 2,

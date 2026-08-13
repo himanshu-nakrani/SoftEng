@@ -34,7 +34,9 @@ test.describe("interactive learning flows", () => {
 
     const play = figure.getByRole("button", { name: "Play simulation" });
     const pause = figure.getByRole("button", { name: "Pause simulation" });
-    const clock = figure.getByText(/^t=\d+(\.\d+)?s$/);
+    const clock = figure.locator("span.tech-num").filter({
+      hasText: /^t=\d+(\.\d+)?s$/,
+    });
 
     await expect(play).toBeEnabled();
     await expect(play).toHaveAttribute("aria-pressed", "false");

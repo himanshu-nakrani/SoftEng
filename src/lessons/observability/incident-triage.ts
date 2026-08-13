@@ -213,6 +213,71 @@ export const incidentTriageSim: LessonSim<IncidentState> = {
     };
   },
 
+  workbench: {
+    experiment: {
+      id: "triage-the-first-symptom",
+      title: "Triage the first symptom",
+      prompt:
+        "Start the checkout path, then use p99, errors, and the retry queue to distinguish a dependency outage from the amplification it creates.",
+      actionLabel: "Start checkout traffic",
+      focusId: "checkout-baseline",
+      action: { kind: "play" },
+    },
+    focuses: [
+      {
+        id: "checkout-baseline",
+        label: "A healthy request has one dependency path",
+        phase: "baseline",
+        at: 1.5,
+        nodes: ["users", "gateway", "api", "payments"],
+        edges: ["users-gateway", "gateway-api", "api-payments"],
+        metrics: ["p99", "errors", "retries", "throughput"],
+        summary:
+          "A checkout request crosses the gateway, checkout API, and payments dependency once; with the path healthy, retry depth stays near zero and completed work tracks user traffic.",
+        nextAction: "Keep the retry queue visible as the dependency fault is introduced.",
+      },
+      {
+        id: "payments-outage",
+        label: "The downstream outage appears first as latency",
+        phase: "change",
+        at: 9,
+        nodes: ["api", "payments"],
+        edges: ["api-payments"],
+        metrics: ["p99", "errors", "retries"],
+        summary:
+          "When payments becomes unavailable, checkout calls cannot complete their downstream path; p99 rises as failures wait out the configured timeout and errors follow.",
+        nextAction: "Change the downstream timeout and observe its direct contribution to p99.",
+        trigger: { kind: "param-change", id: "timeout" },
+      },
+      {
+        id: "retry-feedback",
+        label: "Immediate retries amplify a dead path",
+        phase: "impact",
+        at: 16,
+        nodes: ["gateway", "api", "payments"],
+        edges: ["gateway-api", "api-payments"],
+        metrics: ["p99", "errors", "retries", "throughput"],
+        summary:
+          "Immediate retries become new API-to-payments attempts against a dead dependency, growing the retry queue and increasing load without creating a chance of success.",
+        nextAction: "Switch retry policy to backoff and compare the queue’s slope rather than only its current depth.",
+        trigger: { kind: "param-change", id: "retry-policy" },
+      },
+      {
+        id: "bounded-mitigation",
+        label: "Reduce work to reduce the blast radius",
+        phase: "resolution",
+        at: 25,
+        nodes: ["users", "gateway", "api", "payments"],
+        edges: ["users-gateway", "gateway-api", "api-payments"],
+        metrics: ["p99", "retries", "throughput"],
+        summary:
+          "Backoff slows the retry feedback loop while load shedding deliberately limits incoming non-critical work, preserving more capacity for recovery and diagnosis.",
+        nextAction: "Apply load shedding after backoff and compare whether the retry queue and p99 begin to fall.",
+        trigger: { kind: "button-press", id: "shed-load" },
+      },
+    ],
+  },
+
   timeline: [
     { at: 1.5, caption: "A checkout request crosses gateway → checkout-api → payments, then returns green." },
     {

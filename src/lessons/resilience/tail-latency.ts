@@ -522,6 +522,71 @@ export const tailLatencySim: LessonSim<TailState> = {
     state.metrics.hedges = L.hedges;
   },
 
+  workbench: {
+    experiment: {
+      id: "watch-the-tail",
+      title: "Watch the tail, not just the average",
+      prompt:
+        "Start the requests and compare a stable p50 with the occasional slow leg that makes p99 jump.",
+      actionLabel: "Start requests",
+      focusId: "percentile-baseline",
+      action: { kind: "play" },
+    },
+    focuses: [
+      {
+        id: "percentile-baseline",
+        label: "The median can hide a bad tail",
+        phase: "baseline",
+        at: 5.5,
+        nodes: ["client", "lb", "s1", "s2", "s3"],
+        edges: ["in", "to-s1", "to-s2", "to-s3"],
+        metrics: ["latency", "p50", "p99", "slowLegs"],
+        summary:
+          "Most requests return quickly, so p50 and mean latency look healthy even while occasional slow server legs create a much worse p99.",
+        nextAction: "Raise slow requests and compare which percentile reacts first.",
+        trigger: { kind: "param-change", id: "slowPct" },
+      },
+      {
+        id: "tail-source",
+        label: "Independent slow moments create the tail",
+        phase: "change",
+        at: 9,
+        nodes: ["s1", "s2", "s3"],
+        edges: ["to-s1", "to-s2", "to-s3"],
+        metrics: ["p50", "p99", "slowLegs"],
+        summary:
+          "A small chance of a slow service leg is enough to dominate the high percentile because the percentile tracks the unlucky completed requests rather than the typical one.",
+        nextAction: "Keep p50 in view while you increase the slow-request percentage.",
+      },
+      {
+        id: "fanout-amplifies-tail",
+        label: "Fan-out waits for the slowest leg",
+        phase: "impact",
+        at: FANOUT_AT,
+        nodes: ["lb", "s1", "s2", "s3"],
+        edges: ["to-s1", "to-s2", "to-s3"],
+        metrics: ["p50", "p99", "slowLegs"],
+        summary:
+          "Fan-out turns one user request into multiple independent chances of a slow leg, and completion waits for the slowest response, making tail latency much more common.",
+        nextAction: "Turn fan-out on after the scripted window and compare p99 with the single-server path.",
+        trigger: { kind: "param-change", id: "fanout" },
+      },
+      {
+        id: "hedged-tail",
+        label: "A bounded duplicate can rescue the tail",
+        phase: "resolution",
+        at: HEDGE_AT,
+        nodes: ["lb", "s1", "s2", "s3"],
+        edges: ["to-s1", "to-s2", "to-s3"],
+        metrics: ["p99", "slowLegs", "hedges"],
+        summary:
+          "Hedging only requests that cross the measured p95 sends a bounded duplicate to an untried server; the first good response wins and lowers the tail without duplicating normal traffic.",
+        nextAction: "Enable hedging and wait for the sample window to show its cost in hedges sent and benefit in p99.",
+        trigger: { kind: "param-change", id: "hedge" },
+      },
+    ],
+  },
+
   timeline: [
     {
       at: 2,

@@ -428,6 +428,72 @@ export const realtimeDeliverySim: LessonSim<RTState> = {
     state.metrics.delivered = L.delivered;
   },
 
+  workbench: {
+    experiment: {
+      id: "compare-live-transports",
+      title: "Compare live delivery paths",
+      prompt:
+        "Start with short-polling, then change transport and use the meters to compare empty work against delivery latency.",
+      actionLabel: "Start delivery",
+      focusId: "transport-baseline",
+      action: { kind: "play" },
+    },
+    focuses: [
+      {
+        id: "transport-baseline",
+        label: "A transport defines what the wire carries",
+        phase: "baseline",
+        at: 2,
+        nodes: ["c1", "c2", "c3", "server"],
+        edges: ["wire-c1", "wire-c2", "wire-c3"],
+        metrics: ["latency", "waste", "connections"],
+        summary:
+          "Short-polling sends timed requests even when no message exists, while long-polling and WebSockets keep useful state at different ends of the connection.",
+        nextAction: "Change transport and compare wasted requests, held connections, and message latency together.",
+        trigger: { kind: "param-change", id: "transport" },
+      },
+      {
+        id: "polling-tradeoff",
+        label: "Faster polling buys speed with more empty work",
+        phase: "change",
+        at: 12.5,
+        nodes: ["c1", "c2", "c3", "server"],
+        edges: ["wire-c1", "wire-c2", "wire-c3"],
+        metrics: ["latency", "waste"],
+        summary:
+          "In short-poll mode, a shorter interval can reduce waiting for a new event, but it also creates more empty round trips.",
+        nextAction: "Lower the poll interval only in short-poll mode and describe the cost of the lower latency.",
+        trigger: { kind: "param-change", id: "pollInterval" },
+      },
+      {
+        id: "restart-storm",
+        label: "One restart synchronizes every client",
+        phase: "impact",
+        at: 18,
+        nodes: ["c1", "c2", "c3", "server"],
+        edges: ["wire-c1", "wire-c2", "wire-c3"],
+        metrics: ["connections", "waste", "latency"],
+        summary:
+          "A server restart severs all clients together, aligning their retry clocks and turning independent reconnects into a concentrated burst.",
+        nextAction: "Watch the three reconnect paths arrive together before enabling jitter.",
+        trigger: { kind: "button-press", id: "restart" },
+      },
+      {
+        id: "jittered-recovery",
+        label: "Jitter distributes recovery work",
+        phase: "resolution",
+        at: 21.5,
+        nodes: ["c1", "c2", "c3", "server"],
+        edges: ["wire-c1", "wire-c2", "wire-c3"],
+        metrics: ["connections", "waste", "delivered"],
+        summary:
+          "Randomized reconnect timing spreads the same recovery work over several moments, preventing a synchronized client herd from loading the restarted server at once.",
+        nextAction: "Enable reconnect jitter, press restart again, and compare the recovery shape.",
+        trigger: { kind: "param-change", id: "jitter" },
+      },
+    ],
+  },
+
   timeline: [
     // Three mutually exclusive openers: whichever transport is selected
     // explains itself. The other two stay pending and fire the first time the

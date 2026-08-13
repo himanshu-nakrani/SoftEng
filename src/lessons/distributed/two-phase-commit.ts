@@ -488,6 +488,71 @@ export const twoPhaseCommitSim: LessonSim<TPCState> = {
     state.metrics.coordDown = coordAlive ? 0 : 1;
   },
 
+  workbench: {
+    experiment: {
+      id: "follow-a-commit-round",
+      title: "Follow one commit round",
+      prompt:
+        "Start a transaction and follow prepare, votes, decision, and acknowledgement before testing the coordinator failure window.",
+      actionLabel: "Start transactions",
+      focusId: "prepare-fanout",
+      action: { kind: "play" },
+    },
+    focuses: [
+      {
+        id: "prepare-fanout",
+        label: "The coordinator asks every participant to promise",
+        phase: "baseline",
+        at: 0.5,
+        nodes: ["coord", "p1", "p2", "p3"],
+        edges: ["e1", "e2", "e3"],
+        metrics: ["committed", "aborted", "latency", "tax"],
+        summary:
+          "Two-phase commit begins by fanning prepare messages from one coordinator to every participant; the coordinator cannot decide until every vote returns.",
+        nextAction: "Follow a YES vote back and identify where each participant begins holding a lock.",
+      },
+      {
+        id: "lock-and-vote",
+        label: "A YES vote is a promise that holds a lock",
+        phase: "change",
+        at: 11.5,
+        nodes: ["coord", "p1", "p2", "p3"],
+        edges: ["e1", "e2", "e3"],
+        metrics: ["committed", "aborted", "latency", "tax"],
+        summary:
+          "Participants that vote YES are bound until they receive a decision, so higher transaction rates can turn those durable promises into contention and queueing.",
+        nextAction: "Raise participant abort rate or transaction rate and compare quick aborts with the cost of held locks.",
+        trigger: { kind: "param-change", id: "rate" },
+      },
+      {
+        id: "coordinator-gap",
+        label: "The coordinator can fail after the outcome is known",
+        phase: "impact",
+        at: 18.5,
+        nodes: ["coord", "p1", "p2", "p3"],
+        edges: ["e1", "e2", "e3"],
+        metrics: ["blocked", "latency", "tax"],
+        summary:
+          "If the coordinator dies after all YES votes arrive but before the decision is delivered, every participant remains blocked because none can safely infer the global outcome alone.",
+        nextAction: "Press kill at the worst moment and observe blocked transactions alongside participant lock state.",
+        trigger: { kind: "button-press", id: "killWorst" },
+      },
+      {
+        id: "decision-replay",
+        label: "Recovery ends the block by replaying the decision",
+        phase: "resolution",
+        at: 24,
+        nodes: ["coord", "p1", "p2", "p3"],
+        edges: ["e1", "e2", "e3"],
+        metrics: ["blocked", "committed", "aborted", "latency"],
+        summary:
+          "When the coordinator recovers, its log lets it replay commit or abort to the frozen participants so locks release and the protocol can make progress again.",
+        nextAction: "Compare the blocked window with the coordination-tax meter, then vary failure rate to see when 2PC aborts cheaply instead.",
+        trigger: { kind: "param-change", id: "failRate" },
+      },
+    ],
+  },
+
   timeline: [
     {
       at: 0.5,

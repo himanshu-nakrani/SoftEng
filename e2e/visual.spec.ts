@@ -283,7 +283,9 @@ async function seekTo(figure: Locator, t: number): Promise<void> {
 
   // Proof the replay landed where we asked. `seekTo` ticks until `t >= target`,
   // so it can overshoot by at most one TICK (0.033s) — well inside 0.05.
-  const clock = figure.getByText(/^t=\d+(\.\d+)?s$/);
+  const clock = figure.locator("span.tech-num").filter({
+    hasText: /^t=\d+(\.\d+)?s$/,
+  });
   await expect
     .poll(async () => readClock(clock), {
       message: `sim clock should read t=${t}s after the seek`,

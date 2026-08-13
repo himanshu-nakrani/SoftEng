@@ -232,6 +232,70 @@ export const capTheoremSim: LessonSim<CAPState> = {
     state.metrics.partitioned = partitioned ? 1 : 0;
   },
 
+  workbench: {
+    experiment: {
+      id: "watch-a-partition-choice",
+      title: "Watch a partition force a choice",
+      prompt:
+        "Start synchronized writes, then follow the split to see why the system must either reject work or accept divergence.",
+      actionLabel: "Start replicated writes",
+      focusId: "synchronized-writes",
+      action: { kind: "play" },
+    },
+    focuses: [
+      {
+        id: "synchronized-writes",
+        label: "Replication makes one dataset while the link is healthy",
+        phase: "baseline",
+        at: 2,
+        nodes: ["cw", "rw", "re", "ce"],
+        edges: ["in-w", "in-e", "sync"],
+        metrics: ["availability", "diverged", "rejected"],
+        summary:
+          "With the inter-region link healthy, writes accepted on either coast are replicated across the sync path so both databases converge on the same state.",
+        nextAction: "Keep the sync path visible as the partition removes it.",
+      },
+      {
+        id: "partition-choice",
+        label: "A partition removes the ability to know the other side",
+        phase: "change",
+        at: SPLIT_AT,
+        nodes: ["rw", "re"],
+        edges: ["sync"],
+        metrics: ["availability", "diverged", "rejected"],
+        summary:
+          "When the link is partitioned, neither replica can learn the other side’s new writes, so the remaining choice is between availability and immediate consistency.",
+        nextAction: "Switch between AP and CP while the link is down and compare accepted versus rejected writes.",
+        trigger: { kind: "param-change", id: "mode" },
+      },
+      {
+        id: "ap-divergence",
+        label: "AP accepts writes by accumulating disagreement",
+        phase: "impact",
+        at: 13.5,
+        nodes: ["cw", "rw", "re", "ce"],
+        edges: ["in-w", "in-e"],
+        metrics: ["availability", "diverged", "rejected"],
+        summary:
+          "In AP mode both coasts accept writes during the split, preserving write availability while building an explicit set of diverged writes that must later be reconciled.",
+        nextAction: "Turn the partition on yourself, then compare AP divergence with CP rejections at the same write rate.",
+        trigger: { kind: "param-change", id: "partition" },
+      },
+      {
+        id: "reconciliation-bill",
+        label: "Healing reveals the conflict-resolution bill",
+        phase: "resolution",
+        at: HEAL_AT,
+        nodes: ["rw", "re"],
+        edges: ["sync"],
+        metrics: ["diverged", "lostWrites", "availability"],
+        summary:
+          "When the link returns, the replicas must become one state again; the modeled last-write-wins rule resolves that disagreement by discarding the losing side’s accepted writes.",
+        nextAction: "Replay the split in CP mode and contrast immediate rejected writes with later lost writes.",
+      },
+    ],
+  },
+
   timeline: [
     {
       at: 2,

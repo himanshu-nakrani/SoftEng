@@ -271,6 +271,69 @@ export const cachingSim: LessonSim<CachingState> = {
     state.metrics.dbLoad = state.nodes.db.load * 100;
   },
 
+  workbench: {
+    experiment: {
+      id: "follow-a-cache-read",
+      title: "Follow one cache read",
+      prompt:
+        "Start the read stream and distinguish the fast cache-hit path from the slower database-miss path before changing the cache policy.",
+      actionLabel: "Start reads",
+      focusId: "hit-and-miss",
+      action: { kind: "play" },
+    },
+    focuses: [
+      {
+        id: "hit-and-miss",
+        label: "A hit removes the database path",
+        phase: "baseline",
+        at: 2,
+        nodes: ["client", "cache", "db"],
+        edges: ["front", "back"],
+        metrics: ["hitRatio", "latency", "dbLoad"],
+        summary:
+          "Each read first reaches redis-1; a hit returns quickly, while a miss continues to pg-main and consumes database capacity.",
+        nextAction: "Compare the short front path with the long back path before changing policy.",
+      },
+      {
+        id: "freshness-tradeoff",
+        label: "TTL trades freshness for fewer misses",
+        phase: "change",
+        at: 18,
+        nodes: ["cache", "db"],
+        edges: ["back"],
+        metrics: ["hitRatio", "latency", "dbLoad"],
+        summary:
+          "A shorter TTL invalidates entries sooner, reducing the chance of stale data but sending more reads through the database path.",
+        nextAction: "Change TTL and explain the hit-ratio change together with its freshness cost.",
+        trigger: { kind: "param-change", id: "ttl" },
+      },
+      {
+        id: "cache-outage",
+        label: "Cache loss multiplies database work",
+        phase: "impact",
+        at: 25,
+        nodes: ["client", "cache", "db"],
+        edges: ["front", "back"],
+        metrics: ["hitRatio", "latency", "dbLoad"],
+        summary:
+          "When redis-1 is unavailable, every read becomes a database miss, exposing the work the cache had been absorbing and allowing the database queue to grow.",
+        nextAction: "Use the database-load and latency meters to quantify the amplification.",
+      },
+      {
+        id: "cold-cache-recovery",
+        label: "Recovery starts cold, not warm",
+        phase: "resolution",
+        at: 31,
+        nodes: ["cache", "db"],
+        edges: ["back"],
+        metrics: ["hitRatio", "latency", "dbLoad"],
+        summary:
+          "Reviving the cache restores a place to store answers, but it returns empty, so database pressure persists until ordinary misses rebuild a useful working set.",
+        nextAction: "Let the cache refill and observe why the database backlog can outlive the outage.",
+      },
+    ],
+  },
+
   timeline: [
     {
       at: 2,
