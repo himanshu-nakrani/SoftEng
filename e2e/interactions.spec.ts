@@ -26,10 +26,17 @@ test.describe("interactive learning flows", () => {
     const figure = page.locator("figure").first();
     await figure.scrollIntoViewIfNeeded();
 
+    // Figures may have scroll-autoplayed far enough to open a checkpoint while
+    // the page settled. Restart establishes the same deterministic, paused
+    // frame every run, so this test exercises controls rather than viewport
+    // timing.
+    await figure.getByRole("button", { name: "Restart simulation" }).click();
+
     const play = figure.getByRole("button", { name: "Play simulation" });
     const pause = figure.getByRole("button", { name: "Pause simulation" });
     const clock = figure.getByText(/^t=\d+(\.\d+)?s$/);
 
+    await expect(play).toBeEnabled();
     await expect(play).toHaveAttribute("aria-pressed", "false");
     await play.click();
     await expect(pause).toBeVisible();
@@ -71,16 +78,18 @@ test.describe("interactive learning flows", () => {
     await firstChoice.click();
 
     await expect(firstChoice).toBeDisabled();
-    await expect(
-      page.getByText(/Correct — that is the system behavior to expect\.|Not quite — the correct answer was/),
-    ).toBeVisible();
+    const visibleVerdict = page
+      .locator("p:not(.sr-only)")
+      .filter({
+        hasText:
+          /Correct — that is the system behavior to expect\.|Not quite — the correct answer was/,
+      });
+    await expect(visibleVerdict).toBeVisible();
     await expect(page.getByRole("button", { name: "Ask again" })).toBeVisible();
 
     await page.getByRole("button", { name: "Ask again" }).click();
     await expect(firstChoice).toBeEnabled();
-    await expect(
-      page.getByText(/Correct — that is the system behavior to expect\.|Not quite — the correct answer was/),
-    ).toHaveCount(0);
+    await expect(visibleVerdict).toHaveCount(0);
   });
 
   test("progress import reports a merge and reset requires deliberate confirmation", async ({
