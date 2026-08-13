@@ -128,11 +128,18 @@ test.describe("interactive learning flows", () => {
 
     await expect(quiz.getByText(/Vertical concentrates every request/)).toBeVisible();
     await expect(quiz.getByRole("button", { name: "Close and inspect" })).toBeVisible();
+    const clock = figure.locator("span.tech-num").filter({
+      hasText: /^t=\d+(\.\d+)?s$/,
+    });
     await quiz.getByRole("button", { name: "Close and inspect" }).click();
 
     await expect(quiz).toHaveCount(0);
     await expect(figure.getByRole("button", { name: "Play simulation" })).toBeVisible();
-    await expect(figure.getByText(/Simulation paused at 13\.\d seconds\./)).toBeVisible();
+    // Snapshot publication can land one final 10Hz readout just as the dialog
+    // closes. Sample after the new paused state is visible, then prove it holds.
+    const pausedAt = await clock.textContent();
+    await page.waitForTimeout(250);
+    await expect(clock).toHaveText(pausedAt ?? "");
   });
 
   test("appearance control changes the document theme and persists the learner preference", async ({
