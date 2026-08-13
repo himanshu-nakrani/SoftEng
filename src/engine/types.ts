@@ -208,6 +208,51 @@ export interface QuizCheckpoint<L = Record<string, unknown>> {
   when?: (state: SimState<L>, params: ParamValues) => boolean;
 }
 
+/** A named system state that the workbench can spotlight and explain. */
+export interface WorkbenchFocus {
+  /** Stable lesson-local key used by the event tape and guided experiment. */
+  id: string;
+  /** Human-readable causal landmark. */
+  label: string;
+  /** The story phase, used to order the workbench event path. */
+  phase: "baseline" | "change" | "impact" | "resolution";
+  /** Optional deterministic seek target. Omit for learner-triggered states. */
+  at?: number;
+  /** Components and paths that should be visually emphasized together. */
+  nodes?: string[];
+  edges?: string[];
+  /** Meters whose current value is part of this explanation. */
+  metrics?: string[];
+  /** Plain-language causal explanation, available to sighted and AT users. */
+  summary: string;
+  /** A bounded next experiment, not a generic encouragement. */
+  nextAction?: string;
+  /** A meaningful engine interaction that selects this focus automatically. */
+  trigger?: { kind: "node-kill" | "param-change" | "button-press"; id: string };
+}
+
+export type WorkbenchAction =
+  | { kind: "play" }
+  | { kind: "seek"; at: number }
+  | { kind: "button"; id: string }
+  | { kind: "param"; id: string; value: ParamValue };
+
+/** The authored first experiment that makes an otherwise open sandbox approachable. */
+export interface WorkbenchExperiment {
+  id: string;
+  title: string;
+  prompt: string;
+  actionLabel: string;
+  /** The focus selected before the action runs. */
+  focusId: string;
+  action: WorkbenchAction;
+}
+
+export interface WorkbenchSpec {
+  experiment?: WorkbenchExperiment;
+  focuses: WorkbenchFocus[];
+}
+
 export interface MeterSpec {
   /**
    * Reads SimState.metrics[metricKey] — and, for "sparkline", the matching
@@ -269,6 +314,8 @@ export interface LessonSim<L = Record<string, unknown>> {
    * field renders no legend at all.
    */
   packetLegend?: { type: string; label: string }[];
+  /** Optional guided causal-learning metadata. Existing simulations remain sandbox-only. */
+  workbench?: WorkbenchSpec;
 }
 
 /**
@@ -278,7 +325,7 @@ export interface LessonSim<L = Record<string, unknown>> {
  */
 export type LessonSimView = Pick<
   LessonSim<unknown>,
-  "id" | "topology" | "meters" | "params" | "packetStyles" | "packetLegend"
+  "id" | "topology" | "meters" | "params" | "packetStyles" | "packetLegend" | "workbench"
 >;
 
 /* ---------- Engine constants ---------- */

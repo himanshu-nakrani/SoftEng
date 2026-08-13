@@ -53,6 +53,8 @@ interface SystemNodeProps {
    * (unprovisioned) nodes never draw one — there is nothing inside them yet.
    */
   overlay?: ReactNode;
+  /** Shared workbench emphasis for a component participating in the active causal event. */
+  focused?: boolean;
 }
 
 /**
@@ -64,6 +66,7 @@ export function SystemNode({
   runtime,
   onToggleHealth,
   overlay,
+  focused = false,
 }: SystemNodeProps) {
   const Icon = kindIcon[spec.kind];
   const dead = runtime.health === "dead";
@@ -71,7 +74,7 @@ export function SystemNode({
   const breakable = Boolean(spec.breakable && onToggleHealth && !runtime.ghost);
   // SVG :focus-visible support is uneven across engines (and the group is a
   // <g>, not a control), so the focus rect is driven by explicit focus state.
-  const [focused, setFocused] = useState(false);
+  const [keyboardFocused, setKeyboardFocused] = useState(false);
 
   if (runtime.ghost) {
     return (
@@ -120,8 +123,8 @@ export function SystemNode({
       onClick={breakable ? () => onToggleHealth?.(spec.id) : undefined}
       role={breakable ? "button" : undefined}
       tabIndex={breakable ? 0 : undefined}
-      onFocus={breakable ? () => setFocused(true) : undefined}
-      onBlur={breakable ? () => setFocused(false) : undefined}
+      onFocus={breakable ? () => setKeyboardFocused(true) : undefined}
+      onBlur={breakable ? () => setKeyboardFocused(false) : undefined}
       onKeyDown={
         breakable
           ? (e) => {
@@ -134,7 +137,7 @@ export function SystemNode({
             }
           : undefined
       }
-      aria-label={`${spec.label}, ${spec.kind}, status: ${runtime.health}${breakable ? ". Press to toggle failure." : ""}`}
+      aria-label={`${spec.label}, ${spec.kind}, status: ${runtime.health}${focused ? ". Part of the active causal event." : ""}${breakable ? ". Press to toggle failure." : ""}`}
     >
       {/* Touch target, painted first so it never sits over the node's own
           chrome. Invisible, but `pointer-events: all` hit-tests anyway. */}
@@ -150,13 +153,27 @@ export function SystemNode({
         />
       )}
 
+      {focused && (
+        <rect
+          x={-5}
+          y={-5}
+          width={W + 10}
+          height={H + 10}
+          rx={14}
+          fill="var(--color-accent-dim)"
+          stroke="var(--color-accent)"
+          strokeWidth={1.5}
+          strokeDasharray="4 3"
+          pointerEvents="none"
+        />
+      )}
       <motion.rect
         width={W}
         height={H}
         rx={10}
         fill="var(--color-surface)"
-        stroke={stroke}
-        strokeWidth={dead ? 1.5 : 1}
+        stroke={focused ? "var(--color-accent)" : stroke}
+        strokeWidth={focused ? 1.75 : dead ? 1.5 : 1}
         animate={
           dead
             ? { filter: "drop-shadow(0 0 6px var(--color-glow-red))" }
@@ -254,7 +271,7 @@ export function SystemNode({
       )}
 
       {/* Explicit keyboard focus rect (see the outline reset above). */}
-      {breakable && focused && (
+      {breakable && keyboardFocused && (
         <rect
           x={-4}
           y={-4}

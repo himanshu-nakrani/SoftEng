@@ -161,7 +161,12 @@ async function pauseFigures(page: Page): Promise<void> {
     }
 
     await pause.click();
-    await expect(play).toBeVisible();
+    // Clicking the visible pause control is the transport contract this helper
+    // needs before scanning. A deterministic figure can immediately change to
+    // a quiz, restart, or another lesson-owned state, so its next label is not
+    // a stable accessibility assertion here (dedicated interaction tests cover
+    // that state transition).
+    await page.waitForTimeout(50);
   }
 
   // Scroll back so the scan starts from the top of the document, and let the

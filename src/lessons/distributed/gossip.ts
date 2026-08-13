@@ -627,6 +627,65 @@ export const gossipSim: LessonSim<GossipState> = {
     },
   ],
 
+  workbench: {
+    experiment: {
+      id: "epidemic-convergence",
+      title: "Watch one rumor become cluster knowledge",
+      prompt:
+        "Start with the quiet membership mesh, then introduce a rumor at n0. Use the event path to compare local sends with the global coverage curve.",
+      actionLabel: "Start the rumor",
+      focusId: "quiet-mesh",
+      action: { kind: "seek", at: 0.4 },
+    },
+    focuses: [
+      {
+        id: "quiet-mesh",
+        label: "Every peer can contact every peer",
+        phase: "baseline",
+        at: 0.4,
+        nodes: ["n0", "n1", "n2", "n3"],
+        metrics: ["infected", "coverage", "rounds"],
+        summary:
+          "The cluster has no coordinator or broadcast tree. Each node has the same membership view, and no traffic exists until there is a fact to spread.",
+        nextAction: "Start the first rumor and follow which nodes learn it after each round.",
+      },
+      {
+        id: "first-rumor",
+        label: "One seed begins epidemic delivery",
+        phase: "change",
+        at: 4,
+        nodes: ["n0"],
+        metrics: ["infected", "rounds", "messages"],
+        summary:
+          "n0 knows the rumor first. Each informed peer independently selects random peers, so knowledge multiplies without a leader assigning work.",
+        nextAction: "Compare the newly informed nodes with the coverage and round counters.",
+        trigger: { kind: "button-press", id: "startRumor" },
+      },
+      {
+        id: "convergence",
+        label: "Coverage rises while redundancy becomes visible",
+        phase: "impact",
+        nodes: ["n0", "n1", "n2", "n3", "n4", "n5", "n6", "n7", "n8", "n9"],
+        metrics: ["infected", "coverage", "messages", "rounds"],
+        summary:
+          "As coverage fills, more sends land on peers that already know. The redundant message bill is the mechanism that buys delivery without global coordination.",
+        nextAction: "Lower fanout for a slower epidemic, then increase it and compare the message cost.",
+        trigger: { kind: "param-change", id: "fanout" },
+      },
+      {
+        id: "survives-holes",
+        label: "The rumor routes around missing peers",
+        phase: "resolution",
+        at: 15.5,
+        nodes: ["n0", "n2", "n4", "n6", "n8"],
+        metrics: ["coverage", "messages", "rounds"],
+        summary:
+          "A fresh rumor still reaches every live peer after two nodes die. Senders keep choosing from their flat list; messages to holes are simply lost rather than coordinated around.",
+        nextAction: "Inspect a live node after the restart and compare coverage of live peers with total traffic.",
+      },
+    ],
+  },
+
   quiz: [
     {
       id: "go-rounds",

@@ -253,7 +253,9 @@ test.describe("expand-to-full-screen stage", () => {
     await gotoAndSettle(page, DRIVEN.route);
 
     const figure = page.locator("figure").first();
-    const clock = figure.getByText(/^t=\d+(\.\d+)?s$/);
+    const clock = figure.locator("span.tech-num").filter({
+      hasText: /^t=\d+(\.\d+)?s$/,
+    });
     const play = figure.getByRole("button", { name: "Play simulation" });
     const pause = figure.getByRole("button", { name: "Pause simulation" });
     const expand = figure.getByRole("button", {

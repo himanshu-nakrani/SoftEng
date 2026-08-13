@@ -67,6 +67,31 @@ test.describe("interactive learning flows", () => {
     await expect(api2).toHaveAttribute("aria-label", /status: healthy/);
   });
 
+  test("workbench event path seeks deterministically and exposes a static state view", async ({
+    page,
+  }) => {
+    await gotoAndSettle(page, "/learn/scaling/client-server");
+    const figure = page.locator("figure").first();
+    await figure.scrollIntoViewIfNeeded();
+    await figure.getByRole("button", { name: "Restart simulation" }).click();
+
+    const impact = figure.getByRole("button", {
+      name: /Queue growth becomes user latency/,
+    });
+    await impact.click();
+
+    await expect(impact).toHaveAttribute("aria-pressed", "true");
+    await expect(figure.getByRole("heading", { name: "Queue growth becomes user latency" })).toBeVisible();
+    await expect(figure.getByRole("slider", { name: "Timeline" })).toHaveValue("15.2");
+    await expect(figure.getByText("Simulation paused at 15.2 seconds.")).toBeVisible();
+
+    const staticState = figure.locator(".causal-static-toggle");
+    await expect(staticState).toHaveAttribute("aria-pressed", "false");
+    await staticState.click();
+    await expect(staticState).toHaveAttribute("aria-pressed", "true");
+    await expect(staticState).toHaveAccessibleName("Live motion");
+  });
+
   test("appearance control changes the document theme and persists the learner preference", async ({
     page,
   }) => {

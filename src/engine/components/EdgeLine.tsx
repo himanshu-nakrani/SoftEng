@@ -21,6 +21,8 @@ interface EdgeLineProps {
   reducedMotion?: boolean;
   /** Resolved style map (see `resolvePacketStyles`); defaults to the built-ins. */
   packetStyles?: Record<string, PacketStyle>;
+  /** Shared workbench emphasis for a path participating in the active causal event. */
+  focused?: boolean;
 }
 
 /** Packets on one edge that count as "as busy as it gets" — heat saturates here. */
@@ -52,6 +54,7 @@ export function EdgeLine({
   activity,
   reducedMotion,
   packetStyles,
+  focused = false,
 }: EdgeLineProps) {
   const count = reducedMotion ? (activity?.count ?? 0) : 0;
 
@@ -60,10 +63,10 @@ export function EdgeLine({
       <path
         d={path.d}
         fill="none"
-        stroke="var(--color-border-bright)"
-        strokeWidth={IDLE_WIDTH}
-        strokeOpacity={dimmed ? 0.25 : IDLE_OPACITY}
-        style={{ transition: "stroke-opacity 300ms" }}
+        stroke={focused ? "var(--color-accent)" : "var(--color-border-bright)"}
+        strokeWidth={focused ? IDLE_WIDTH + 1.35 : IDLE_WIDTH}
+        strokeOpacity={dimmed ? 0.25 : focused ? 1 : IDLE_OPACITY}
+        style={{ transition: "stroke-opacity 300ms, stroke-width 220ms, stroke 220ms" }}
       />
     );
   }
@@ -79,11 +82,11 @@ export function EdgeLine({
     <path
       d={path.d}
       fill="none"
-      stroke={stroke}
-      strokeWidth={IDLE_WIDTH + (BUSY_WIDTH - IDLE_WIDTH) * heat}
+      stroke={focused ? "var(--color-accent)" : stroke}
+      strokeWidth={IDLE_WIDTH + (BUSY_WIDTH - IDLE_WIDTH) * heat + (focused ? 1 : 0)}
       strokeLinecap="round"
       strokeOpacity={
-        dimmed ? 0.25 : IDLE_OPACITY + (BUSY_OPACITY - IDLE_OPACITY) * heat
+        dimmed ? 0.25 : focused ? 1 : IDLE_OPACITY + (BUSY_OPACITY - IDLE_OPACITY) * heat
       }
       style={{
         // Snapshots land every ~100ms; a transition just longer than that

@@ -215,6 +215,68 @@ export const metricsLogsTracesSim: LessonSim<SignalsState> = {
     },
   ],
 
+  workbench: {
+    experiment: {
+      id: "diagnose-slow-query",
+      title: "Follow one symptom to the dependency that caused it",
+      prompt:
+        "Establish the healthy baseline, then introduce the slow database query. Start with p95 to see scope, then inspect the path to locate the expensive hop.",
+      actionLabel: "Show the baseline",
+      focusId: "healthy-checkout",
+      action: { kind: "seek", at: 1.5 },
+    },
+    focuses: [
+      {
+        id: "healthy-checkout",
+        label: "One healthy checkout path",
+        phase: "baseline",
+        at: 1.5,
+        nodes: ["browser", "api", "worker", "db"],
+        edges: ["client-api", "api-worker", "worker-db"],
+        metrics: ["p95", "dbQueue", "throughput"],
+        summary:
+          "A checkout completes only after API, worker, and database work have all returned. With a healthy database, work drains and p95 stays stable.",
+        nextAction: "Introduce the incident and use p95 to establish that real users are affected.",
+      },
+      {
+        id: "slow-query",
+        label: "The database becomes the slow dependency",
+        phase: "change",
+        at: 13,
+        nodes: ["worker", "db"],
+        edges: ["worker-db"],
+        metrics: ["p95", "dbQueue", "throughput"],
+        summary:
+          "The slow query reduces database service capacity. Work accumulates at orders-db, and the tail of end-to-end checkout latency rises.",
+        nextAction: "Switch evidence modes and inspect the database component rather than searching every log first.",
+        trigger: { kind: "button-press", id: "inject-slow-query" },
+      },
+      {
+        id: "trace-path",
+        label: "A trace links the symptom to the slow span",
+        phase: "impact",
+        at: 22,
+        nodes: ["browser", "api", "worker", "db"],
+        edges: ["client-api", "api-worker", "worker-db"],
+        metrics: ["p95", "dbQueue"],
+        summary:
+          "The trace preserves the whole causal route: browser to API to worker to orders-db. The slow database span explains why the aggregate p95 changed.",
+        nextAction: "Use logs only after the trace has named the dependency and narrowed the question.",
+        trigger: { kind: "param-change", id: "signal" },
+      },
+      {
+        id: "incident-resolved",
+        label: "Evidence is now a repair plan",
+        phase: "resolution",
+        nodes: ["db"],
+        metrics: ["p95", "errorRate", "dbQueue"],
+        summary:
+          "A useful investigation ends with an actionable dependency: fix, isolate, or protect orders-db, then watch queue and p95 recover together.",
+        nextAction: "Compare a slow dependency with a hard database failure using the component control.",
+      },
+    ],
+  },
+
   quiz: [
     {
       id: "signals-root-cause",

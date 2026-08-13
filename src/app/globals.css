@@ -987,3 +987,353 @@ input[type="range"].accent-accent:focus-visible {
 [data-theme="dark"] .surface-card {
   box-shadow: 0 1.5rem 3rem -2.4rem oklch(8% 0.01 180 / 70%), inset 0 1px 0 oklch(100% 0 0 / 5%);
 }
+
+
+/* ---------------------------------------------------------------------------
+   Causal Learning Workbench — shared guidance and inspection surface.
+--------------------------------------------------------------------------- */
+
+@layer components {
+  .causal-experiment {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-top: 1px solid var(--color-border);
+    padding: 0.9rem 1rem;
+    background: linear-gradient(90deg, var(--color-accent-dim), transparent 72%);
+  }
+
+  .causal-experiment-copy {
+    min-width: 0;
+  }
+
+  .causal-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  }
+
+  .causal-experiment h3,
+  .causal-inspector h3 {
+    margin-top: 0.28rem;
+    color: var(--color-fg);
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.15;
+  }
+
+  .causal-experiment p {
+    max-width: 44rem;
+    margin-top: 0.35rem;
+    color: var(--color-fg-muted);
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+
+  .causal-experiment-claim {
+    color: var(--color-fg) !important;
+  }
+
+  .causal-action {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.42rem;
+    min-height: 2.45rem;
+    border-radius: 0.55rem;
+    padding: 0.55rem 0.75rem;
+    background: var(--color-accent);
+    color: var(--color-accent-ink);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition: transform 140ms var(--ease-out-soft), filter 140ms var(--ease-out-soft);
+  }
+
+  .causal-action:hover {
+    filter: brightness(1.08);
+  }
+
+  .causal-action:active {
+    transform: scale(0.97);
+  }
+
+  .causal-tape {
+    border-top: 1px solid var(--color-border);
+    padding: 0.72rem 1rem 0.8rem;
+    background: var(--color-surface);
+  }
+
+  .causal-tape-heading {
+    display: flex;
+    align-items: center;
+    gap: 0.38rem;
+    margin-bottom: 0.58rem;
+    color: var(--color-fg-faint);
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  }
+
+  .causal-tape-list {
+    display: flex;
+    gap: 0.45rem;
+    overflow-x: auto;
+    padding-bottom: 0.12rem;
+    scrollbar-width: thin;
+  }
+
+  .causal-tape-event {
+    display: grid;
+    flex: 1 0 9.4rem;
+    grid-template-columns: auto 1fr;
+    column-gap: 0.42rem;
+    align-items: center;
+    min-height: 3.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    padding: 0.42rem 0.5rem;
+    color: var(--color-fg-muted);
+    text-align: left;
+    transition: background 160ms var(--ease-out-soft), border-color 160ms var(--ease-out-soft), transform 160ms var(--ease-out-soft);
+  }
+
+  .causal-tape-event:hover {
+    border-color: var(--color-border-bright);
+    background: var(--color-raised);
+  }
+
+  .causal-tape-event:active {
+    transform: scale(0.98);
+  }
+
+  .causal-tape-event.is-active {
+    border-color: var(--color-accent);
+    background: var(--color-accent-dim);
+    color: var(--color-fg);
+  }
+
+  .causal-tape-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border: 1px solid var(--color-border-bright);
+    border-radius: 999px;
+    background: var(--color-surface);
+  }
+
+  .causal-tape-event.is-active .causal-tape-dot {
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-accent-dim);
+  }
+
+  .causal-tape-meta,
+  .causal-tape-time {
+    color: var(--color-fg-faint);
+    font-family: var(--font-mono);
+    font-size: 0.57rem;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  .causal-tape-label {
+    grid-column: 2;
+    overflow: hidden;
+    color: inherit;
+    font-size: 0.74rem;
+    font-weight: 600;
+    line-height: 1.25;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .causal-tape-time {
+    grid-column: 2;
+  }
+
+  .causal-inspector {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.85rem 1rem;
+    border-top: 1px solid var(--color-border);
+    padding: 0.9rem 1rem;
+    background: linear-gradient(110deg, color-mix(in oklch, var(--color-raised) 94%, var(--color-accent-dim)), var(--color-surface));
+  }
+
+  .causal-inspector-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.7rem;
+  }
+
+  .causal-inspector-reset {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.34rem;
+    border-radius: 0.4rem;
+    padding: 0.34rem 0.42rem;
+    color: var(--color-fg-faint);
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    transition: background 140ms var(--ease-out-soft), color 140ms var(--ease-out-soft);
+  }
+
+  .causal-inspector-reset:hover {
+    background: var(--color-surface);
+    color: var(--color-fg);
+  }
+
+  .causal-node-select-label {
+    grid-row: span 2;
+    min-width: 10.5rem;
+    color: var(--color-fg-faint);
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  .causal-node-select {
+    display: block;
+    width: 100%;
+    margin-top: 0.38rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.4rem;
+    padding: 0.42rem 1.8rem 0.42rem 0.5rem;
+    background: var(--color-surface);
+    color: var(--color-fg);
+    font-family: var(--font-mono);
+    font-size: 0.67rem;
+    text-transform: none;
+  }
+
+  .causal-inspector-state {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+  }
+
+  .causal-inspector-state > div {
+    min-width: 4.6rem;
+    border-left: 2px solid var(--color-border-bright);
+    padding-left: 0.48rem;
+  }
+
+  .causal-inspector-state span {
+    display: block;
+    color: var(--color-fg-faint);
+    font-family: var(--font-mono);
+    font-size: 0.57rem;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  .causal-inspector-state strong {
+    display: block;
+    margin-top: 0.18rem;
+    color: var(--color-fg);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+  }
+
+  .causal-inspector-explanation {
+    display: flex;
+    grid-column: 1 / -1;
+    align-items: flex-start;
+    gap: 0.45rem;
+    color: var(--color-fg-muted);
+    font-size: 0.78rem;
+    line-height: 1.45;
+  }
+
+  .causal-inspector-explanation svg {
+    flex: 0 0 auto;
+    margin-top: 0.16rem;
+    color: var(--color-accent);
+  }
+
+  .causal-next-action {
+    grid-column: 1 / -1;
+    margin-top: -0.35rem;
+    color: var(--color-fg-faint);
+    font-size: 0.72rem;
+  }
+
+  .causal-static-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 1.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.42rem;
+    padding: 0.3rem 0.42rem;
+    background: var(--color-surface);
+    color: var(--color-fg-muted);
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: background 140ms var(--ease-out-soft), color 140ms var(--ease-out-soft), border-color 140ms var(--ease-out-soft);
+  }
+
+  .causal-static-toggle:hover,
+  .causal-static-toggle.is-active {
+    border-color: var(--color-accent);
+    background: var(--color-accent-dim);
+    color: var(--color-fg);
+  }
+
+  .causal-meter-focus {
+    position: relative;
+  }
+
+  .causal-meter-focus::after {
+    position: absolute;
+    inset: -0.35rem 0.45rem;
+    border: 1px solid var(--color-accent);
+    border-radius: 0.42rem;
+    content: "";
+    pointer-events: none;
+  }
+
+  @media (max-width: 40rem) {
+    .causal-experiment {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .causal-action {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .causal-inspector {
+      grid-template-columns: 1fr;
+    }
+
+    .causal-node-select-label {
+      grid-row: auto;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .causal-tape-event,
+  .causal-action,
+  .causal-static-toggle {
+    transition: none;
+  }
+}
