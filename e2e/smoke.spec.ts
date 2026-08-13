@@ -106,7 +106,9 @@ test.describe("the simulation engine runs in the browser", () => {
     const pauseButton = figure.getByRole("button", { name: "Pause simulation" });
     // The transport clock: `t=<seconds>s`, anchored so only the clock span
     // matches (ancestors carry the speed buttons' text too).
-    const clock = figure.getByText(/^t=\d+(\.\d+)?s$/);
+    const clock = figure.locator("span.tech-num").filter({
+      hasText: /^t=\d+(\.\d+)?s$/,
+    });
     // PacketLayer's pool: circles in the stage svg's aria-hidden group.
     // `:visible` is Playwright's own check — pooled slots parked with
     // `visibility: hidden` do not count.
@@ -177,7 +179,9 @@ test.describe("the simulation engine runs in the browser", () => {
       const stage = figure.locator("svg[data-sim-stage]");
       await expect(stage).toBeVisible();
       await expect(stage.locator("text")).not.toHaveCount(0);
-      await expect(figure.getByText(/^t=\d+(\.\d+)?s$/)).toBeVisible();
+      await expect(
+        figure.locator("span.tech-num").filter({ hasText: /^t=\d+(\.\d+)?s$/ }),
+      ).toBeVisible();
       await expect(
         figure.getByRole("button", { name: /(Play|Pause) simulation/ }),
       ).toBeVisible();
