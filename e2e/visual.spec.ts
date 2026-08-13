@@ -227,7 +227,10 @@ async function pausedFigure(page: Page, route: string): Promise<Locator> {
     pause,
     "figure should autoplay once scrolled into view (our hydration gate)",
   ).toBeVisible();
-  await pause.click();
+  // Restart is a stronger post-hydration reset than a pause toggle: it both
+  // stops the runner and returns it to a known frame, avoiding an observer
+  // timing race where scroll state could resume just after the click.
+  await figure.getByRole("button", { name: "Restart simulation" }).click();
   await expect(play, "the figure should be paused before seeking").toBeVisible();
 
   // Self-hosted woff2 files land after hydration; shooting before they do

@@ -333,6 +333,52 @@ test.describe("expand-to-full-screen stage", () => {
   });
 });
 
+test.describe("meter readouts", () => {
+  test("keeps each metric value and unit on one readable baseline", async ({ page }) => {
+    const watcher = watchConsole(page);
+    await gotoAndSettle(page, DRIVEN.route);
+
+    const figure = page.locator("figure").first();
+    await figure.scrollIntoViewIfNeeded();
+    const throughputMeter = figure
+      .getByText("throughput", { exact: true })
+      .locator("..");
+    const reading = throughputMeter.locator("[data-meter-reading]");
+    const value = reading.locator("[data-meter-value]");
+    const unit = reading.locator("[data-meter-unit]");
+
+    await expect(reading).toBeVisible();
+    await expect(value).toBeVisible();
+    await expect(unit).toBeVisible();
+    const readingLayout = await reading.evaluate((el) => {
+      const style = getComputedStyle(el);
+      return { display: style.display, alignItems: style.alignItems };
+    });
+    // As a flex item, CSS blockifies `inline-flex` to `flex`; the essential
+    // contract is still the baseline-aligned flex pair, not its outer display.
+    expect(readingLayout.display).toBe("flex");
+    expect(readingLayout.alignItems).toBe("baseline");
+
+    const [valueBox, unitBox] = await Promise.all([
+      value.boundingBox(),
+      unit.boundingBox(),
+    ]);
+    expect(valueBox, "throughput value needs a measurable box").not.toBeNull();
+    expect(unitBox, "throughput unit needs a measurable box").not.toBeNull();
+    expect(
+      Math.abs(unitBox!.y - valueBox!.y),
+      "throughput value and unit should remain on the same meter row",
+    ).toBeLessThan(valueBox!.height);
+    expect(
+      unitBox!.x,
+      "throughput unit should begin after the numeric value, not overlap it",
+    ).toBeGreaterThanOrEqual(valueBox!.x + valueBox!.width);
+
+    await expectNoHorizontalScroll(page, "lesson page with meter readouts");
+    expectQuiet(watcher, "while measuring the throughput meter");
+  });
+});
+
 test.describe("no horizontal scroll at 390px", () => {
   for (const route of ROUTES) {
     test(`${route} fits the viewport`, async ({ page }) => {
