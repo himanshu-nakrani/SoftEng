@@ -592,6 +592,7 @@ function FigureBody<L>({
           quiz={simulation.activeQuiz}
           answer={simulation.quizAnswer}
           onAnswer={simulation.answerQuiz}
+          onDismiss={simulation.dismissQuiz}
           onResume={simulation.resumeFromQuiz}
         />
       </div>

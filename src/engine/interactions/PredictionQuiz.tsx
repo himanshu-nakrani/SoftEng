@@ -10,6 +10,8 @@ interface PredictionQuizProps {
   quiz: QuizCheckpoint | null;
   answer: string | null;
   onAnswer: (choiceId: string) => void;
+  /** Dismiss an answered quiz but leave its deterministic frame paused. */
+  onDismiss: () => void;
   onResume: () => void;
 }
 
@@ -35,6 +37,7 @@ export function PredictionQuiz({
   quiz,
   answer,
   onAnswer,
+  onDismiss,
   onResume,
 }: PredictionQuizProps) {
   const titleId = useId();
@@ -68,6 +71,20 @@ export function PredictionQuiz({
     if (quizId === null || answer === null) return;
     resumeRef.current?.focus();
   }, [quizId, answer]);
+
+  // Escape is deliberately unavailable until an answer has been committed: a
+  // checkpoint must not be skippable, but an answered explanation must never
+  // trap the learner over the simulation.
+  useEffect(() => {
+    if (quizId === null || answer === null) return;
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      onDismiss();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [quizId, answer, onDismiss]);
 
   const onChoiceKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const count = quiz?.choices.length ?? 0;
@@ -123,7 +140,7 @@ export function PredictionQuiz({
             role="alertdialog"
             aria-modal="true"
             aria-labelledby={titleId}
-            className="max-h-full w-full max-w-md overflow-y-auto rounded-lg border border-glow-violet/40 bg-surface p-5 shadow-[0_0_40px_-12px_var(--color-glow-violet)]"
+            className="relative max-h-full w-full max-w-md overflow-y-auto rounded-lg border border-glow-violet/40 bg-surface p-5 shadow-[0_0_40px_-12px_var(--color-glow-violet)]"
           >
             <p className="tech-label mb-2 text-glow-violet">
               predict — sim paused
@@ -188,15 +205,24 @@ export function PredictionQuiz({
                   <p className="mt-4 border-l-2 border-glow-violet/50 pl-3 text-[13px] leading-relaxed text-fg-muted">
                     {quiz.explain}
                   </p>
-                  <button
-                    ref={resumeRef}
-                    type="button"
-                    onClick={onResume}
-                    className="mt-4 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-glow-violet px-4 py-2.5 text-sm font-semibold text-bg transition-all hover:brightness-110"
-                  >
-                    Watch it happen
-                    <ArrowRight className="size-4" />
-                  </button>
+                  <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                    <button
+                      type="button"
+                      onClick={onDismiss}
+                      className="cursor-pointer rounded-lg border border-border bg-raised px-4 py-2.5 text-sm font-semibold text-fg transition-colors hover:border-border-bright hover:bg-surface"
+                    >
+                      Close and inspect
+                    </button>
+                    <button
+                      ref={resumeRef}
+                      type="button"
+                      onClick={onResume}
+                      className="flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-glow-violet px-4 py-2.5 text-sm font-semibold text-bg transition-all hover:brightness-110"
+                    >
+                      Watch it happen
+                      <ArrowRight className="size-4" />
+                    </button>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>

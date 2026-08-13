@@ -94,6 +94,47 @@ test.describe("interactive learning flows", () => {
     await expect(staticState).toHaveAccessibleName("Live motion");
   });
 
+  test("an answered prediction checkpoint can close without advancing the simulation", async ({
+    page,
+  }) => {
+    await gotoAndSettle(page, "/learn/scaling/scaling-strategies");
+    const figure = page.locator("figure").first();
+    await figure.scrollIntoViewIfNeeded();
+    await figure.getByRole("button", { name: "Restart simulation" }).click();
+
+    // Seek immediately before the checkpoint, then play through the real tick
+    // that fires it. Seeking past a checkpoint intentionally forfeits it.
+    const timeline = figure.getByRole("slider", { name: "Timeline" });
+    await timeline.evaluate((el, value) => {
+      const input = el as HTMLInputElement;
+      const setter = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        "value",
+      )?.set;
+      if (!setter) throw new Error("no native range value setter");
+      setter.call(input, String(value));
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    }, 12.9);
+
+    await figure.getByRole("button", { name: "Play simulation" }).click();
+    const quiz = figure.getByRole("alertdialog");
+    await expect(quiz).toBeVisible();
+    await quiz
+      .getByRole("button", {
+        name: "Vertical — the one big box IS the fleet: capacity → 0",
+      })
+      .click();
+
+    await expect(quiz.getByText(/Vertical concentrates every request/)).toBeVisible();
+    await expect(quiz.getByRole("button", { name: "Close and inspect" })).toBeVisible();
+    await quiz.getByRole("button", { name: "Close and inspect" }).click();
+
+    await expect(quiz).toHaveCount(0);
+    await expect(figure.getByRole("button", { name: "Play simulation" })).toBeVisible();
+    await expect(figure.getByText(/Simulation paused at 13\.\d seconds\./)).toBeVisible();
+  });
+
   test("appearance control changes the document theme and persists the learner preference", async ({
     page,
   }) => {
