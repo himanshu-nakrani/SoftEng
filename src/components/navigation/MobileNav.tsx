@@ -2,6 +2,7 @@
 
 import { ProgressRing } from "@/components/navigation/ProgressRing";
 import { SidebarTree } from "@/components/navigation/SidebarTree";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import type { LessonMeta } from "@/curriculum/types";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { useLessonProgress } from "@/hooks/use-lesson-progress";
@@ -193,9 +194,12 @@ export function MobileNav() {
             <SidebarTree onNavigate={close} />
           </div>
 
-          <p className="border-t border-border bg-bg/20 px-4 py-3 font-mono text-[9px] tracking-widest text-fg-muted uppercase">
-            v0.1 · progress in localStorage
-          </p>
+          <div className="border-t border-border bg-bg/20 px-4 py-3">
+            <ThemeToggle className="mb-3" />
+            <p className="font-mono text-[9px] tracking-widest text-fg-muted uppercase">
+              saved locally · no account needed
+            </p>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>

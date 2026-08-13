@@ -119,7 +119,9 @@ export function Lesson({ slug, children }: LessonProps) {
 
             <div className="relative">
               <div className="mb-5 flex items-center gap-3">
-                <span className="tech-label">{mod.title}</span>
+                <span className="tech-label text-glow-red">live thought experiment</span>
+                <span className="hidden text-fg-faint sm:inline">/</span>
+                <span className="tech-label hidden sm:inline">{mod.title}</span>
                 <div className="tech-rule flex-1" />
                 <MasteryMark meta={meta} />
                 <span className="tech-num text-xs text-fg-faint">
@@ -130,7 +132,7 @@ export function Lesson({ slug, children }: LessonProps) {
               <h1 className="hero-copy font-display mb-3 text-3xl font-bold tracking-tight sm:text-4xl">
                 {meta.title}
               </h1>
-              <p className="mb-6 max-w-xl leading-relaxed text-fg-muted">
+              <p className="mb-6 max-w-2xl leading-relaxed text-fg-muted">
                 {meta.tagline}
               </p>
 

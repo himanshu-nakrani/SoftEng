@@ -223,10 +223,10 @@ function MapNode({
   const row = (
     <div
       className={cn(
-        "flex-1 rounded-xl border border-transparent bg-surface/15 px-4 py-4 shadow-[inset_0_1px_0_oklch(94%_0.008_250_/_3%)] transition-all",
+        "flex-1 rounded-lg border border-border bg-raised px-4 py-4 shadow-[inset_0_1px_0_oklch(100%_0_0_/_35%)] transition-all",
         soon
           ? "opacity-40"
-          : "group-hover:border-border-bright group-hover:bg-surface/70 group-hover:shadow-[0_1rem_2rem_-1.5rem_oklch(5%_0.02_255_/_85%)]",
+          : "group-hover:border-border-bright group-hover:bg-overlay group-hover:shadow-[0_1rem_2rem_-1.5rem_oklch(20%_0.01_180_/_22%)]",
       )}
     >
       <div className="mb-1 flex items-baseline gap-2.5">
@@ -316,7 +316,7 @@ export function LessonMap() {
               <h2 className="font-display text-xl font-bold tracking-tight">{mod.title}</h2>
               <p className="mt-0.5 hidden text-xs text-fg-faint sm:block">{mod.description}</p>
             </div>
-            <span className="tech-num ml-auto shrink-0 rounded-full border border-border bg-surface/45 px-2.5 py-1 text-[10px] text-fg-faint">
+            <span className="tech-num ml-auto shrink-0 rounded-full border border-border bg-raised px-2.5 py-1 text-[10px] text-fg-faint">
               {mod.lessons.length} lessons
             </span>
           </div>

@@ -1,3 +1,4 @@
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { shareMetadata } from "@/lib/site";
 import { ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
@@ -27,10 +28,11 @@ export default function AboutPage() {
           </span>
           <span className="size-1.5 rounded-full bg-accent shadow-[0_0_6px_var(--color-accent)]" />
         </Link>
-        <nav className="ml-auto flex gap-5 text-sm text-fg-muted">
+        <nav className="ml-auto flex items-center gap-5 text-sm text-fg-muted">
           <Link href="/learn" className="transition-colors hover:text-fg">
             Learning path
           </Link>
+          <ThemeToggle />
         </nav>
       </header>
 

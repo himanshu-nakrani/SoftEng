@@ -67,6 +67,31 @@ test.describe("interactive learning flows", () => {
     await expect(api2).toHaveAttribute("aria-label", /status: healthy/);
   });
 
+  test("appearance control changes the document theme and persists the learner preference", async ({
+    page,
+  }) => {
+    await gotoAndSettle(page, "/");
+
+    const root = page.locator("html");
+    const before = await root.getAttribute("data-theme");
+    expect(before === "light" || before === "dark").toBeTruthy();
+    const after = before === "dark" ? "light" : "dark";
+
+    await page
+      .getByRole("button", { name: `Switch to ${after} mode` })
+      .click();
+    await expect(root).toHaveAttribute("data-theme", after);
+    await expect(
+      page.getByRole("button", {
+        name: `Switch to ${before === "dark" ? "dark" : "light"} mode`,
+      }),
+    ).toBeVisible();
+
+    await page.reload();
+    await page.waitForLoadState("networkidle");
+    await expect(root).toHaveAttribute("data-theme", after);
+  });
+
   test("review answers reveal explanation and can be retried without recording progress", async ({
     page,
   }) => {

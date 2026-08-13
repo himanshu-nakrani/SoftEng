@@ -1,3 +1,4 @@
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { shareMetadata } from "@/lib/site";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -37,10 +38,11 @@ export default function ReviewPage() {
           </span>
           <span className="size-1.5 rounded-full bg-accent shadow-[0_0_6px_var(--color-accent)]" />
         </Link>
-        <nav className="ml-auto flex gap-5 text-sm text-fg-muted">
+        <nav className="ml-auto flex items-center gap-5 text-sm text-fg-muted">
           <Link href="/learn" className="transition-colors hover:text-fg">
             Learning path
           </Link>
+          <ThemeToggle />
         </nav>
       </header>
 

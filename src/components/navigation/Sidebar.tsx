@@ -1,6 +1,7 @@
 "use client";
 
 import { SidebarTree } from "@/components/navigation/SidebarTree";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import Link from "next/link";
 
 /**
@@ -21,9 +22,12 @@ export function Sidebar() {
 
       <SidebarTree />
 
-      <p className="mt-auto border-t border-border/65 px-2.5 pt-4 font-mono text-[9px] tracking-widest text-fg-muted uppercase">
-        v0.1 · progress in localStorage
-      </p>
+      <div className="mt-auto border-t border-border/65 px-2.5 pt-4">
+        <ThemeToggle className="mb-3" />
+        <p className="font-mono text-[9px] tracking-widest text-fg-muted uppercase">
+          saved locally · no account needed
+        </p>
+      </div>
     </aside>
   );
 }

@@ -2,6 +2,7 @@ import { ContinueCta } from "@/components/landing/ContinueCta";
 import { HeroSim } from "@/components/landing/HeroSim";
 import { Vignettes } from "@/components/landing/Vignettes";
 import { CornerTicks } from "@/components/ui/CornerTicks";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { accentCssVar } from "@/lib/accent";
 import { allLessons, modules, track } from "@/lib/curriculum";
 import { absoluteUrl, siteDescription, siteName } from "@/lib/site";
@@ -22,14 +23,15 @@ function SiteHeader() {
           <span className="size-1.5 animate-pulse rounded-full bg-glow-green" />
           all systems nominal
         </span>
-        <nav aria-label="Primary navigation" className="ml-auto flex items-center gap-1 text-sm text-fg-muted">
-          <Link href="/learn" className="rounded-full px-3 py-1.5 transition-colors hover:bg-surface/70 hover:text-fg">
-            Learning path
-          </Link>
-          <Link href="/about" className="rounded-full px-3 py-1.5 transition-colors hover:bg-surface/70 hover:text-fg">
-            About
-          </Link>
-        </nav>
+          <nav aria-label="Primary navigation" className="ml-auto flex items-center gap-1 text-sm text-fg-muted">
+            <Link href="/learn" className="rounded-full px-3 py-1.5 transition-colors hover:bg-surface/70 hover:text-fg">
+              Learning path
+            </Link>
+            <Link href="/about" className="rounded-full px-3 py-1.5 transition-colors hover:bg-surface/70 hover:text-fg">
+              About
+            </Link>
+            <ThemeToggle className="ml-1" />
+          </nav>
       </div>
     </header>
   );

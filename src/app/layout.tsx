@@ -130,8 +130,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#2e3440",
-  colorScheme: "dark",
+  themeColor: "#f7f6f1",
+  colorScheme: "light dark",
 };
 
 export default function RootLayout({
@@ -140,7 +140,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" data-theme="light" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(() => { try { const saved = localStorage.getItem('syslab-appearance'); const theme = saved === 'dark' || saved === 'light' ? saved : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); document.documentElement.dataset.theme = theme; document.documentElement.classList.toggle('dark', theme === 'dark'); } catch {} })();",
+          }}
+        />
+      </head>
       <body
         className={`${bricolage.variable} ${plexSans.variable} ${plexMono.variable} font-sans antialiased`}
       >
