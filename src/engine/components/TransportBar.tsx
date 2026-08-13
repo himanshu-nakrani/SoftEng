@@ -270,8 +270,16 @@ export function TransportBar({
           onClick={controls.toggle}
           disabled={quizzing}
           aria-label={playing ? "Pause simulation" : "Play simulation"}
+          aria-pressed={playing}
           aria-keyshortcuts="Space"
-          className="flex size-8 cursor-pointer items-center justify-center rounded-lg bg-accent text-bg transition-all hover:brightness-110 disabled:opacity-40"
+          title={
+            quizzing
+              ? "Answer the checkpoint to continue"
+              : playing
+                ? "Pause simulation (Space)"
+                : "Play simulation (Space)"
+          }
+          className="flex size-8 cursor-pointer items-center justify-center rounded-lg bg-accent text-bg transition-[transform,filter] hover:brightness-110 active:scale-95 disabled:opacity-40"
         >
           {playing ? (
             <Pause className="size-4" fill="currentColor" strokeWidth={0} />
@@ -389,6 +397,13 @@ export function TransportBar({
             )}
           />
           t={t.toFixed(1)}s
+        </span>
+        <span role="status" className="sr-only">
+          {quizzing
+            ? "Checkpoint open. Answer the prediction to continue."
+            : playing
+              ? "Simulation playing."
+              : `Simulation paused at ${t.toFixed(1)} seconds.`}
         </span>
 
         {/* Transcript toggle — last in the row, right of the clock, because it

@@ -52,10 +52,11 @@ export function ReviewCard({ item }: { item: ReviewItem }) {
   const chip = statusChip[item.status];
   const correctLabel =
     quiz.choices.find((c) => c.id === quiz.correctChoiceId)?.label ?? "";
+  const answeredCorrectly = choice === quiz.correctChoiceId;
   const verdict = !revealed
     ? ""
-    : choice === quiz.correctChoiceId
-      ? "Correct."
+    : answeredCorrectly
+      ? "Correct — that is the system behavior to expect."
       : `Not quite — the correct answer was ${correctLabel}.`;
 
   return (
@@ -135,16 +136,35 @@ export function ReviewCard({ item }: { item: ReviewItem }) {
         })}
       </div>
 
-      {/* Present from first render so the verdict is a content change inside a
-          live region, not a region that appears already populated. */}
+      {/* Present from first render so the verdict is announced as a content
+          change. The explanation is visible as well: practice should resolve
+          uncertainty immediately, not hide the learning moment from sighted
+          learners. */}
       <p role="status" className="sr-only">
         {verdict}
       </p>
 
       {revealed && (
-        <p className="mt-4 border-l-2 border-glow-violet/50 pl-3 text-[13px] leading-relaxed text-fg-muted">
-          {quiz.explain}
-        </p>
+        <div
+          className={cn(
+            "mt-4 rounded-lg border px-3.5 py-3",
+            answeredCorrectly
+              ? "border-glow-green/35 bg-glow-green-dim"
+              : "border-glow-violet/35 bg-glow-violet-dim",
+          )}
+        >
+          <p
+            className={cn(
+              "text-[13px] font-medium",
+              answeredCorrectly ? "text-glow-green" : "text-glow-violet",
+            )}
+          >
+            {verdict}
+          </p>
+          <p className="mt-1.5 text-[13px] leading-relaxed text-fg-muted">
+            {quiz.explain}
+          </p>
+        </div>
       )}
 
       <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border pt-3">
