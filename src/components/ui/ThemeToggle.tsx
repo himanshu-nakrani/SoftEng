@@ -1,7 +1,15 @@
 "use client";
 
 import { Moon, Palette, RotateCcw, SlidersHorizontal, Sun, Type } from "lucide-react";
-import { useState, useSyncExternalStore, type CSSProperties } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+  type KeyboardEvent,
+} from "react";
 
 type Appearance = "light" | "dark";
 type ReadingSize = "compact" | "default" | "comfortable";
@@ -67,6 +75,38 @@ function parsePreferences(snapshot: string): Preferences {
   };
 }
 
+function moveRadioFocus(
+  event: KeyboardEvent<HTMLDivElement>,
+  values: readonly string[],
+  refs: React.MutableRefObject<(HTMLButtonElement | null)[]>,
+  onChoose: (value: string) => void,
+) {
+  const current = refs.current.indexOf(event.target as HTMLButtonElement);
+  if (current === -1 || values.length === 0) return;
+  let next: number;
+  switch (event.key) {
+    case "ArrowRight":
+    case "ArrowDown":
+      next = current === values.length - 1 ? 0 : current + 1;
+      break;
+    case "ArrowLeft":
+    case "ArrowUp":
+      next = current === 0 ? values.length - 1 : current - 1;
+      break;
+    case "Home":
+      next = 0;
+      break;
+    case "End":
+      next = values.length - 1;
+      break;
+    default:
+      return;
+  }
+  event.preventDefault();
+  refs.current[next]?.focus();
+  onChoose(values[next]);
+}
+
 function accentInk(hex: string) {
   const channels = hex.slice(1).match(/.{2}/g)?.map((channel) => Number.parseInt(channel, 16) / 255);
   if (!channels || channels.length !== 3) return "#10201f";
@@ -117,6 +157,11 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
   const [appearanceOverride, setAppearanceOverride] = useState<Appearance | null>(null);
   const [preferencesOverride, setPreferencesOverride] = useState<Preferences | null>(null);
   const [open, setOpen] = useState(false);
+  const panelId = useId();
+  const settingsRef = useRef<HTMLButtonElement>(null);
+  const resetRef = useRef<HTMLButtonElement>(null);
+  const accentRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const sizeRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const appearance = appearanceOverride ?? documentTheme;
   const preferences = preferencesOverride ?? parsePreferences(documentPreferenceSnapshot);
@@ -156,11 +201,31 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
     setPreferencesOverride(DEFAULT_PREFERENCES);
   }
 
+  function closePreferences() {
+    setOpen(false);
+    // The panel is conditionally removed. Return focus after React commits the
+    // removal so keyboard users never land on a destroyed radio or color input.
+    requestAnimationFrame(() => settingsRef.current?.focus());
+  }
+
+  useEffect(() => {
+    if (!open) return;
+    // Opening a disclosure must give keyboard users an obvious starting point.
+    requestAnimationFrame(() => resetRef.current?.focus());
+  }, [open]);
+
+  const accentValues = ACCENT_PRESETS.map((preset) => preset.value);
+  const selectedAccentIndex = accentValues.findIndex(
+    (value) => value.toLowerCase() === preferences.accent.toLowerCase(),
+  );
+  const sizeValues = READING_SIZES.map((size) => size.id);
+  const selectedSizeIndex = sizeValues.indexOf(preferences.readingSize);
+
   return (
     <div className={`appearance-controls ${className}`} onKeyDown={(event) => {
       if (event.key === "Escape" && open) {
         event.stopPropagation();
-        setOpen(false);
+        closePreferences();
       }
     }}>
       <button
@@ -181,9 +246,13 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
 
       <button
         type="button"
-        onClick={() => setOpen((value) => !value)}
+        ref={settingsRef}
+        onClick={() => {
+          if (open) closePreferences();
+          else setOpen(true);
+        }}
         aria-expanded={open}
-        aria-controls="appearance-personalization-panel"
+        aria-controls={panelId}
         aria-label="Customize color and reading size"
         title="Customize color and reading size"
         className="appearance-settings-trigger"
@@ -193,7 +262,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
 
       {open && (
         <section
-          id="appearance-personalization-panel"
+          id={panelId}
           aria-label="Appearance preferences"
           className="appearance-personalization-panel"
         >
@@ -201,6 +270,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
             <span className="tech-label">your workspace</span>
             <button
               type="button"
+              ref={resetRef}
               onClick={resetPersonalization}
               className="appearance-reset"
               title="Reset color and reading size"
@@ -215,20 +285,38 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
               <Palette aria-hidden="true" className="size-3.5" />
               Accent color
             </legend>
-            <div className="appearance-swatch-row" role="radiogroup" aria-label="Accent color">
-              {ACCENT_PRESETS.map((preset) => (
-                <button
-                  key={preset.value}
-                  type="button"
-                  role="radio"
-                  aria-checked={preferences.accent.toLowerCase() === preset.value.toLowerCase()}
-                  aria-label={`${preset.name} accent`}
-                  title={preset.name}
-                  className="appearance-swatch"
-                  style={{ "--swatch": preset.value } as CSSProperties}
-                  onClick={() => chooseAccent(preset.value)}
-                />
-              ))}
+            <div className="appearance-swatch-row">
+              <div
+                className="appearance-swatch-options"
+                role="radiogroup"
+                aria-label="Accent color"
+                onKeyDown={(event) =>
+                  moveRadioFocus(event, accentValues, accentRefs, chooseAccent)
+                }
+              >
+                {ACCENT_PRESETS.map((preset, index) => (
+                  <button
+                    key={preset.value}
+                    ref={(element) => {
+                      accentRefs.current[index] = element;
+                    }}
+                    type="button"
+                    role="radio"
+                    aria-checked={preferences.accent.toLowerCase() === preset.value.toLowerCase()}
+                    aria-label={`${preset.name} accent`}
+                    title={preset.name}
+                    tabIndex={
+                      index === selectedAccentIndex ||
+                      (selectedAccentIndex === -1 && index === 0)
+                        ? 0
+                        : -1
+                    }
+                    className="appearance-swatch"
+                    style={{ "--swatch": preset.value } as CSSProperties}
+                    onClick={() => chooseAccent(preset.value)}
+                  />
+                ))}
+              </div>
               <label className="appearance-custom-swatch" title="Choose a custom accent color">
                 <span className="sr-only">Custom accent color</span>
                 <input
@@ -246,13 +334,26 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
               <Type aria-hidden="true" className="size-3.5" />
               Reading size
             </legend>
-            <div className="appearance-size-row" role="radiogroup" aria-label="Reading size">
-              {READING_SIZES.map((size) => (
+            <div
+              className="appearance-size-row"
+              role="radiogroup"
+              aria-label="Reading size"
+              onKeyDown={(event) =>
+                moveRadioFocus(event, sizeValues, sizeRefs, (value) =>
+                  chooseReadingSize(value as ReadingSize),
+                )
+              }
+            >
+              {READING_SIZES.map((size, index) => (
                 <button
                   key={size.id}
+                  ref={(element) => {
+                    sizeRefs.current[index] = element;
+                  }}
                   type="button"
                   role="radio"
                   aria-checked={preferences.readingSize === size.id}
+                  tabIndex={index === selectedSizeIndex ? 0 : -1}
                   onClick={() => chooseReadingSize(size.id)}
                   className="appearance-size-option"
                   title={size.description}

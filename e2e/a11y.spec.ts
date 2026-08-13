@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import type { AxeResults, Result } from "axe-core";
-import { getLesson, lessonPath } from "@/lib/curriculum";
+import { allLessons, lessonPath } from "@/lib/curriculum";
 
 /**
  * Automated accessibility scanning (axe-core) over the shipped static export.
@@ -23,12 +23,11 @@ import { getLesson, lessonPath } from "@/lib/curriculum";
  * be quiet about it — but it is exactly the sort of hand-rolled semantics that
  * a refactor breaks silently, which is why this suite exists.
  *
- * COVERAGE: the two hub routes, plus the richest lesson from each of the four
- * modules (the ones with the most ARIA surface — overlays, node internals,
- * breakable nodes, a multi-node topology). Every lesson page is built from the
- * same primitives, so a fifth lesson would re-scan the same components; the
- * smoke suite is what guarantees the other eighteen routes exist and are
- * clean. `/review` is scanned when it ships and skipped, loudly, until then.
+ * COVERAGE: the two hub routes and every lesson route in the curriculum. Shared
+ * primitives make representative sampling useful during early development, but
+ * a release-quality audit must also catch authored controls, labels, meter
+ * units, captions, and workbench metadata unique to an individual lesson.
+ * `/review` is scanned when it ships and skipped, loudly, until then.
  *
  * FAILURE POLICY: a violation here is a bug report about product code, and
  * product code is not this file's to change. A genuine finding gets recorded
@@ -74,25 +73,9 @@ const KNOWN_FINDINGS: string[] = [];
 /** Static hub routes. */
 const HUB_ROUTES = ["/", "/learn"];
 
-/** Richest lesson per module — the widest ARIA surface in each. */
-const LESSON_SLUGS = [
-  // scaling: three servers, a balancer, breakable nodes, a select + slider.
-  "load-balancing",
-  // data: a full stage overlay (ring + arcs + key ticks) with per-node labels.
-  "consistent-hashing",
-  // resilience: node internals (failure pips), four sliders, a dead node.
-  "circuit-breaker",
-  // distributed: ten nodes, per-node overlays, a button param.
-  "gossip",
-];
-
-/** Registry-resolved lesson routes — a renamed slug fails loudly at load. */
-const LESSON_ROUTES: { slug: string; route: string }[] = LESSON_SLUGS.map(
-  (slug) => {
-    const lesson = getLesson(slug);
-    if (!lesson) throw new Error(`lesson "${slug}" is not in the registry`);
-    return { slug, route: lessonPath(lesson) };
-  },
+/** Registry-resolved lesson routes — every authored interactive surface. */
+const LESSON_ROUTES: { slug: string; route: string }[] = allLessons.map(
+  (lesson) => ({ slug: lesson.slug, route: lessonPath(lesson) }),
 );
 
 /** Built by a sibling; scanned the moment it exists (see the test). */

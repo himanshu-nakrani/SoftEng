@@ -66,7 +66,7 @@ function ButtonParam({
         type="button"
         onClick={press}
         className={cn(
-          "flex cursor-pointer items-center gap-1.5 rounded-lg border border-glow-amber/40 bg-glow-amber-dim px-3 py-1.5 font-mono text-[11px] font-medium text-glow-amber transition-all hover:brightness-125 active:scale-95",
+          "flex min-h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-glow-amber/40 bg-glow-amber-dim px-3 py-1.5 font-mono text-[11px] font-medium text-glow-amber transition-all hover:brightness-125 active:scale-95",
           // Reduced motion keeps the state change (information) and drops the
           // pulsing (decoration).
           fired && "ring-2 ring-glow-amber/70 brightness-150",
@@ -138,7 +138,7 @@ export function ControlPanel({
               role="switch"
               aria-checked={on}
               onClick={() => onChange(spec.key, !on)}
-              className="flex cursor-pointer items-center gap-2"
+              className="flex min-h-8 cursor-pointer items-center gap-2"
             >
               <span className="tech-label">{spec.label}</span>
               <span

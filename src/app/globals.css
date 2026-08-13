@@ -653,11 +653,11 @@ input[type="range"].accent-accent:focus-visible {
   color: var(--color-accent);
 }
 
-.theme-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  min-height: 2rem;
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 2.25rem;
   border: 1px solid var(--color-border);
   border-radius: 999px;
   padding: 0.35rem 0.5rem;
@@ -714,12 +714,12 @@ input[type="range"].accent-accent:focus-visible {
   gap: 0.35rem;
 }
 
-.appearance-settings-trigger {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  .appearance-settings-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
   border: 1px solid var(--color-border);
   border-radius: 999px;
   background: var(--color-raised);
@@ -765,12 +765,13 @@ input[type="range"].accent-accent:focus-visible {
   margin-bottom: 0.85rem;
 }
 
-.appearance-reset {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  border-radius: 999px;
-  padding: 0.2rem 0.4rem;
+  .appearance-reset {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2rem;
+    gap: 0.3rem;
+    border-radius: 999px;
+    padding: 0.2rem 0.4rem;
   color: var(--color-fg-faint);
   font-size: 0.6875rem;
   transition: color 160ms var(--ease-out-soft), background 160ms var(--ease-out-soft);
@@ -795,19 +796,25 @@ input[type="range"].accent-accent:focus-visible {
   text-transform: uppercase;
 }
 
-.appearance-swatch-row {
-  gap: 0.45rem;
-}
+  .appearance-swatch-row,
+  .appearance-swatch-options {
+    gap: 0.45rem;
+  }
 
-.appearance-swatch,
+  .appearance-swatch-options {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .appearance-swatch,
 .appearance-custom-swatch {
   position: relative;
   display: inline-flex;
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  width: 1.8rem;
-  height: 1.8rem;
+    width: 2rem;
+    height: 2rem;
   overflow: hidden;
   border: 1px solid color-mix(in oklch, var(--swatch, var(--color-border)) 60%, var(--color-border));
   border-radius: 999px;
@@ -1182,6 +1189,7 @@ input[type="range"].accent-accent:focus-visible {
   .causal-inspector-reset {
     display: inline-flex;
     align-items: center;
+    min-height: 2rem;
     gap: 0.34rem;
     border-radius: 0.4rem;
     padding: 0.34rem 0.42rem;
@@ -1276,7 +1284,7 @@ input[type="range"].accent-accent:focus-visible {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    min-height: 1.75rem;
+    min-height: 2rem;
     border: 1px solid var(--color-border);
     border-radius: 0.42rem;
     padding: 0.3rem 0.42rem;

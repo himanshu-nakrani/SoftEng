@@ -225,6 +225,55 @@ test.describe("interactive learning flows", () => {
     await expect(visibleVerdict).toHaveCount(0);
   });
 
+  test("personalization radios support keyboard selection and return focus on Escape", async ({
+    page,
+  }) => {
+    await gotoAndSettle(page, "/");
+
+    const trigger = page.getByRole("button", {
+      name: "Customize color and reading size",
+    });
+    await trigger.click();
+    const panel = page.getByRole("region", { name: "Appearance preferences" });
+    const reset = panel.getByRole("button", { name: "Reset" });
+    await expect(reset).toBeFocused();
+
+    const cobalt = panel.getByRole("radio", { name: "Cobalt accent" });
+    const teal = panel.getByRole("radio", { name: "Teal accent" });
+    await cobalt.focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(teal).toBeFocused();
+    await expect(teal).toHaveAttribute("aria-checked", "true");
+
+    const defaultSize = panel.getByRole("radio", { name: "Default reading size" });
+    const comfortable = panel.getByRole("radio", { name: "Comfortable reading size" });
+    await defaultSize.focus();
+    await page.keyboard.press("End");
+    await expect(comfortable).toBeFocused();
+    await expect(comfortable).toHaveAttribute("aria-checked", "true");
+
+    await page.keyboard.press("Escape");
+    await expect(panel).toHaveCount(0);
+    await expect(trigger).toBeFocused();
+  });
+
+  test("review feedback moves focus to recovery and back to the first answer", async ({
+    page,
+  }) => {
+    await gotoAndSettle(page, "/review");
+
+    const firstChoice = page.getByRole("button", {
+      name: "Latency climbs, then requests start getting dropped",
+    });
+    await firstChoice.click();
+    const askAgain = page.getByRole("button", { name: "Ask again" });
+    await expect(askAgain).toBeFocused();
+
+    await askAgain.click();
+    await expect(firstChoice).toBeFocused();
+    await expect(firstChoice).toBeEnabled();
+  });
+
   test("progress import reports a merge and reset requires deliberate confirmation", async ({
     page,
   }) => {

@@ -5,7 +5,7 @@ import { accentCssVar } from "@/lib/accent";
 import { cn } from "@/lib/cn";
 import { ArrowRight, Check, RotateCcw, X } from "lucide-react";
 import Link from "next/link";
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { ReviewItem, ReviewStatus } from "./deck";
 
 /** The chip in the card's top-right — what the STORE says, before any practice. */
@@ -46,6 +46,8 @@ const statusChip: Record<ReviewStatus, { label: string; className: string }> = {
 export function ReviewCard({ item }: { item: ReviewItem }) {
   const [choice, setChoice] = useState<string | null>(null);
   const questionId = useId();
+  const choiceRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const askAgainRef = useRef<HTMLButtonElement>(null);
   const { quiz } = item;
 
   const revealed = choice !== null;
@@ -58,6 +60,17 @@ export function ReviewCard({ item }: { item: ReviewItem }) {
     : answeredCorrectly
       ? "Correct — that is the system behavior to expect."
       : `Not quite — the correct answer was ${correctLabel}.`;
+
+  // The chosen answer disables every option. Move focus to the recovery action
+  // instead of allowing it to disappear with the newly disabled button.
+  useEffect(() => {
+    if (revealed) askAgainRef.current?.focus();
+  }, [revealed]);
+
+  function askAgain() {
+    setChoice(null);
+    requestAnimationFrame(() => choiceRefs.current[0]?.focus());
+  }
 
   return (
     <GlowCard
@@ -102,12 +115,15 @@ export function ReviewCard({ item }: { item: ReviewItem }) {
         role="group"
         aria-labelledby={questionId}
       >
-        {quiz.choices.map((c) => {
+        {quiz.choices.map((c, index) => {
           const chosen = choice === c.id;
           const correct = c.id === quiz.correctChoiceId;
           return (
             <button
               key={c.id}
+              ref={(element) => {
+                choiceRefs.current[index] = element;
+              }}
               type="button"
               disabled={revealed}
               onClick={() => setChoice(c.id)}
@@ -179,8 +195,9 @@ export function ReviewCard({ item }: { item: ReviewItem }) {
         {revealed && (
           <button
             type="button"
-            onClick={() => setChoice(null)}
-            className="inline-flex cursor-pointer items-center gap-1.5 text-[13px] text-fg-faint transition-colors hover:text-fg-muted"
+            ref={askAgainRef}
+            onClick={askAgain}
+            className="inline-flex min-h-8 cursor-pointer items-center gap-1.5 text-[13px] text-fg-faint transition-colors hover:text-fg-muted"
           >
             <RotateCcw className="size-3.5" />
             Ask again
