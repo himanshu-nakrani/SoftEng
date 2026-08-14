@@ -4,6 +4,7 @@ import { GlowCard } from "@/components/ui/GlowCard";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { accentCssVar } from "@/lib/accent";
 import { useProgress, type QuizResult } from "@/stores/progress";
+import { useJournal } from "@/stores/journal";
 import { ArrowRight, Compass } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
@@ -15,6 +16,7 @@ import {
   type DeckStats,
   type ReviewItem,
   type ReviewStatus,
+  prioritizeDeck,
 } from "./deck";
 
 /** Stable empty reference so the pre-hydration render doesn't thrash the memo. */
@@ -23,11 +25,11 @@ const EMPTY_QUIZZES: Record<string, QuizResult> = {};
 const tierCopy: Record<ReviewStatus, { title: string; blurb: string }> = {
   missed: {
     title: "worth another look",
-    blurb: "Predicted wrong the first time — the only thing between you and a mastered lesson.",
+      blurb: "Predicted wrong the first time — start here, then follow the lowest-confidence concepts.",
   },
   unattempted: {
     title: "not asked yet",
-    blurb: "These checkpoints fire mid-run; you haven't reached them in a sim yet.",
+      blurb: "These checkpoints fire mid-run; the lowest-confidence lessons rise within each tier.",
   },
   mastered: {
     title: "called it first try",
@@ -52,9 +54,13 @@ const tierCopy: Record<ReviewStatus, { title: string; blurb: string }> = {
 export function ReviewDeck() {
   const hydrated = useHydrated();
   const quizAnswers = useProgress((s) => s.quizAnswers);
+  const journalEntries = useJournal((s) => s.entries);
   const answers = hydrated ? quizAnswers : EMPTY_QUIZZES;
 
-  const items = useMemo(() => buildDeck(answers), [answers]);
+  const items = useMemo(
+    () => prioritizeDeck(buildDeck(answers), journalEntries),
+    [answers, journalEntries],
+  );
   const stats = useMemo(() => deckStats(items), [items]);
 
   const tiers = useMemo(
