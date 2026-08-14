@@ -3,13 +3,27 @@
 import type { LessonMeta } from "@/curriculum/types";
 import { createContext, useContext } from "react";
 
+export interface LessonUiState {
+  calibration: boolean;
+  setCalibration: (value: boolean) => void;
+}
+
 /** Provided by <Lesson>, consumed by sections and embedded widgets. */
 export const LessonContext = createContext<LessonMeta | null>(null);
+
+export const LessonUiContext = createContext<LessonUiState>({
+  calibration: false,
+  setCalibration: () => {},
+});
 
 export function useLessonMeta(): LessonMeta {
   const meta = useContext(LessonContext);
   if (!meta) throw new Error("useLessonMeta must be used inside <Lesson>");
   return meta;
+}
+
+export function useLessonUi(): LessonUiState {
+  return useContext(LessonUiContext);
 }
 
 /**

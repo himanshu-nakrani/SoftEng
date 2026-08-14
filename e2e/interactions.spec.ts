@@ -226,6 +226,39 @@ test.describe("interactive learning flows", () => {
       .toBe("#7453A6");
   });
 
+  test("lesson wayfinding exposes learning state, concept links, and calibration mode", async ({
+    page,
+  }) => {
+    await gotoAndSettle(page, "/learn/scaling/scaling-strategies");
+
+    const article = page
+      .locator("article")
+      .filter({
+        has: page.getByRole("heading", { name: "Vertical vs Horizontal Scaling" }),
+      })
+      .first();
+    await expect(article.getByText("learning state", { exact: true })).toBeVisible();
+    await expect(article.getByText("Where this idea goes next", { exact: true })).toBeVisible();
+    await expect(
+      article.getByRole("link", { name: "leads to Load Balancing" }),
+    ).toBeVisible();
+
+    const readingMode = article
+      .locator('button[aria-pressed]')
+      .filter({ hasText: /Reading mode|Return to experiment/ });
+    await expect(readingMode).toHaveAccessibleName("Enter reading mode");
+    await readingMode.click();
+    await expect(readingMode).toHaveAttribute("aria-pressed", "true");
+    await expect(article).toHaveAttribute("data-calibration", "true");
+    await expect(article.locator(".calibration-secondary").first()).toBeHidden();
+    await expect(article.getByText("Event path", { exact: true })).toBeVisible();
+
+    const experimentMode = article.getByRole("button", { name: "Return to experiment mode" });
+    await experimentMode.click();
+    await expect(article).not.toHaveAttribute("data-calibration", "true");
+    await expect(article.getByRole("button", { name: "Enter reading mode" })).toBeVisible();
+  });
+
   test("review answers reveal explanation and can be retried without recording progress", async ({
     page,
   }) => {

@@ -4,6 +4,7 @@ import { ProgressRing } from "@/components/navigation/ProgressRing";
 import { ProgressSettings } from "@/components/navigation/ProgressSettings";
 import { GlowCard } from "@/components/ui/GlowCard";
 import type { Difficulty, LessonMeta, Module } from "@/curriculum/types";
+import type { LearningActivity } from "@/hooks/use-lesson-progress";
 import { useHydrated } from "@/hooks/use-hydrated";
 import {
   lessonFraction,
@@ -22,6 +23,14 @@ const difficultyColor: Record<Difficulty, string> = {
   foundational: "text-glow-green",
   intermediate: "text-glow-orange",
   advanced: "text-glow-violet",
+};
+
+const activityLabel: Record<LearningActivity, string> = {
+  untouched: "not started",
+  explored: "explored",
+  predicted: "predicted",
+  complete: "complete",
+  mastered: "mastered",
 };
 
 /**
@@ -93,6 +102,10 @@ export function TrackProgress() {
         ))}
         <span className="tech-num ml-auto text-[11px] text-fg-faint">
           {track.done} / {track.total} sections
+          <span className="hidden sm:inline">
+            {` · ${track.lessonsExplored}/${track.lessons} explored`}
+            {track.lessonsPredicted > 0 && ` · ${track.lessonsPredicted} predicted`}
+          </span>
           {track.lessonsMastered > 0 && (
             <span className="text-accent"> · {track.lessonsMastered} mastered</span>
           )}
@@ -241,7 +254,17 @@ function MapNode({
             coming soon
           </span>
         )}
-        {!soon && (
+        {!soon && progress.activity !== "untouched" && (
+          <span
+            className={cn(
+              "ml-auto font-mono text-[9px] tracking-widest uppercase",
+              progress.activity === "mastered" ? "text-accent" : "text-fg-faint",
+            )}
+          >
+            {activityLabel[progress.activity]}
+          </span>
+        )}
+        {!soon && progress.activity === "untouched" && (
           <ArrowRight className="ml-auto size-3.5 shrink-0 text-fg-faint opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
         )}
       </div>

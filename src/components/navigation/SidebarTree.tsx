@@ -2,6 +2,7 @@
 
 import { ProgressRing } from "@/components/navigation/ProgressRing";
 import type { LessonMeta, Module } from "@/curriculum/types";
+import type { LearningActivity } from "@/hooks/use-lesson-progress";
 import { useLessonProgress } from "@/hooks/use-lesson-progress";
 import { cn } from "@/lib/cn";
 import { accentCssVar } from "@/lib/accent";
@@ -13,6 +14,14 @@ import { usePathname } from "next/navigation";
 /** Shared row geometry for every navigable line in the tree. */
 const ROW =
   "flex items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-[13px] transition-[background,color,transform] duration-150";
+
+const activityLabel: Record<LearningActivity, string> = {
+  untouched: "not started",
+  explored: "explored",
+  predicted: "predicted",
+  complete: "complete",
+  mastered: "mastered",
+};
 
 function SidebarLesson({
   lesson,
@@ -47,6 +56,18 @@ function SidebarLesson({
         accent={module.accent}
       />
       <span className="truncate">{lesson.title}</span>
+      {!soon && progress.activity !== "untouched" && (
+        <span
+          className={cn(
+            "ml-auto shrink-0 font-mono text-[9px] tracking-widest uppercase",
+            progress.activity === "mastered"
+              ? "text-accent"
+              : "text-fg-faint",
+          )}
+        >
+          {progress.activity === "mastered" ? "mastered" : activityLabel[progress.activity]}
+        </span>
+      )}
       {soon && (
         <span className="ml-auto font-mono text-[9px] tracking-widest text-fg-faint uppercase">
           soon
@@ -63,6 +84,7 @@ function SidebarLesson({
       <Link
         href={href}
         aria-current={active ? "page" : undefined}
+        aria-label={`${lesson.title} — ${activityLabel[progress.activity]}`}
         onClick={onNavigate}
       >
         {row}

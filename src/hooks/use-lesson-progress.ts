@@ -7,14 +7,19 @@ import { useProgress, type QuizResult } from "@/stores/progress";
 import { useMemo } from "react";
 
 export type LessonState = "untouched" | "in-progress" | "complete";
+export type LearningActivity = "untouched" | "explored" | "predicted" | "complete" | "mastered";
 
 export interface LessonProgress {
   /** 0..1 — completed registry sections / total registry sections. */
   fraction: number;
   state: LessonState;
+  /** A learner-facing state that distinguishes exploration from prediction. */
+  activity: LearningActivity;
   /** Completed / total registry sections — the "2/4" readout. */
   done: number;
   total: number;
+  /** Number of persisted prediction checkpoints attempted in this lesson. */
+  quizzesAttempted: number;
   /**
    * Every section done AND every recorded checkpoint right first try.
    * Deliberately a flag layered on `state` rather than a fourth
@@ -61,6 +66,14 @@ export function lessonFraction(
  * lesson with zero recorded quizzes is merely `complete`, never mastered, so
  * mastery can only be claimed by having answered something.
  */
+export function lessonQuizCount(
+  lesson: LessonMeta,
+  quizAnswers: Record<string, QuizResult>,
+): number {
+  const prefix = `${lesson.slug}/`;
+  return Object.keys(quizAnswers).filter((key) => key.startsWith(prefix)).length;
+}
+
 export function lessonMastered(
   lesson: LessonMeta,
   completedSections: Record<string, string[]>,
@@ -95,18 +108,39 @@ export function useLessonProgress(lesson: LessonMeta): LessonProgress {
 
   const total = lesson.sections.length;
   if (!hydrated) {
-    return { fraction: 0, state: "untouched", done: 0, total, mastered: false };
+    return {
+      fraction: 0,
+      state: "untouched",
+      activity: "untouched",
+      done: 0,
+      total,
+      quizzesAttempted: 0,
+      mastered: false,
+    };
   }
 
   const done = sectionsDone(lesson, completedSections);
   const fraction = total === 0 ? 0 : Math.min(done / total, 1);
+  const quizzesAttempted = lessonQuizCount(lesson, quizAnswers);
+  const mastered = lessonMastered(lesson, completedSections, quizAnswers);
+  const activity = mastered
+    ? "mastered"
+    : fraction >= 1
+      ? "complete"
+      : quizzesAttempted > 0
+        ? "predicted"
+        : done > 0
+          ? "explored"
+          : "untouched";
 
   return {
     fraction,
     state: fraction >= 1 ? "complete" : done > 0 ? "in-progress" : "untouched",
+    activity,
     done,
     total,
-    mastered: lessonMastered(lesson, completedSections, quizAnswers),
+    quizzesAttempted,
+    mastered,
   };
 }
 
@@ -135,6 +169,8 @@ export interface SegmentProgress {
   fraction: number;
   lessons: number;
   lessonsComplete: number;
+  lessonsExplored: number;
+  lessonsPredicted: number;
 }
 
 export interface TrackProgress {
@@ -143,6 +179,8 @@ export interface TrackProgress {
   fraction: number;
   lessons: number;
   lessonsComplete: number;
+  lessonsExplored: number;
+  lessonsPredicted: number;
   lessonsMastered: number;
   segments: SegmentProgress[];
 }
@@ -170,10 +208,14 @@ export function useTrackProgress(): TrackProgress {
       let done = 0;
       let total = 0;
       let lessonsComplete = 0;
+      let lessonsExplored = 0;
+      let lessonsPredicted = 0;
       for (const lesson of live) {
         done += sectionsDone(lesson, sections);
         total += lesson.sections.length;
         if (lessonFraction(lesson, sections) >= 1) lessonsComplete += 1;
+        if (sectionsDone(lesson, sections) > 0) lessonsExplored += 1;
+        if (lessonQuizCount(lesson, quizzes) > 0) lessonsPredicted += 1;
       }
       return {
         module,
@@ -182,6 +224,8 @@ export function useTrackProgress(): TrackProgress {
         fraction: total === 0 ? 0 : Math.min(done / total, 1),
         lessons: live.length,
         lessonsComplete,
+        lessonsExplored,
+        lessonsPredicted,
       };
     });
 
@@ -202,6 +246,14 @@ export function useTrackProgress(): TrackProgress {
       lessons: segments.reduce((acc, seg) => acc + seg.lessons, 0),
       lessonsComplete: segments.reduce(
         (acc, seg) => acc + seg.lessonsComplete,
+        0,
+      ),
+      lessonsExplored: segments.reduce(
+        (acc, seg) => acc + seg.lessonsExplored,
+        0,
+      ),
+      lessonsPredicted: segments.reduce(
+        (acc, seg) => acc + seg.lessonsPredicted,
         0,
       ),
       lessonsMastered,

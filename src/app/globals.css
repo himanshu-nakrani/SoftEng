@@ -1345,3 +1345,12 @@ input[type="range"].accent-accent:focus-visible {
     transition: none;
   }
 }
+
+/* Reading mode: reduce cognitive load without changing simulation state. */
+[data-calibration="true"] .calibration-secondary {
+  display: none !important;
+}
+
+[data-calibration="true"] .sim-figure-stage {
+  border-bottom-color: var(--color-border-bright);
+}

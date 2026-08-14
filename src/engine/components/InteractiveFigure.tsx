@@ -43,6 +43,8 @@ interface InteractiveFigureProps<L> {
   description: string;
   /** Start playing when scrolled into view (the "observe" verb). */
   autoplay?: boolean;
+  /** Page-level reading mode; changes chrome visibility, never sim state. */
+  calibrationMode?: boolean;
   seed?: number;
   /**
    * Deep-linked sim moment: replay to this sim-second once on mount and stay
@@ -305,6 +307,7 @@ function FigureBody<L>({
   sim,
   description,
   autoplay = true,
+  calibrationMode = false,
   seed,
   initialSeekT,
   stageOverlay,
@@ -531,6 +534,7 @@ function FigureBody<L>({
   return (
     <figure
       ref={containerRef}
+      data-calibration={calibrationMode ? "true" : undefined}
       // ONE element, ONE class list — expanding swaps `className` on the very
       // same node in the very same position, so React reconciles in place and
       // the running sim (runner, RNG cursor, quiz progress) is untouched.
@@ -606,11 +610,13 @@ function FigureBody<L>({
       </div>
       <figcaption className="sr-only">{description}</figcaption>
       {workbench?.experiment && (
-        <ExperimentCard
-          experiment={workbench.experiment}
-          focus={activeFocus}
-          onStart={startExperiment}
-        />
+        <div className="calibration-secondary">
+          <ExperimentCard
+            experiment={workbench.experiment}
+            focus={activeFocus}
+            onStart={startExperiment}
+          />
+        </div>
       )}
       {workbench && (
         <CausalEventTape
@@ -623,25 +629,29 @@ function FigureBody<L>({
           to the thing it explains, and it stays out of the meters row, whose
           flex dividers and 2-column mobile grid a chip row would break. Renders
           nothing — not an empty strip — for sims with no `packetLegend`. */}
-      <PacketLegend sim={sim} />
-      <MetersRow sim={sim} simulation={simulation} activeFocus={activeFocus} />
-      {workbench && (
-        <CausalInspector
-          focus={activeFocus}
-          nodes={sim.topology.nodes}
-          snapshotNodes={snapshot.nodes}
-          selectedNodeId={selectedNodeId}
-          onSelectNode={setSelectedNodeId}
-          onRestart={simulation.controls.restart}
+      <div className="calibration-secondary">
+        <PacketLegend sim={sim} />
+        <MetersRow sim={sim} simulation={simulation} activeFocus={activeFocus} />
+      </div>
+      <div className="calibration-secondary">
+        {workbench && (
+          <CausalInspector
+            focus={activeFocus}
+            nodes={sim.topology.nodes}
+            snapshotNodes={snapshot.nodes}
+            selectedNodeId={selectedNodeId}
+            onSelectNode={setSelectedNodeId}
+            onRestart={simulation.controls.restart}
+          />
+        )}
+        <ControlPanel
+          specs={sim.params}
+          values={simulation.params}
+          onChange={applyParam}
+          onPress={pressScenario}
         />
-      )}
-      <ControlPanel
-        specs={sim.params}
-        values={simulation.params}
-        onChange={applyParam}
-        onPress={pressScenario}
-      />
-      <Clock sim={sim} simulation={simulation} />
+        <Clock sim={sim} simulation={simulation} />
+      </div>
     </figure>
   );
 }

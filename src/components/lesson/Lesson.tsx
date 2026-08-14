@@ -7,9 +7,15 @@ import { useLessonProgress } from "@/hooks/use-lesson-progress";
 import { cn } from "@/lib/cn";
 import { getLesson, moduleOf } from "@/lib/curriculum";
 import { useProgress } from "@/stores/progress";
-import { Sparkles } from "lucide-react";
-import { useCallback, type ReactNode } from "react";
-import { LessonCompletionContext, LessonContext } from "./context";
+import { BookOpen, Focus, Sparkles } from "lucide-react";
+import { useCallback, useState, type ReactNode } from "react";
+import {
+  LessonCompletionContext,
+  LessonContext,
+  LessonUiContext,
+} from "./context";
+import { LearningConnections } from "./LearningConnections";
+import { LearningSummary } from "./LearningSummary";
 import { NextLessonCard } from "./NextLessonCard";
 
 const difficultyColor: Record<Difficulty, string> = {
@@ -77,6 +83,60 @@ function MasteryMark({ meta }: { meta: LessonMeta }) {
   );
 }
 
+const activityCopy = {
+  untouched: "not started",
+  explored: "explored",
+  predicted: "predicted",
+  complete: "complete",
+  mastered: "mastered",
+} as const;
+
+function LessonProgressStrip({ meta }: { meta: LessonMeta }) {
+  const hydrated = useHydrated();
+  const completed = useProgress((s) => s.completedSections[meta.slug]);
+  const progress = useLessonProgress(meta);
+  const done = new Set(hydrated ? (completed ?? []) : []);
+  const nextSection = meta.sections.find((section) => !done.has(section.id));
+
+  return (
+    <div
+      className="mt-5 rounded-lg border border-border bg-bg/25 px-3.5 py-3"
+      aria-label={`Lesson progress: ${progress.done} of ${progress.total} sections, ${activityCopy[progress.activity]}`}
+    >
+      <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10px] tracking-widest text-fg-faint uppercase">
+        <span className="inline-flex items-center gap-1.5 text-fg-muted">
+          <BookOpen className="size-3.5 text-accent" strokeWidth={1.75} />
+          learning state
+        </span>
+        <span className="text-accent">{activityCopy[progress.activity]}</span>
+        <span className="ml-auto text-fg-faint">
+          {progress.done}/{progress.total} sections
+          {progress.quizzesAttempted > 0 &&
+            ` · ${progress.quizzesAttempted} prediction${progress.quizzesAttempted === 1 ? "" : "s"}`}
+        </span>
+      </div>
+      <div className="h-1.5 overflow-hidden rounded-full bg-raised" aria-hidden>
+        <div
+          className="h-full rounded-full bg-accent transition-[width] duration-500 ease-[var(--ease-out-soft)]"
+          style={{ width: `${progress.fraction * 100}%` }}
+        />
+      </div>
+      <p className="mt-2 text-xs text-fg-muted">
+        {nextSection ? (
+          <>
+            <span className="font-medium text-fg">Next:</span> {nextSection.title}
+          </>
+        ) : (
+          <>
+            <span className="font-medium text-fg">All sections visited.</span>{" "}
+            Revisit a causal state or open the review deck.
+          </>
+        )}
+      </p>
+    </div>
+  );
+}
+
 interface LessonProps {
   slug: string;
   children: ReactNode;
@@ -88,6 +148,7 @@ interface LessonProps {
  * pages never restate it.
  */
 export function Lesson({ slug, children }: LessonProps) {
+  const [calibration, setCalibration] = useState(false);
   const completeSection = useProgress((s) => s.completeSection);
   const completeLessonSection = useCallback(
     (sectionId: string) => completeSection(slug, sectionId),
@@ -106,8 +167,9 @@ export function Lesson({ slug, children }: LessonProps) {
 
   return (
     <LessonContext.Provider value={meta}>
-      <LessonCompletionContext.Provider value={completeLessonSection}>
-        <article>
+      <LessonUiContext.Provider value={{ calibration, setCalibration }}>
+        <LessonCompletionContext.Provider value={completeLessonSection}>
+          <article data-calibration={calibration ? "true" : undefined}>
           <header className="surface-card relative mb-14 overflow-hidden px-5 py-6 sm:px-8 sm:py-8">
             {/* ghost index numeral */}
             <span
@@ -158,14 +220,35 @@ export function Lesson({ slug, children }: LessonProps) {
                   </span>
                 )}
               </div>
+
+              <LessonProgressStrip meta={meta} />
+
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                <p className="calibration-secondary text-xs text-fg-faint">
+                  Read the causal story first, then restore the full instrument.
+                </p>
+                <button
+                  type="button"
+                  aria-pressed={calibration}
+                  aria-label={calibration ? "Return to experiment mode" : "Enter reading mode"}
+                  onClick={() => setCalibration((value) => !value)}
+                  className="inline-flex min-h-8 items-center gap-2 rounded-lg border border-border bg-raised px-3 py-1.5 font-mono text-[10px] tracking-widest text-fg-muted uppercase transition-colors hover:border-border-bright hover:bg-surface hover:text-fg"
+                >
+                  <Focus className="size-3.5 text-accent" strokeWidth={1.75} />
+                  {calibration ? "Return to experiment" : "Reading mode"}
+                </button>
+              </div>
             </div>
           </header>
 
           <CheckpointRail slug={slug} />
           {children}
+          <LearningSummary meta={meta} />
+          <LearningConnections meta={meta} />
           <NextLessonCard />
-        </article>
-      </LessonCompletionContext.Provider>
+          </article>
+        </LessonCompletionContext.Provider>
+      </LessonUiContext.Provider>
     </LessonContext.Provider>
   );
 }

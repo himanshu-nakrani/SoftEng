@@ -1,6 +1,7 @@
 "use client";
 
 import { GlowCard } from "@/components/ui/GlowCard";
+import { getLearningGuide } from "@/curriculum/learning";
 import { accentCssVar } from "@/lib/accent";
 import { cn } from "@/lib/cn";
 import { ArrowRight, Check, RotateCcw, X } from "lucide-react";
@@ -49,6 +50,7 @@ export function ReviewCard({ item }: { item: ReviewItem }) {
   const choiceRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const askAgainRef = useRef<HTMLButtonElement>(null);
   const { quiz } = item;
+  const guide = getLearningGuide(item.lesson.slug);
 
   const revealed = choice !== null;
   const chip = statusChip[item.status];
@@ -98,6 +100,12 @@ export function ReviewCard({ item }: { item: ReviewItem }) {
             className="text-sm leading-relaxed font-medium text-fg"
           >
             {quiz.question}
+          </p>
+          <p className="mt-2 text-xs leading-relaxed text-fg-faint">
+            <span className="font-mono text-[9px] tracking-widest text-accent uppercase">
+              learning lens ·{" "}
+            </span>
+            {guide.tryNext}
           </p>
         </div>
         <span
@@ -186,9 +194,10 @@ export function ReviewCard({ item }: { item: ReviewItem }) {
       <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border pt-3">
         <Link
           href={item.href}
+          aria-label={`Revisit the exact simulation moment for ${item.lesson.title}: ${quiz.question}`}
           className="group inline-flex items-center gap-1.5 text-[13px] font-medium text-accent transition-colors hover:brightness-110"
         >
-          Watch it happen
+          Revisit exact moment
           <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
         </Link>
 

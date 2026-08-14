@@ -14,6 +14,7 @@ import {
 import {
   useLessonCompletion,
   useLessonMeta,
+  useLessonUi,
   useSectionCompletion,
 } from "./context";
 
@@ -99,6 +100,7 @@ export function SectionFigure<L>({
 }: SectionFigureProps<L>) {
   const markComplete = useSectionCompletion();
   const completeLessonSection = useLessonCompletion();
+  const { calibration } = useLessonUi();
   const recordQuiz = useProgress((s) => s.recordQuiz);
   const { slug } = useLessonMeta();
 
@@ -158,6 +160,7 @@ export function SectionFigure<L>({
       autoplay={autoplay}
       seed={seed}
       initialSeekT={seekT}
+      calibrationMode={calibration}
       stageOverlay={stageOverlay}
       nodeOverlay={nodeOverlay}
       onEngage={markComplete}
