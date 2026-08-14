@@ -15,6 +15,7 @@ import {
   LessonUiContext,
 } from "./context";
 import { LearningConnections } from "./LearningConnections";
+import { ReflectionCard } from "./ReflectionCard";
 import { LearningSummary } from "./LearningSummary";
 import { NextLessonCard } from "./NextLessonCard";
 
@@ -244,6 +245,7 @@ export function Lesson({ slug, children }: LessonProps) {
           <CheckpointRail slug={slug} />
           {children}
           <LearningSummary meta={meta} />
+          <ReflectionCard meta={meta} />
           <LearningConnections meta={meta} />
           <NextLessonCard />
           </article>

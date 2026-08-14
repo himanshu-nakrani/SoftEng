@@ -11,6 +11,7 @@ import type { QuizCheckpoint } from "@/engine/types";
 import { getSim } from "@/lessons";
 import { allLessons, lessonPath, moduleOf, modules } from "@/lib/curriculum";
 import { quizKey, type QuizResult } from "@/stores/progress";
+import type { Confidence, JournalEntry } from "@/stores/journal";
 
 /**
  * How a checkpoint stands with this learner.
@@ -40,6 +41,28 @@ export interface ReviewItem {
 
 /** Deck tiers, in the order the page renders them. */
 export const TIER_ORDER: ReviewStatus[] = ["missed", "unattempted", "mastered"];
+
+const confidenceRank: Record<Confidence, number> = {
+  uncertain: 0,
+  "getting-it": 1,
+  "can-explain": 2,
+};
+
+/** Keep the practice tiers, then surface the learner's lowest-confidence work. */
+export function prioritizeDeck(
+  items: ReviewItem[],
+  journal: Record<string, JournalEntry>,
+): ReviewItem[] {
+  return [...items].sort((a, b) => {
+    const tier = TIER_ORDER.indexOf(a.status) - TIER_ORDER.indexOf(b.status);
+    if (tier !== 0) return tier;
+    const aConfidence = journal[a.lesson.slug]?.confidence;
+    const bConfidence = journal[b.lesson.slug]?.confidence;
+    const aRank = aConfidence ? confidenceRank[aConfidence] : 3;
+    const bRank = bConfidence ? confidenceRank[bConfidence] : 3;
+    return aRank - bRank;
+  });
+}
 
 /**
  * Where "watch it happen" points.
