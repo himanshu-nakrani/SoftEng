@@ -259,6 +259,45 @@ test.describe("interactive learning flows", () => {
     await expect(article.getByRole("button", { name: "Enter reading mode" })).toBeVisible();
   });
 
+  test("local journal saves confidence, persists across reload, and exports from review", async ({
+    page,
+  }) => {
+    await gotoAndSettle(page, "/learn/scaling/scaling-strategies");
+    await page.evaluate(() => localStorage.removeItem("softeng-journal"));
+    await page.reload();
+    await page.waitForLoadState("networkidle");
+
+    const article = page
+      .locator("article")
+      .filter({
+        has: page.getByRole("heading", { name: "Vertical vs Horizontal Scaling" }),
+      })
+      .first();
+    const note = article.getByRole("textbox", { name: "your reflection" });
+    await note.fill("Capacity placement changes the failure domain.");
+    await article.getByRole("radio", { name: "Can explain it" }).click();
+    await article.getByRole("button", { name: "Save reflection" }).click();
+    await expect(
+      article.getByRole("status").filter({ hasText: "Saved locally" }),
+    ).toContainText("Saved locally");
+
+    await page.reload();
+    await page.waitForLoadState("networkidle");
+    await expect(
+      page
+        .locator("article")
+        .filter({
+          has: page.getByRole("heading", { name: "Vertical vs Horizontal Scaling" }),
+        })
+        .first()
+        .getByRole("radio", { name: "Can explain it" }),
+    ).toHaveAttribute("aria-checked", "true");
+
+    await gotoAndSettle(page, "/review");
+    await expect(page.getByText("1 local reflection.", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Export" })).toBeEnabled();
+  });
+
   test("review answers reveal explanation and can be retried without recording progress", async ({
     page,
   }) => {

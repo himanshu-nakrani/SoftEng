@@ -1,4 +1,5 @@
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { JournalTools } from "./JournalTools";
 import { shareMetadata } from "@/lib/site";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -63,6 +64,7 @@ export default function ReviewPage() {
           </p>
         </div>
 
+        <JournalTools />
         <ReviewDeck />
       </main>
     </div>

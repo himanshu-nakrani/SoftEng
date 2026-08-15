@@ -2,6 +2,7 @@
 
 import { GlowCard } from "@/components/ui/GlowCard";
 import { getLearningGuide } from "@/curriculum/learning";
+import { useJournal } from "@/stores/journal";
 import { accentCssVar } from "@/lib/accent";
 import { cn } from "@/lib/cn";
 import { ArrowRight, Check, RotateCcw, X } from "lucide-react";
@@ -51,6 +52,15 @@ export function ReviewCard({ item }: { item: ReviewItem }) {
   const askAgainRef = useRef<HTMLButtonElement>(null);
   const { quiz } = item;
   const guide = getLearningGuide(item.lesson.slug);
+  const confidence = useJournal((state) => state.entries[item.lesson.slug]?.confidence);
+  const confidenceLabel =
+    confidence === "can-explain"
+      ? "can explain"
+      : confidence === "getting-it"
+        ? "getting it"
+        : confidence === "uncertain"
+          ? "uncertain"
+          : "not rated";
 
   const revealed = choice !== null;
   const chip = statusChip[item.status];
@@ -108,14 +118,19 @@ export function ReviewCard({ item }: { item: ReviewItem }) {
             {guide.tryNext}
           </p>
         </div>
-        <span
-          className={cn(
-            "ml-auto shrink-0 rounded-full px-2.5 py-0.5 font-mono text-[10px] tracking-wide whitespace-nowrap",
-            chip.className,
-          )}
-        >
-          {chip.label}
-        </span>
+        <div className="ml-auto flex shrink-0 flex-wrap justify-end gap-1.5">
+          <span
+            className={cn(
+              "rounded-full px-2.5 py-0.5 font-mono text-[10px] tracking-wide whitespace-nowrap",
+              chip.className,
+            )}
+          >
+            {chip.label}
+          </span>
+          <span className="rounded-full bg-raised px-2.5 py-0.5 font-mono text-[10px] tracking-wide text-fg-faint whitespace-nowrap">
+            {confidenceLabel}
+          </span>
+        </div>
       </div>
 
       <div
