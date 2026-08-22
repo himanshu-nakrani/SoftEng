@@ -2,7 +2,7 @@
 
 import { useSectionCompletion } from "@/components/lesson/context";
 import { CornerTicks } from "@/components/ui/CornerTicks";
-import { Meter } from "@/engine/components/Meter";
+import { Meter } from "@/components/ui/Meter";
 import { mulberry32 } from "@/engine/rng";
 import { cn } from "@/lib/cn";
 import { Plus, RotateCcw, Scaling } from "lucide-react";
@@ -60,7 +60,7 @@ export function HashTableLab() {
         <CornerTicks />
         <span
           aria-hidden
-          className="pointer-events-none absolute top-2.5 right-5 font-mono text-[9px] tracking-[0.12em] text-fg-faint/80 uppercase"
+          className="pointer-events-none absolute top-2.5 right-5 font-mono text-[9px] tracking-[0.12em] text-fg-faint uppercase"
         >
           fig · hash-table · {bucketCount} buckets
         </span>

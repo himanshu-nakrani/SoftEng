@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/cn";
-import type { MeterSpec } from "../types";
+import type { MeterSpec } from "@/engine/types";
 
 interface MeterProps {
   spec: MeterSpec;

@@ -47,7 +47,9 @@ export function useAlgoPlayer(
   const [speed, setSpeed] = useState(1);
   const engaged = useRef(false);
   const onEngageRef = useRef(onEngage);
-  onEngageRef.current = onEngage;
+  useEffect(() => {
+    onEngageRef.current = onEngage;
+  }, [onEngage]);
 
   const engage = () => {
     if (!engaged.current) {
@@ -57,10 +59,15 @@ export function useAlgoPlayer(
   };
 
   // Reset playback when the step list changes (new n / seed / algorithm).
-  useEffect(() => {
+  // Render-phase state adjustment (react.dev "Adjusting state when a prop
+  // changes"): comparing against the stored previous list lets React discard
+  // the render instead of cascading a second commit through an effect.
+  const [prevSteps, setPrevSteps] = useState(steps);
+  if (prevSteps !== steps) {
+    setPrevSteps(steps);
     setIndex(0);
     setPlaying(false);
-  }, [steps]);
+  }
 
   // Playback interval.
   useEffect(() => {

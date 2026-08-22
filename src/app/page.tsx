@@ -97,7 +97,7 @@ export default function Home() {
               <CornerTicks inset={0} />
               <span
                 aria-hidden
-                className="pointer-events-none absolute top-1.5 right-4 font-mono text-[9px] tracking-[0.12em] text-fg-faint/80 uppercase"
+                className="pointer-events-none absolute top-1.5 right-4 font-mono text-[9px] tracking-[0.12em] text-fg-faint uppercase"
               >
                 fig · 00 — lb-cluster · self-healing
               </span>

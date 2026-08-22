@@ -20,7 +20,7 @@ import { CaptionOverlay } from "./CaptionOverlay";
 import { ControlPanel } from "./ControlPanel";
 import { EdgeLine } from "./EdgeLine";
 import { FigureErrorBoundary } from "./FigureErrorBoundary";
-import { Meter } from "./Meter";
+import { Meter } from "@/components/ui/Meter";
 import { PacketLayer, resolvePacketStyles } from "./PacketLayer";
 import { PacketLegend } from "./PacketLegend";
 import { SystemNode } from "./SystemNode";
@@ -469,7 +469,7 @@ function FigureBody<L>({
         <div className="absolute top-2 right-2.5 flex items-center gap-2.5">
           <span
             aria-hidden
-            className="pointer-events-none font-mono text-[9px] tracking-[0.12em] text-fg-faint/80 uppercase"
+            className="pointer-events-none font-mono text-[9px] tracking-[0.12em] text-fg-faint uppercase"
           >
             fig · {sim.id} · seed {seed ?? 42}
           </span>

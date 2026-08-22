@@ -1,7 +1,7 @@
 "use client";
 
 import { CornerTicks } from "@/components/ui/CornerTicks";
-import { Meter } from "@/engine/components/Meter";
+import { Meter } from "@/components/ui/Meter";
 import { Dices } from "lucide-react";
 import { useState } from "react";
 import { AlgoTransportBar } from "./AlgoTransportBar";
@@ -41,7 +41,7 @@ export function AlgoFigure({
           <CornerTicks />
           <span
             aria-hidden
-            className="pointer-events-none absolute top-2.5 right-5 font-mono text-[9px] tracking-[0.12em] text-fg-faint/80 uppercase"
+            className="pointer-events-none absolute top-2.5 right-5 font-mono text-[9px] tracking-[0.12em] text-fg-faint uppercase"
           >
             fig · {def.id} · seed {seed}
           </span>

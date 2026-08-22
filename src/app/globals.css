@@ -18,10 +18,27 @@
   --color-border: oklch(27% 0.016 70);
   --color-border-bright: oklch(36% 0.02 70);
 
-  /* text — warm off-whites */
+  /* text — warm off-whites. The quiet-text LADDER is a contract:
+     - fg        the sentence itself (prose, active states)
+     - fg-muted  support voice — captions, inactive controls, secondary prose
+     - fg-faint  marginalia — stamps, timestamps, units, footers. ALWAYS as
+                 solid text on app backgrounds: it passes AA at 4.6:1 against
+                 the darkest ground (#0b0805); alpha variants (/50, /70, /80)
+                 composite below threshold and are banned for text. Borders
+                 and decorative marks may still use alpha. */
   --color-fg: oklch(93% 0.008 80);
   --color-fg-muted: oklch(66% 0.014 75);
-  --color-fg-faint: oklch(47% 0.014 75);
+  --color-fg-faint: oklch(58% 0.014 75);
+
+  /* Radius grammar (plate geometry): near-square PLATES (cards, figure
+     shells, overlays — usually CornerTicks-framed) vs machined CONTROLS
+     (`rounded-md`, buttons/inputs/segments, left at Tailwind's 6px default).
+     Circles keep `rounded-full` (pips, rings, toggles). No other radius
+     values exist; don't reintroduce them. */
+  --radius-sm: 2px;
+  --radius-lg: 2px;
+  --radius-xl: 2px;
+  --radius: 2px;
 
   /* PRIMARY — phosphor amber: CTAs, request packets, rings, outlined type */
   --color-accent: oklch(80% 0.15 80);
