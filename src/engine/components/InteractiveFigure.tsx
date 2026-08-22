@@ -135,6 +135,40 @@ function StageContent({
           fill={`url(#dots-${sim.id})`}
           opacity={0.5}
         />
+        {/* plate graticule — a fine tick scale along the bottom and left
+            edges, taller at every fifth division. Ruler marginalia framing
+            the drawing, not data: inert, decorative, unmeasured. */}
+        <g
+          aria-hidden
+          stroke="var(--color-border-bright)"
+          strokeWidth={1}
+          opacity={0.55}
+        >
+          {Array.from({ length: 21 }, (_, i) => {
+            const x = i * (STAGE_W / 20);
+            return (
+              <line
+                key={`b${i}`}
+                x1={x}
+                y1={STAGE_H}
+                x2={x}
+                y2={STAGE_H - (i % 5 === 0 ? 9 : 4)}
+              />
+            );
+          })}
+          {Array.from({ length: 10 }, (_, i) => {
+            const y = STAGE_H - i * (STAGE_H / 9);
+            return (
+              <line
+                key={`l${i}`}
+                x1={0}
+                y1={y}
+                x2={i % 5 === 0 ? 9 : 4}
+                y2={y}
+              />
+            );
+          })}
+        </g>
 
         {sim.topology.edges.map((edge) => {
           const path = registry.get(edge.id)!;

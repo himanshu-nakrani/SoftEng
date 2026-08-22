@@ -342,6 +342,17 @@ export function TransportBar({
               } as React.CSSProperties
             }
           />
+          {/* tick ruler — ten divisions along the timeline, the plate's
+              arrivals scale. Purely decorative; the track above owns input. */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-2 bottom-0 h-1.5 opacity-70"
+            style={{
+              backgroundImage:
+                "linear-gradient(to right, var(--color-border) 0 1px, transparent 1px)",
+              backgroundSize: "10% 100%",
+            }}
+          />
           {/* Scripted beats: dots for timeline captions, violet diamonds for
               checkpoints (the same violet the quiz status pip uses). Inset by
               half a thumb width so a marker sits under the thumb's centre when

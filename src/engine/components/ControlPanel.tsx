@@ -66,7 +66,7 @@ function ButtonParam({
         type="button"
         onClick={press}
         className={cn(
-          "flex cursor-pointer items-center gap-1.5 rounded-lg border border-glow-amber/40 bg-glow-amber-dim px-3 py-1.5 font-mono text-[11px] font-medium text-glow-amber transition-all hover:brightness-125 active:scale-95",
+          "flex cursor-pointer items-center gap-1.5 rounded-md border border-glow-amber/40 bg-glow-amber-dim px-3 py-1.5 font-mono text-[11px] font-medium text-accent transition-all hover:brightness-125 active:scale-95",
           // Reduced motion keeps the state change (information) and drops the
           // pulsing (decoration).
           fired && "ring-2 ring-glow-amber/70 brightness-150",
@@ -141,16 +141,20 @@ export function ControlPanel({
               className="flex cursor-pointer items-center gap-2"
             >
               <span className="tech-label">{spec.label}</span>
+              {/* instrument switch: a machined slide, not an OS pill — square
+                  travel, amber state, hairline frame */}
               <span
                 className={cn(
-                  "relative h-4.5 w-8 rounded-full transition-colors",
-                  on ? "bg-accent" : "bg-border",
+                  "relative h-4.5 w-8 rounded-sm border transition-colors duration-150",
+                  on ? "border-accent/60 bg-accent-dim" : "border-border bg-raised",
                 )}
               >
                 <span
                   className={cn(
-                    "absolute top-0.5 left-0.5 size-3.5 rounded-full bg-fg transition-transform",
-                    on && "translate-x-3.5 bg-bg",
+                    "absolute top-[3px] left-0.5 size-3 rounded-[2px] transition-transform duration-150",
+                    on
+                      ? "translate-x-3.5 bg-accent shadow-[0_0_6px_var(--color-accent)]"
+                      : "bg-fg-muted",
                   )}
                 />
               </span>
