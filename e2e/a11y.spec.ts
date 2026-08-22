@@ -39,43 +39,19 @@ import { getLesson, lessonPath } from "@/lib/curriculum";
  * ─────────────────────────────────────────────────────────────────────────
  * OPEN FINDINGS  (found by the first run of this suite; NOT fixed here)
  * ─────────────────────────────────────────────────────────────────────────
- * Two rules fail today. Both are product-code bugs with a single root cause
- * each, both are pinned below as `test.fixme` so the suite lands green while
- * they stay visible, and both are excluded from the live assertions by
- * `KNOWN_FINDINGS` — everything else is asserted for real, so a THIRD rule
- * appearing goes red immediately.
+ * One rule fails today. It is a product-code bug with a single root cause,
+ * pinned below as `test.fixme` so the suite lands green while it stays
+ * visible, and excluded from the live assertions by `KNOWN_FINDINGS` —
+ * everything else is asserted for real, so a SECOND rule appearing goes red
+ * immediately.
  *
- * 1. [color-contrast] impact=serious — 10-18 nodes on every route scanned.
- *    https://dequeuniversity.com/rules/axe/4.12/color-contrast
- *    One root cause: `--color-fg-faint` (#605a52) as body text on the app's
- *    backgrounds. Verbatim samples:
+ * Previously open and since FIXED (2026-08 ui-uplift branch):
  *
- *      target: [".items-end > .tech-num"]                                (/)
- *      html:   <p class="tech-num text-xs text-fg-faint">23 lessons · 4 modules</p>
- *      why:    insufficient color contrast of 2.93 (fg #605a52, bg #0b0805,
- *              9.0pt (12px), normal). Expected 4.5:1
- *
- *      target: [".gap-y-4.py-7…:nth-child(1) > .text-3xl.text-fg-faint\\/50…"] (/)
- *      html:   <span class="font-display text-3xl font-bold text-fg-faint/50 tabular-nums">01</span>
- *      why:    insufficient color contrast of 1.54 (fg #35312c, bg #0b0805,
- *              22.5pt (30px), bold). Expected 3:1
- *
- *      target: [".mt-auto"]                                    (/learn, lessons)
- *      html:   <p class="mt-auto px-2.5 pt-4 font-mono text-[9px] tracking-widest
- *              text-fg-faint/70 uppercase">v0.1 · progress in localStorage</p>
- *      why:    insufficient color contrast of 1.97 (fg #47423c, bg #0f0b07,
- *              6.8pt (9px), normal). Expected 4.5:1
- *
- *      target: ["a[href$=\"#scaling\"] > .group-hover\\:text-fg"]        (/learn)
- *      html:   <span class="group-hover:text-fg">Scaling</span>
- *      why:    insufficient color contrast of 2.83 (fg #605a52, bg #120d09,
- *              8.3pt (11px), normal). Expected 4.5:1
- *
- *    Note the two decorative-looking cases are NOT exempt: the ghost index
- *    numerals ("01") and the sidebar module names are real text conveying real
- *    information, so 1.5:1 is a genuine AA failure, not a false positive. The
- *    fix is a token change (lighten `--color-fg-faint`, or stop using it for
- *    text below `--color-fg-muted`), which belongs in globals.css.
+ * 1. [color-contrast] — `--color-fg-faint` (#605a52) failed as text on every
+ *    ground (2.93:1 worst). Fixed in globals.css: token raised to
+ *    oklch(60% 0.014 75), which passes AA against bg, surface AND raised;
+ *    alpha-composited faint text (/50, /70, /80) was replaced with solid
+ *    token text at every call site. The rule is now enforced like any other.
  *
  * 2. [nested-interactive] impact=serious — exactly 1 node per page with a
  *    figure, plus the landing vignette.
@@ -123,7 +99,7 @@ const WCAG_TAGS = ["wcag2a", "wcag2aa"] as const;
  * Deleting an entry from this list is the last step of fixing it — do that,
  * drop the matching `test.fixme`, and the rule is enforced from then on.
  */
-const KNOWN_FINDINGS: string[] = ["color-contrast", "nested-interactive"];
+const KNOWN_FINDINGS: string[] = ["nested-interactive"];
 
 /** Static hub routes. */
 const HUB_ROUTES = ["/", "/learn"];

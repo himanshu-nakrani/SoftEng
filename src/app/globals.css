@@ -22,13 +22,14 @@
      - fg        the sentence itself (prose, active states)
      - fg-muted  support voice — captions, inactive controls, secondary prose
      - fg-faint  marginalia — stamps, timestamps, units, footers. ALWAYS as
-                 solid text on app backgrounds: it passes AA at 4.6:1 against
-                 the darkest ground (#0b0805); alpha variants (/50, /70, /80)
-                 composite below threshold and are banned for text. Borders
-                 and decorative marks may still use alpha. */
+                 solid text: it passes AA (≥4.5:1) against every ground it can
+                 sit on — bg, surface, and raised — which alpha variants
+                 (/50, /70, /80) never do; they composite below threshold and
+                 are banned for text. Borders and decorative marks may still
+                 use alpha. */
   --color-fg: oklch(93% 0.008 80);
   --color-fg-muted: oklch(66% 0.014 75);
-  --color-fg-faint: oklch(58% 0.014 75);
+  --color-fg-faint: oklch(60% 0.014 75);
 
   /* Radius grammar (plate geometry): near-square PLATES (cards, figure
      shells, overlays — usually CornerTicks-framed) vs machined CONTROLS
