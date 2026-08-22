@@ -5,6 +5,9 @@ import { useReducedMotion } from "motion/react";
 import { Maximize2, Minimize2 } from "lucide-react";
 import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
 import { CornerTicks } from "@/components/ui/CornerTicks";
+import { IconButton } from "@/components/ui/IconButton";
+import { Meter } from "@/components/ui/Meter";
+import { PlateLabel } from "@/components/ui/PlateLabel";
 import { cn } from "@/lib/cn";
 import { buildPaths } from "../paths";
 import type { LessonSim, LessonSimView, NodeRuntime, NodeSpec } from "../types";
@@ -20,7 +23,6 @@ import { CaptionOverlay } from "./CaptionOverlay";
 import { ControlPanel } from "./ControlPanel";
 import { EdgeLine } from "./EdgeLine";
 import { FigureErrorBoundary } from "./FigureErrorBoundary";
-import { Meter } from "@/components/ui/Meter";
 import { PacketLayer, resolvePacketStyles } from "./PacketLayer";
 import { PacketLegend } from "./PacketLegend";
 import { SystemNode } from "./SystemNode";
@@ -467,24 +469,20 @@ function FigureBody<L>({
             dodge the other. The rail itself takes pointer events; the plate
             opts back out. */}
         <div className="absolute top-2 right-2.5 flex items-center gap-2.5">
-          <span
-            aria-hidden
-            className="pointer-events-none font-mono text-[9px] tracking-[0.12em] text-fg-faint uppercase"
-          >
-            fig · {sim.id} · seed {seed ?? 42}
-          </span>
-          <button
-            type="button"
+          <PlateLabel>fig · {sim.id} · seed {seed ?? 42}</PlateLabel>
+          <IconButton
             onClick={() => setExpanded((v) => !v)}
             aria-expanded={expanded}
-            aria-label={
+            label={
               expanded
                 ? "Exit full screen and return the figure to the page"
                 : "Expand the figure to full screen"
             }
             title={expanded ? "Exit full screen (Esc)" : "Expand to full screen"}
+            variant="bordered"
+            size="sm"
             className={cn(
-              "size-7 shrink-0 cursor-pointer items-center justify-center rounded-md border border-border bg-surface/80 text-fg-muted backdrop-blur transition-colors hover:border-border-bright hover:text-fg",
+              "shrink-0",
               // Small stages always get it; a stage you are meant to *poke*
               // gets it at every width. Expanded always shows the way out.
               expanded || hasBreakable ? "flex" : "flex lg:hidden",
@@ -495,7 +493,7 @@ function FigureBody<L>({
             ) : (
               <Maximize2 className="size-3.5" strokeWidth={1.75} />
             )}
-          </button>
+          </IconButton>
         </div>
         <PredictionQuiz
           quiz={simulation.activeQuiz}

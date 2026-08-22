@@ -3,7 +3,7 @@
 import { ProgressRing } from "@/components/navigation/ProgressRing";
 import { ProgressSettings } from "@/components/navigation/ProgressSettings";
 import { GlowCard } from "@/components/ui/GlowCard";
-import type { Difficulty, LessonMeta, Module } from "@/curriculum/types";
+import type { LessonMeta, Module } from "@/curriculum/types";
 import { useHydrated } from "@/hooks/use-hydrated";
 import {
   lessonFraction,
@@ -12,17 +12,12 @@ import {
   useTrackProgress,
 } from "@/hooks/use-lesson-progress";
 import { cn } from "@/lib/cn";
-import { accentCssVar } from "@/lib/accent";
+import { accentCssVar, difficultyClass } from "@/lib/accent";
 import { allLessons, getLesson, lessonPath, modules } from "@/lib/curriculum";
 import { useProgress } from "@/stores/progress";
 import { ArrowRight, Sparkles } from "lucide-react";
 import Link from "next/link";
 
-const difficultyColor: Record<Difficulty, string> = {
-  foundational: "text-glow-green",
-  intermediate: "text-glow-orange",
-  advanced: "text-glow-violet",
-};
 
 /**
  * Track-level readout: one headline % plus a section-weighted segmented bar,
@@ -249,7 +244,7 @@ function MapNode({
         {lesson.tagline}
       </p>
       <p className="font-mono text-[11px] tracking-wide text-fg-faint">
-        <span className={difficultyColor[lesson.difficulty]}>
+        <span className={difficultyClass[lesson.difficulty]}>
           {lesson.difficulty}
         </span>
         {" · "}

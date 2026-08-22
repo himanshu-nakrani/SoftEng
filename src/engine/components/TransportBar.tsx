@@ -1,5 +1,6 @@
 "use client";
 
+import { IconButton } from "@/components/ui/IconButton";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { cn } from "@/lib/cn";
 import { ListVideo, Pause, Play, RotateCcw, StepForward } from "lucide-react";
@@ -265,43 +266,38 @@ export function TransportBar({
   return (
     <>
       <div className="flex flex-wrap items-center gap-1 border-t border-border px-3 py-2">
-        <button
-          type="button"
+        <IconButton
           onClick={controls.toggle}
           disabled={quizzing}
-          aria-label={playing ? "Pause simulation" : "Play simulation"}
+          label={playing ? "Pause simulation" : "Play simulation"}
           aria-keyshortcuts="Space"
-          className="flex size-8 cursor-pointer items-center justify-center rounded-lg bg-accent text-bg transition-all hover:brightness-110 disabled:opacity-40"
+          variant="solid"
         >
           {playing ? (
             <Pause className="size-4" fill="currentColor" strokeWidth={0} />
           ) : (
             <Play className="size-4 translate-x-px" fill="currentColor" strokeWidth={0} />
           )}
-        </button>
+        </IconButton>
 
-        <button
-          type="button"
+        <IconButton
           onClick={controls.stepOnce}
           disabled={playing || quizzing}
-          aria-label="Advance one tick"
+          label="Advance one tick"
           aria-keyshortcuts="."
           title="Step one tick"
-          className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-fg-muted transition-colors hover:bg-raised hover:text-fg disabled:pointer-events-none disabled:opacity-40"
         >
           <StepForward className="size-4" />
-        </button>
+        </IconButton>
 
-        <button
-          type="button"
+        <IconButton
           onClick={controls.restart}
-          aria-label="Restart simulation"
+          label="Restart simulation"
           aria-keyshortcuts="R"
           title="Restart (deterministic replay)"
-          className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-fg-muted transition-colors hover:bg-raised hover:text-fg"
         >
           <RotateCcw className="size-4" />
-        </button>
+        </IconButton>
 
         <div className="mx-2 h-4 w-px bg-border" />
 
@@ -396,13 +392,12 @@ export function TransportBar({
             run. The clock keeps its own `ml-auto`; a second auto margin here
             would split the free space between them and float this into the
             middle of the row on narrow screens. */}
-        <button
-          type="button"
+        <IconButton
           onClick={() => setTranscriptOpen((v) => !v)}
           disabled={transcriptDisabled}
           aria-expanded={transcriptOpen}
           aria-controls={transcriptId}
-          aria-label={
+          label={
             transcriptOpen ? "Hide caption transcript" : "Show caption transcript"
           }
           title={
@@ -413,12 +408,12 @@ export function TransportBar({
                 : "Show the caption transcript (every caption so far, seekable)"
           }
           className={cn(
-            "ml-1 flex size-8 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-raised hover:text-fg disabled:pointer-events-none disabled:opacity-40",
-            transcriptOpen ? "bg-raised text-accent" : "text-fg-muted",
+            "ml-1",
+            transcriptOpen ? "bg-raised text-accent" : undefined,
           )}
         >
           <ListVideo className="size-4" />
-        </button>
+        </IconButton>
       </div>
       <TranscriptPanel
         id={transcriptId}

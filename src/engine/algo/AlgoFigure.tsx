@@ -2,6 +2,7 @@
 
 import { CornerTicks } from "@/components/ui/CornerTicks";
 import { Meter } from "@/components/ui/Meter";
+import { PlateLabel } from "@/components/ui/PlateLabel";
 import { Dices } from "lucide-react";
 import { useState } from "react";
 import { AlgoTransportBar } from "./AlgoTransportBar";
@@ -39,12 +40,9 @@ export function AlgoFigure({
       <div className="relative grid bg-bg/40 lg:grid-cols-[1fr_240px]">
         <div className="relative">
           <CornerTicks />
-          <span
-            aria-hidden
-            className="pointer-events-none absolute top-2.5 right-5 font-mono text-[9px] tracking-[0.12em] text-fg-faint uppercase"
-          >
+          <PlateLabel className="absolute top-2.5 right-5">
             fig · {def.id} · seed {seed}
-          </span>
+          </PlateLabel>
           <ArrayView step={current} />
           {current.note && (
             <p className="pointer-events-none absolute bottom-2 left-3 flex items-center gap-2 rounded-md border border-border bg-bg/85 px-2.5 py-1.5 font-mono text-[11px] text-fg backdrop-blur-sm">

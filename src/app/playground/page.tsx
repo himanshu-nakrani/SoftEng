@@ -1,4 +1,5 @@
 import { PlaygroundClient } from "@/components/playground/PlaygroundClient";
+import { SiteHeader } from "@/components/navigation/SiteChrome";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -12,23 +13,21 @@ export const metadata: Metadata = {
 export default function PlaygroundPage() {
   return (
     <div className="min-h-screen">
-      <header className="mx-auto flex max-w-6xl items-center gap-6 px-6 py-5">
-        <Link href="/" className="flex items-baseline gap-1">
-          <span className="font-display text-xl font-bold tracking-tight">
-            syslab
-          </span>
-          <span className="size-1.5 rounded-full bg-accent shadow-[0_0_6px_var(--color-accent)]" />
-        </Link>
-        <span className="tech-label">{"// playground"}</span>
-        <nav className="ml-auto flex items-center gap-5 text-sm text-fg-muted">
-          <Link href="/learn" className="transition-colors hover:text-fg">
-            Learning path
-          </Link>
-          <Link href="/about" className="transition-colors hover:text-fg">
-            About
-          </Link>
-        </nav>
-      </header>
+      <SiteHeader
+        nav={
+          <>
+            <span className="tech-label mr-5 hidden sm:inline">
+              {"// playground"}
+            </span>
+            <Link href="/learn" className="text-sm transition-colors hover:text-fg text-fg-muted">
+              Learning path
+            </Link>
+            <Link href="/about" className="text-sm transition-colors hover:text-fg text-fg-muted">
+              About
+            </Link>
+          </>
+        }
+      />
 
       <main className="mx-auto max-w-6xl px-6 py-8">
         {/* useSearchParams requires a Suspense boundary for static export */}

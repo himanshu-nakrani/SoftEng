@@ -1,45 +1,41 @@
 import { ContinueCta } from "@/components/landing/ContinueCta";
 import { HeroSim } from "@/components/landing/HeroSim";
 import { Vignettes } from "@/components/landing/Vignettes";
+import { SiteFooter, SiteHeader } from "@/components/navigation/SiteChrome";
 import { CornerTicks } from "@/components/ui/CornerTicks";
+import { buttonClasses } from "@/components/ui/Button";
+import { PlateLabel } from "@/components/ui/PlateLabel";
+import { SectionRule } from "@/components/ui/SectionRule";
 import { accentCssVar } from "@/lib/accent";
 import { allLessons, modules, track } from "@/lib/curriculum";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
-function SiteHeader() {
+/** Landing nav — the status readout is marginalia and lives at the edge. */
+function LandingNav() {
   return (
-    <header className="mx-auto flex max-w-6xl items-center gap-6 px-6 py-5">
-      <Link href="/" className="flex items-baseline gap-1">
-        <span className="font-display text-xl font-bold tracking-tight">
-          syslab
-        </span>
-        <span className="size-1.5 rounded-full bg-accent shadow-[0_0_6px_var(--color-accent)]" />
-      </Link>
+    <>
       <span className="tech-label hidden items-center gap-1.5 sm:flex">
         <span className="size-1.5 animate-pulse rounded-full bg-glow-green" />
         all systems nominal
       </span>
-      <nav className="ml-auto flex items-center gap-5 text-sm text-fg-muted">
-        <Link href="/learn" className="transition-colors hover:text-fg">
-          Learning path
-        </Link>
-        <Link href="/about" className="transition-colors hover:text-fg">
-          About
-        </Link>
-      </nav>
-    </header>
+      <Link href="/learn" className="text-sm transition-colors hover:text-fg text-fg-muted">
+        Learning path
+      </Link>
+      <Link href="/about" className="text-sm transition-colors hover:text-fg text-fg-muted">
+        About
+      </Link>
+    </>
   );
 }
 
 /** Hairline rule with a mono index — the section divider language. */
-function SectionRule({ n, label }: { n: string; label: string }) {
+function LedgerRule({ n, label }: { n: string; label: string }) {
   return (
-    <div className="mb-8 flex items-center gap-4">
+    <SectionRule className="mb-8">
       <span className="tech-num text-xs text-fg-faint">{n}</span>
       <span className="tech-label text-accent">{label}</span>
-      <div className="tech-rule flex-1" />
-    </div>
+    </SectionRule>
   );
 }
 
@@ -54,7 +50,7 @@ export default function Home() {
   return (
     <div className="relative">
       <div className="dot-grid dot-grid-fade pointer-events-none absolute inset-x-0 top-0 -z-10 h-[90vh]" />
-      <SiteHeader />
+      <SiteHeader nav={<LandingNav />} />
 
       {/* Skip-link target: the header above and the footer below stay outside,
           so "skip to content" lands past the nav on the hero. */}
@@ -73,10 +69,7 @@ export default function Home() {
             </p>
             <div className="mb-10 flex flex-wrap items-center gap-3">
               <ContinueCta />
-              <Link
-                href="/about"
-                className="rounded-md border border-border px-5 py-2.5 text-sm text-fg-muted transition-colors hover:border-border-bright hover:text-fg"
-              >
+              <Link href="/about" className={buttonClasses("outline", "md")}>
                 How it works
               </Link>
             </div>
@@ -95,12 +88,9 @@ export default function Home() {
             />
             <div className="relative">
               <CornerTicks inset={0} />
-              <span
-                aria-hidden
-                className="pointer-events-none absolute top-1.5 right-4 font-mono text-[9px] tracking-[0.12em] text-fg-faint uppercase"
-              >
+              <PlateLabel className="absolute top-1.5 right-4">
                 fig · 00 — lb-cluster · self-healing
-              </span>
+              </PlateLabel>
               <HeroSim />
             </div>
             <p className="tech-label mt-1 text-center">
@@ -111,7 +101,7 @@ export default function Home() {
 
         {/* ---- the four verbs: numbered ledger ---- */}
         <section className="mx-auto max-w-6xl px-6 pb-28">
-          <SectionRule n="01" label="the method" />
+          <LedgerRule n="01" label="the method" />
           <h2 className="font-display mb-8 text-2xl font-bold tracking-tight sm:text-3xl">
             Observe. Manipulate. Predict. Break.
           </h2>
@@ -120,7 +110,7 @@ export default function Home() {
 
         {/* ---- the track: a manifest, not a card grid ---- */}
         <section className="mx-auto max-w-6xl px-6 pb-28">
-          <SectionRule n="02" label="track 01" />
+          <LedgerRule n="02" label="track 01" />
           <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
             <h2 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
               {track.title}
@@ -176,23 +166,21 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="border-t border-border">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-6 py-8">
-          <p className="font-mono text-xs text-fg-faint">
-            syslab — learn systems by breaking them
-            <span className="mx-3 text-border-bright">·</span>
-            no production servers were harmed
-          </p>
-          <nav className="ml-auto flex gap-5 text-xs text-fg-muted">
-            <Link href="/learn" className="transition-colors hover:text-fg">
-              Learning path
-            </Link>
-            <Link href="/about" className="transition-colors hover:text-fg">
-              About
-            </Link>
-          </nav>
-        </div>
-      </footer>
+      <SiteFooter width="app" className="border-t border-border">
+        <p className="font-mono text-xs text-fg-faint">
+          syslab — learn systems by breaking them
+          <span className="mx-3 text-border-bright">·</span>
+          no production servers were harmed
+        </p>
+        <nav aria-label="Footer" className="ml-auto flex gap-5 text-xs text-fg-muted">
+          <Link href="/learn" className="transition-colors hover:text-fg">
+            Learning path
+          </Link>
+          <Link href="/about" className="transition-colors hover:text-fg">
+            About
+          </Link>
+        </nav>
+      </SiteFooter>
     </div>
   );
 }

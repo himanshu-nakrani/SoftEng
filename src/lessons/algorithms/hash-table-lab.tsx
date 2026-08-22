@@ -3,6 +3,7 @@
 import { useSectionCompletion } from "@/components/lesson/context";
 import { CornerTicks } from "@/components/ui/CornerTicks";
 import { Meter } from "@/components/ui/Meter";
+import { PlateLabel } from "@/components/ui/PlateLabel";
 import { mulberry32 } from "@/engine/rng";
 import { cn } from "@/lib/cn";
 import { Plus, RotateCcw, Scaling } from "lucide-react";
@@ -58,12 +59,9 @@ export function HashTableLab() {
     <figure className="my-6 overflow-hidden rounded-lg border border-border bg-surface">
       <div className="relative bg-bg/40 p-5">
         <CornerTicks />
-        <span
-          aria-hidden
-          className="pointer-events-none absolute top-2.5 right-5 font-mono text-[9px] tracking-[0.12em] text-fg-faint uppercase"
-        >
+        <PlateLabel className="absolute top-2.5 right-5">
           fig · hash-table · {bucketCount} buckets
-        </span>
+        </PlateLabel>
 
         <div
           className="grid gap-1.5 pt-3"

@@ -1,6 +1,8 @@
 "use client";
 
+import { buttonClasses } from "@/components/ui/Button";
 import { GlowCard } from "@/components/ui/GlowCard";
+import { SectionRule } from "@/components/ui/SectionRule";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { accentCssVar } from "@/lib/accent";
 import { useProgress, type QuizResult } from "@/stores/progress";
@@ -82,13 +84,14 @@ export function ReviewDeck() {
       ) : (
         tiers.map((group) => (
           <section key={group.tier} className="mb-10">
-            <div className="mb-1 flex items-center gap-3">
-              <h2 className="tech-label text-fg">{tierCopy[group.tier].title}</h2>
+            <SectionRule className="mb-1">
+              <h2 className="font-display text-lg font-bold tracking-tight">
+                {tierCopy[group.tier].title}
+              </h2>
               <span className="tech-num text-[11px] text-fg-faint">
                 {group.items.length}
               </span>
-              <div className="tech-rule min-w-6 flex-1" />
-            </div>
+            </SectionRule>
             <p className="mb-4 text-[13px] text-fg-faint">
               {tierCopy[group.tier].blurb}
             </p>
@@ -110,14 +113,13 @@ function StatsPanel({ stats }: { stats: DeckStats }) {
 
   return (
     <GlowCard className="mb-10 px-5 py-4">
-      <div className="mb-3 flex items-baseline gap-3">
+      <SectionRule className="mb-3">
         <span className="tech-label">first-try predictions</span>
-        <div className="tech-rule min-w-6 flex-1" />
-        <span className="tech-num text-2xl leading-none font-semibold text-accent">
+        <span className="tech-num ml-auto text-2xl leading-none font-semibold text-accent">
           {stats.firstTry}
           <span className="text-sm text-fg-faint">/{stats.total}</span>
         </span>
-      </div>
+      </SectionRule>
 
       <div
         className="mb-3 h-1.5 overflow-hidden rounded-full bg-raised"
@@ -189,7 +191,7 @@ function ColdStart({ total }: { total: number }) {
           </p>
           <Link
             href="/learn"
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-bg transition-all hover:brightness-110"
+            className={buttonClasses("primary", "md", "mt-4")}
           >
             Start the track
             <ArrowRight className="size-4" />

@@ -1,10 +1,11 @@
 "use client";
 
-import type { Difficulty, LessonMeta } from "@/curriculum/types";
+import type { LessonMeta } from "@/curriculum/types";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { useLessonKeyboardNav } from "@/hooks/use-lesson-keyboard-nav";
 import { useLessonProgress } from "@/hooks/use-lesson-progress";
 import { cn } from "@/lib/cn";
+import { difficultyClass } from "@/lib/accent";
 import { getLesson, moduleOf } from "@/lib/curriculum";
 import { useProgress } from "@/stores/progress";
 import { Sparkles } from "lucide-react";
@@ -12,11 +13,6 @@ import { useCallback, type ReactNode } from "react";
 import { LessonCompletionContext, LessonContext } from "./context";
 import { NextLessonCard } from "./NextLessonCard";
 
-const difficultyColor: Record<Difficulty, string> = {
-  foundational: "text-glow-green",
-  intermediate: "text-glow-orange",
-  advanced: "text-glow-violet",
-};
 
 /** Fixed right-rail mini-TOC with live checkpoint dots (xl screens). */
 function CheckpointRail({ slug }: { slug: string }) {
@@ -138,7 +134,7 @@ export function Lesson({ slug, children }: LessonProps) {
               <div className="flex flex-wrap items-center gap-x-6 gap-y-1.5 border-y border-border py-2.5 font-mono text-[11px] tracking-wide text-fg-faint uppercase">
                 <span>
                   difficulty{" "}
-                  <span className={difficultyColor[meta.difficulty]}>
+                  <span className={difficultyClass[meta.difficulty]}>
                     {meta.difficulty}
                   </span>
                 </span>

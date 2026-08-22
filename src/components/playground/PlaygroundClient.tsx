@@ -6,17 +6,10 @@ import { simBySlug } from "@/lessons/index";
 import { cn } from "@/lib/cn";
 import { allLessons, getLesson, moduleOf } from "@/lib/curriculum";
 import type { Accent } from "@/curriculum/types";
+import { accentCssVar } from "@/lib/accent";
 import { Check, Dices, Share2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
-
-const accentVar: Record<Accent, string> = {
-  cyan: "var(--color-glow-cyan)",
-  violet: "var(--color-glow-violet)",
-  amber: "var(--color-accent)",
-  green: "var(--color-glow-green)",
-  red: "var(--color-glow-red)",
-};
 
 interface PlaygroundEntry {
   slug: string;
@@ -114,7 +107,7 @@ export function PlaygroundClient() {
               >
                 <span
                   className="size-1.5 shrink-0 rounded-full"
-                  style={{ background: accentVar[e.accent] }}
+                  style={{ background: accentCssVar[e.accent] }}
                 />
                 {e.title}
               </button>
@@ -131,7 +124,7 @@ export function PlaygroundClient() {
           <span className="tech-label">sandbox — no script, no quizzes</span>
           <span
             className="size-1.5 rounded-full"
-            style={{ background: accentVar[accent] }}
+            style={{ background: accentCssVar[accent] }}
             aria-hidden
           />
           <div className="ml-auto flex items-center gap-2">

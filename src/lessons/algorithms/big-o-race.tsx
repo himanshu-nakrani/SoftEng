@@ -2,6 +2,7 @@
 
 import { useSectionCompletion } from "@/components/lesson/context";
 import { CornerTicks } from "@/components/ui/CornerTicks";
+import { PlateLabel } from "@/components/ui/PlateLabel";
 import { cn } from "@/lib/cn";
 import { useRef, useState } from "react";
 
@@ -62,12 +63,7 @@ export function BigORace() {
     <figure className="relative my-6 overflow-hidden rounded-lg border border-border bg-surface">
       <div className="relative bg-bg/40 p-5">
         <CornerTicks />
-        <span
-          aria-hidden
-          className="pointer-events-none absolute top-2.5 right-5 font-mono text-[9px] tracking-[0.12em] text-fg-faint uppercase"
-        >
-          fig · big-o-race
-        </span>
+        <PlateLabel className="absolute top-2.5 right-5">fig · big-o-race</PlateLabel>
 
         <div className="flex flex-col gap-4 pt-2">
           {CURVES.map((curve, i) => {

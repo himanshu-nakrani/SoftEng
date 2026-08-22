@@ -3,13 +3,17 @@ import type { ReactNode } from "react";
 
 type Tone = "cyan" | "violet" | "amber" | "green" | "red" | "neutral";
 
+/**
+ * Chrome color budget: tone colors the TEXT and the tick only, never a tinted
+ * fill — on this ground, hierarchy comes from luminance, not from washes.
+ */
 const toneClasses: Record<Tone, string> = {
-  cyan: "bg-glow-cyan-dim text-glow-cyan",
-  violet: "bg-glow-violet-dim text-glow-violet",
-  amber: "bg-glow-amber-dim text-glow-amber",
-  green: "bg-glow-green-dim text-glow-green",
-  red: "bg-glow-red-dim text-glow-red",
-  neutral: "bg-raised text-fg-muted",
+  cyan: "text-glow-cyan",
+  violet: "text-glow-violet",
+  amber: "text-accent",
+  green: "text-glow-green",
+  red: "text-glow-red",
+  neutral: "text-fg-muted",
 };
 
 interface BadgeProps {
@@ -18,17 +22,22 @@ interface BadgeProps {
   className?: string;
 }
 
-/** Small monospace chip — difficulty, est. time, prerequisite tags. */
+/**
+ * Tick-tag: the square-cornered monospace chip (difficulty, est. time,
+ * prerequisite tags). A small leading mark carries the tone; the hairline
+ * border keeps it plate-like instead of pill-like.
+ */
 export function Badge({ children, tone = "neutral", className }: BadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5",
-        "font-mono text-[11px] font-medium tracking-wide",
+        "inline-flex items-center gap-1.5 rounded-sm border border-border bg-raised px-2 py-0.5",
+        "font-mono text-[11px] tracking-wide",
         toneClasses[tone],
         className,
       )}
     >
+      <span aria-hidden className="size-1 bg-current opacity-80" />
       {children}
     </span>
   );

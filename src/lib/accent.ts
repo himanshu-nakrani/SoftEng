@@ -1,4 +1,4 @@
-import type { Accent } from "@/curriculum/types";
+import type { Accent, Difficulty } from "@/curriculum/types";
 
 /**
  * Module accent → design token. The one mapping every surface reads, so the
@@ -12,4 +12,14 @@ export const accentCssVar: Record<Accent, string> = {
   amber: "var(--color-glow-amber)",
   green: "var(--color-glow-green)",
   red: "var(--color-glow-red)",
+};
+
+/**
+ * Difficulty → text class. Lived duplicated in LessonMap and Lesson; this is
+ * the single copy.
+ */
+export const difficultyClass: Record<Difficulty, string> = {
+  foundational: "text-glow-green",
+  intermediate: "text-glow-orange",
+  advanced: "text-glow-violet",
 };
