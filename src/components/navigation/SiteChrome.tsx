@@ -11,10 +11,18 @@ const widths = {
 export type SiteWidth = keyof typeof widths;
 
 /** The wordmark: display voice, one phosphor pip, one link home. */
-export function Wordmark({ className }: { className?: string }) {
+export function Wordmark({
+  className,
+  onClick,
+}: {
+  className?: string;
+  /** Pass-through for chrome that must close itself on navigate (drawer). */
+  onClick?: () => void;
+}) {
   return (
     <Link
       href="/"
+      onClick={onClick}
       className={cn("flex w-fit items-baseline gap-1", className)}
       aria-label="syslab — home"
     >

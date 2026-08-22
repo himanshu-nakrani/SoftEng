@@ -1,4 +1,5 @@
 import { cn } from "@/lib/cn";
+import { SectionRule } from "@/components/ui/SectionRule";
 import { AlertTriangle, Info, Lightbulb } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -105,7 +106,7 @@ export function TryThis({
   children: ReactNode;
 }) {
   return (
-    <div className="my-5 rounded-md border border-border bg-surface px-4 py-3">
+    <div className="my-5 rounded-sm border border-border bg-surface px-4 py-3">
       <p className="tech-label mb-2 text-accent">{label}</p>
       <ul
         className={cn(
@@ -158,10 +159,9 @@ export function CompareCol({
 }) {
   return (
     <div>
-      <div className="mb-2 flex items-center gap-3">
+      <SectionRule className="mb-2">
         <span className="tech-label text-accent">{title}</span>
-        <div className="tech-rule min-w-6 flex-1" />
-      </div>
+      </SectionRule>
       <div className="text-sm leading-relaxed text-fg-muted [&>*:last-child]:mb-0">
         {children}
       </div>
@@ -169,11 +169,15 @@ export function CompareCol({
   );
 }
 
+/* Callout tones follow the chrome color budget: amber = insight (the brand
+   light), orange = warning (the degraded hue), and note is NEUTRAL — a plain
+   hairline box, because violet/cyan in prose competed with luminance as the
+   hierarchy device. */
 const calloutStyles = {
   insight: {
     icon: Lightbulb,
-    border: "border-glow-cyan/40",
-    text: "text-glow-cyan",
+    border: "border-accent/40",
+    text: "text-accent",
     label: "insight",
   },
   warning: {
@@ -184,8 +188,8 @@ const calloutStyles = {
   },
   note: {
     icon: Info,
-    border: "border-glow-violet/40",
-    text: "text-glow-violet",
+    border: "border-border-bright",
+    text: "text-fg-muted",
     label: "note",
   },
 } as const;
@@ -202,7 +206,7 @@ export function Callout({
   return (
     <aside
       className={cn(
-        "my-5 rounded-md border bg-surface px-4 py-3",
+        "my-5 rounded-sm border bg-surface px-4 py-3",
         style.border,
       )}
     >

@@ -8,6 +8,7 @@ import { cn } from "@/lib/cn";
 import { difficultyClass } from "@/lib/accent";
 import { getLesson, moduleOf } from "@/lib/curriculum";
 import { useProgress } from "@/stores/progress";
+import { SectionRule } from "@/components/ui/SectionRule";
 import { Sparkles } from "lucide-react";
 import { useCallback, type ReactNode } from "react";
 import { LessonCompletionContext, LessonContext } from "./context";
@@ -39,10 +40,12 @@ function CheckpointRail({ slug }: { slug: string }) {
             </span>
             <span
               className={cn(
-                "size-2 rounded-full transition-all",
+                // ruler tick, not a bullet — the rail is marginalia on the
+                // plate's edge, so the marks are dashes of luminance
+                "h-3.5 w-0.5 transition-all",
                 isDone
                   ? "bg-glow-green shadow-[0_0_6px_var(--color-glow-green)]"
-                  : "border border-border-bright bg-transparent group-hover:border-fg-muted",
+                  : "bg-border-bright group-hover:bg-fg-muted",
               )}
             />
           </a>
@@ -105,24 +108,24 @@ export function Lesson({ slug, children }: LessonProps) {
       <LessonCompletionContext.Provider value={completeLessonSection}>
         <article>
           <header className="relative mb-14">
-            {/* ghost index numeral */}
-            <span
-              aria-hidden
-              className="font-display pointer-events-none absolute -top-8 -left-2 text-[8rem] leading-none font-bold text-fg/[0.04] select-none"
+            {/* kicker as marginalia — module name left, plate number right.
+                No ghost numeral behind the type: on this ground, nothing
+                overlaps; hierarchy comes from luminance alone. */}
+            <SectionRule
+              className="mb-4"
+              trailing={
+                <>
+                  <MasteryMark meta={meta} />
+                  <span className="tech-num text-xs text-fg-faint">
+                    plate {nn} / {String(mod.lessons.length).padStart(2, "0")}
+                  </span>
+                </>
+              }
             >
-              {nn}
-            </span>
+              <span className="tech-label">{mod.title}</span>
+            </SectionRule>
 
-            <div className="relative">
-              <div className="mb-4 flex items-center gap-3">
-                <span className="tech-label">{mod.title}</span>
-                <div className="tech-rule flex-1" />
-                <MasteryMark meta={meta} />
-                <span className="tech-num text-xs text-fg-faint">
-                  {nn} / {String(mod.lessons.length).padStart(2, "0")}
-                </span>
-              </div>
-
+            <div>
               <h1 className="font-display mb-3 text-3xl font-bold tracking-tight sm:text-4xl">
                 {meta.title}
               </h1>

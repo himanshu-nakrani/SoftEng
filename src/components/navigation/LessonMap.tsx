@@ -3,6 +3,7 @@
 import { ProgressRing } from "@/components/navigation/ProgressRing";
 import { ProgressSettings } from "@/components/navigation/ProgressSettings";
 import { GlowCard } from "@/components/ui/GlowCard";
+import { SectionRule } from "@/components/ui/SectionRule";
 import type { LessonMeta, Module } from "@/curriculum/types";
 import { useHydrated } from "@/hooks/use-hydrated";
 import {
@@ -33,37 +34,39 @@ export function TrackProgress() {
 
   return (
     <GlowCard className="mb-10 px-5 py-4">
-      <div className="mb-3 flex items-baseline gap-3">
+      <SectionRule className="mb-3">
         <span className="tech-label">track progress</span>
-        <div className="tech-rule min-w-6 flex-1" />
-        <span className="tech-num text-2xl leading-none font-semibold text-accent">
+        <span className="tech-num ml-auto text-2xl leading-none font-semibold text-accent">
           {pct}
           <span className="text-sm text-fg-faint">%</span>
         </span>
-      </div>
+      </SectionRule>
 
-      {/* section-weighted segments: each module's width is its share of the
-          track's sections, so the bar and the numbers can't disagree */}
-      <div className="mb-3 flex gap-1" aria-hidden>
-        {track.segments.map((seg) => (
-          <div
-            key={seg.module.slug}
-            className="h-1.5 overflow-hidden rounded-full bg-raised"
-            style={{ flexGrow: seg.total || 1, flexBasis: 0 }}
-          >
-            <div
-              className="h-full rounded-full transition-[width] duration-700 ease-[var(--ease-out-soft)]"
-              style={{
-                width: `${seg.fraction * 100}%`,
-                background: accentCssVar[seg.module.accent],
-                boxShadow:
-                  seg.fraction > 0
-                    ? `0 0 8px -1px ${accentCssVar[seg.module.accent]}`
-                    : undefined,
-              }}
+      {/* tick-scale: one tick per section in the track, filled in the module's
+          accent as it completes — a tally, not a bar. Section-weighted by
+          construction (each module contributes exactly its section count), so
+          the marks and the numbers can't disagree */}
+      <div className="mb-3 flex items-end gap-[3px]" aria-hidden>
+        {track.segments.map((seg) => {
+          const filled = Math.round(seg.fraction * seg.total);
+          return Array.from({ length: seg.total }, (_, i) => (
+            <span
+              key={`${seg.module.slug}:${i}`}
+              className={cn(
+                "w-[3px] transition-colors duration-700",
+                i < filled ? "h-2.5" : "h-1.5 bg-border",
+              )}
+              style={
+                i < filled
+                  ? {
+                      background: accentCssVar[seg.module.accent],
+                      boxShadow: `0 0 6px -1px ${accentCssVar[seg.module.accent]}`,
+                    }
+                  : undefined
+              }
             />
-          </div>
-        ))}
+          ));
+        })}
       </div>
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
@@ -218,7 +221,7 @@ function MapNode({
   const row = (
     <div
       className={cn(
-        "flex-1 rounded-md border border-transparent px-4 py-3.5 transition-all",
+        "flex-1 rounded-sm border border-transparent px-4 py-3.5 transition-all",
         soon
           ? "opacity-40"
           : "group-hover:border-border-bright group-hover:bg-surface/60",
@@ -296,9 +299,16 @@ export function LessonMap() {
         // id + scroll-mt is a contract with the landing page, which links
         // straight to /learn#<module-slug>.
         <section key={mod.slug} id={mod.slug} className="mb-12 scroll-mt-24">
-          <div className="mb-5 flex items-center gap-3">
+          <SectionRule
+            className="mb-5"
+            trailing={
+              <span className="hidden font-mono text-[11px] text-fg-faint sm:inline">
+                {mod.description}
+              </span>
+            }
+          >
             <span
-              className="size-1.5 rounded-full"
+              className="size-1.5 shrink-0 self-center rounded-full"
               style={{
                 background: accentCssVar[mod.accent],
                 boxShadow: `0 0 8px ${accentCssVar[mod.accent]}`,
@@ -308,11 +318,7 @@ export function LessonMap() {
               mod.{String(i + 1).padStart(2, "0")}
             </span>
             <h2 className="font-display text-xl font-bold">{mod.title}</h2>
-            <div className="tech-rule min-w-8 flex-1" />
-            <span className="hidden font-mono text-[11px] text-fg-faint sm:inline">
-              {mod.description}
-            </span>
-          </div>
+          </SectionRule>
 
           <ul className="ml-1">
             {mod.lessons.map((lesson, li) => (

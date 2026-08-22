@@ -113,12 +113,16 @@ function StatsPanel({ stats }: { stats: DeckStats }) {
 
   return (
     <GlowCard className="mb-10 px-5 py-4">
-      <SectionRule className="mb-3">
+      <SectionRule
+        className="mb-3"
+        trailing={
+          <span className="tech-num text-2xl leading-none font-semibold text-accent">
+            {stats.firstTry}
+            <span className="text-sm text-fg-faint">/{stats.total}</span>
+          </span>
+        }
+      >
         <span className="tech-label">first-try predictions</span>
-        <span className="tech-num ml-auto text-2xl leading-none font-semibold text-accent">
-          {stats.firstTry}
-          <span className="text-sm text-fg-faint">/{stats.total}</span>
-        </span>
       </SectionRule>
 
       <div

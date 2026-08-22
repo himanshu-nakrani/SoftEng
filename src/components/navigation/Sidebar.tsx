@@ -1,7 +1,7 @@
 "use client";
 
 import { SidebarTree } from "@/components/navigation/SidebarTree";
-import Link from "next/link";
+import { Wordmark } from "@/components/navigation/SiteChrome";
 
 /**
  * Learn-area sidebar (≥ md): logo, path link, module → lesson tree with
@@ -11,12 +11,7 @@ import Link from "next/link";
 export function Sidebar() {
   return (
     <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col gap-1 overflow-y-auto border-r border-border bg-surface/50 px-3 py-5 md:flex">
-      <Link href="/" className="mb-4 flex items-baseline gap-1 px-2.5">
-        <span className="font-display text-lg font-bold tracking-tight">
-          syslab
-        </span>
-        <span className="size-1.5 rounded-full bg-accent shadow-[0_0_6px_var(--color-accent)]" />
-      </Link>
+      <Wordmark className="mb-4 px-2.5" />
 
       <SidebarTree />
 

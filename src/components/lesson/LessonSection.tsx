@@ -2,6 +2,7 @@
 
 import { Check, Link as LinkIcon } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { SectionRule } from "@/components/ui/SectionRule";
 import { useProgress } from "@/stores/progress";
 import { LessonContext, SectionCompletionContext } from "./context";
 import { useContext } from "react";
@@ -98,7 +99,7 @@ export function LessonSection({ id, children }: LessonSectionProps) {
   return (
     <SectionCompletionContext.Provider value={markComplete}>
       <section ref={ref} id={id} className="mb-14 scroll-mt-24">
-        <div className="group mb-4 flex items-baseline gap-3">
+        <SectionRule className="group mb-4">
           <span className="tech-num text-xs text-fg-faint">
             {String(index).padStart(2, "0")}
           </span>
@@ -106,8 +107,7 @@ export function LessonSection({ id, children }: LessonSectionProps) {
             {section.title}
           </h2>
           <PermalinkButton id={id} />
-          <div className="tech-rule min-w-8 flex-1" />
-        </div>
+        </SectionRule>
         {children}
       </section>
     </SectionCompletionContext.Provider>

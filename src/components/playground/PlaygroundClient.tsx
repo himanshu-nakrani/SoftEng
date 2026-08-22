@@ -3,6 +3,7 @@
 import { InteractiveFigure } from "@/engine/components/InteractiveFigure";
 import type { LessonSim } from "@/engine/types";
 import { simBySlug } from "@/lessons/index";
+import { SectionRule } from "@/components/ui/SectionRule";
 import { cn } from "@/lib/cn";
 import { allLessons, getLesson, moduleOf } from "@/lib/curriculum";
 import type { Accent } from "@/curriculum/types";
@@ -83,10 +84,9 @@ export function PlaygroundClient() {
     );
   }
 
-  // Keep title/accent in sync if the registry has the lesson.
+  // Keep the title in sync if the registry has the lesson.
   const lesson = getLesson(entry.slug);
   const title = lesson?.title ?? entry.title;
-  const accent = lesson ? moduleOf(lesson).accent : entry.accent;
 
   return (
     <div className="grid gap-8 lg:grid-cols-[220px_1fr]">
@@ -117,41 +117,42 @@ export function PlaygroundClient() {
       </nav>
 
       <div className="min-w-0">
-        <div className="mb-2 flex flex-wrap items-center gap-3">
-          <h1 className="font-display text-xl font-bold tracking-tight">
+        <SectionRule
+          className="mb-3"
+          trailing={
+            <span className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={reseed}
+                title="New random seed (deterministic per seed)"
+                className="flex cursor-pointer items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 font-mono text-[11px] text-fg-muted transition-colors hover:border-border-bright hover:text-fg"
+              >
+                <Dices className="size-3.5" />
+                seed {seed}
+              </button>
+              <button
+                type="button"
+                onClick={share}
+                title="Copy a link that reproduces this exact run"
+                className="flex cursor-pointer items-center gap-1.5 rounded-md bg-accent px-2.5 py-1.5 font-mono text-[11px] font-medium text-bg transition-all hover:brightness-110"
+              >
+                {copied ? (
+                  <Check className="size-3.5" />
+                ) : (
+                  <Share2 className="size-3.5" />
+                )}
+                {copied ? "copied" : "share run"}
+              </button>
+            </span>
+          }
+        >
+          <h1 className="font-display text-3xl font-bold tracking-tight">
             {title}
           </h1>
-          <span className="tech-label">sandbox — no script, no quizzes</span>
-          <span
-            className="size-1.5 rounded-full"
-            style={{ background: accentCssVar[accent] }}
-            aria-hidden
-          />
-          <div className="ml-auto flex items-center gap-2">
-            <button
-              type="button"
-              onClick={reseed}
-              title="New random seed (deterministic per seed)"
-              className="flex cursor-pointer items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 font-mono text-[11px] text-fg-muted transition-colors hover:border-border-bright hover:text-fg"
-            >
-              <Dices className="size-3.5" />
-              seed {seed}
-            </button>
-            <button
-              type="button"
-              onClick={share}
-              title="Copy a link that reproduces this exact run"
-              className="flex cursor-pointer items-center gap-1.5 rounded-md bg-accent px-2.5 py-1.5 font-mono text-[11px] font-medium text-bg transition-all hover:brightness-110"
-            >
-              {copied ? (
-                <Check className="size-3.5" />
-              ) : (
-                <Share2 className="size-3.5" />
-              )}
-              {copied ? "copied" : "share run"}
-            </button>
-          </div>
-        </div>
+          <span className="tech-label hidden md:inline">
+            sandbox — no script, no quizzes
+          </span>
+        </SectionRule>
 
         <InteractiveFigure
           key={`${slug}:${seed}`}

@@ -1,7 +1,9 @@
 "use client";
 
+import { IconButton } from "@/components/ui/IconButton";
 import { ProgressRing } from "@/components/navigation/ProgressRing";
 import { SidebarTree } from "@/components/navigation/SidebarTree";
+import { Wordmark } from "@/components/navigation/SiteChrome";
 import type { LessonMeta } from "@/curriculum/types";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { useLessonProgress } from "@/hooks/use-lesson-progress";
@@ -173,20 +175,14 @@ export function MobileNav() {
           className="fixed inset-y-0 left-0 z-50 flex w-[17.5rem] max-w-[85vw] flex-col border-r border-border bg-surface shadow-2xl md:hidden"
         >
           <div className="flex items-center gap-2 border-b border-border px-4 py-3">
-            <Link href="/" onClick={close} className="flex items-baseline gap-1">
-              <span className="font-display text-lg font-bold tracking-tight">
-                syslab
-              </span>
-              <span className="size-1.5 rounded-full bg-accent shadow-[0_0_6px_var(--color-accent)]" />
-            </Link>
-            <button
-              type="button"
+            <Wordmark onClick={close} />
+            <IconButton
               onClick={close}
-              aria-label="Close navigation"
-              className="ml-auto flex size-8 items-center justify-center rounded-lg text-fg-muted transition-colors hover:bg-raised hover:text-fg"
+              label="Close navigation"
+              className="ml-auto"
             >
               <X className="size-4.5" strokeWidth={1.75} />
-            </button>
+            </IconButton>
           </div>
 
           <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-contain px-3 py-4">

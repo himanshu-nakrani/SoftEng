@@ -93,9 +93,11 @@ export default function Home() {
               </PlateLabel>
               <HeroSim />
             </div>
-            <p className="tech-label mt-1 text-center">
-              ☠ this is live — click a server
-            </p>
+            {/* plate marginalia — specimen count left, the invitation right */}
+            <div className="mt-1.5 flex items-center justify-between">
+              <PlateLabel>specimens · {availableCount} live sims</PlateLabel>
+              <p className="tech-label">☠ this is live — click a server</p>
+            </div>
           </div>
         </section>
 

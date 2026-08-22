@@ -1,4 +1,5 @@
 import { LessonMap, TrackProgress } from "@/components/navigation/LessonMap";
+import { SectionRule } from "@/components/ui/SectionRule";
 import { track } from "@/lib/curriculum";
 import { ArrowRight, ListChecks } from "lucide-react";
 import type { Metadata } from "next";
@@ -12,10 +13,9 @@ export default function LearnPage() {
   return (
     <>
       <header className="mb-10">
-        <div className="mb-4 flex items-center gap-3">
+        <SectionRule className="mb-4">
           <span className="tech-label text-accent">track 01</span>
-          <div className="tech-rule flex-1" />
-        </div>
+        </SectionRule>
         <h1 className="font-display mb-3 text-3xl font-bold tracking-tight">
           {track.title}
         </h1>
