@@ -116,12 +116,12 @@ function LessonProgressStrip({ meta }: { meta: LessonMeta }) {
         </span>
       </div>
       {/* tick-scale tally — one tick per section, matching the learn hub */}
-      <div className="flex items-end gap-[3px]" aria-hidden>
+      <div className="flex items-end gap-[3px] overflow-hidden" aria-hidden>
         {meta.sections.map((section, i) => (
           <span
             key={section.id}
             className={cn(
-              "w-[3px] transition-colors duration-500",
+              "min-w-0 flex-1 transition-colors duration-500",
               i < progress.done ? "h-2.5 bg-accent" : "h-1.5 bg-border",
             )}
           />

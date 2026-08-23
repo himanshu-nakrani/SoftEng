@@ -397,6 +397,56 @@ input[type="range"].accent-accent:focus-visible {
 }
 
 /* ---------------------------------------------------------------------------
+   Release-D feature hooks — phosphor equivalents.
+
+   The learning journal, causal workbench and reading-mode features arrive
+   with a few semantic class names. These definitions keep them on the token
+   system (plates and hairlines, no theme gradients). Reading mode REMOVES
+   the workbench's secondary instruments rather than dimming them — the same
+   information-discipline as reduced motion.
+--------------------------------------------------------------------------- */
+
+@layer components {
+  /* learning surfaces (LearningSummary / ReflectionCard / LearningConnections) */
+  .surface-card {
+    border-radius: 2px;
+  }
+
+  /* landing manifest rows: ledger hairlines + quiet hover wash */
+  .module-row {
+    border-block: 1px solid var(--color-border);
+    margin-top: -1px;
+    transition: background 180ms var(--ease-out-soft);
+  }
+  .module-row:hover {
+    background: var(--color-surface);
+  }
+
+  .lesson-shell {
+    position: relative;
+  }
+
+  .sim-figure {
+    background: var(--color-surface);
+  }
+
+  .sim-figure-stage {
+    background: transparent;
+  }
+
+  /* the meter a workbench focus is about — one amber outline, nothing more */
+  .causal-meter-focus {
+    outline: 1px solid var(--color-accent);
+    outline-offset: 4px;
+    border-radius: 2px;
+  }
+}
+
+[data-calibration="true"] .calibration-secondary {
+  display: none !important;
+}
+
+/* ---------------------------------------------------------------------------
    Reduced motion — motion becomes optional, information stays
 --------------------------------------------------------------------------- */
 

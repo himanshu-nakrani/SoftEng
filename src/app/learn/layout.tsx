@@ -21,7 +21,7 @@ export default function LearnLayout({
           <Wordmark className="shrink-0" />
           <MobileCurrentLesson />
         </header>
-        <main id="main" className="lesson-shell mx-auto w-full max-w-4xl px-4 py-10 md:px-8 lg:py-14">
+        <main id="main" className="lesson-shell mx-auto w-full max-w-3xl px-4 py-10 md:px-8">
           {children}
         </main>
       </div>

@@ -52,17 +52,17 @@ export function TrackProgress() {
       </SectionRule>
 
       {/* tick-scale: one tick per section in the track, filled in the module's
-          accent as it completes — a tally, not a bar. Section-weighted by
-          construction (each module contributes exactly its section count), so
-          the marks and the numbers can't disagree */}
-      <div className="mb-3 flex items-end gap-[3px]" aria-hidden>
+          accent as it completes — a tally, not a bar. Ticks are fluid
+          (flex-1) so the ruler always spans its container exactly, whatever
+          the section count and viewport */}
+      <div className="mb-3 flex items-end gap-[3px] overflow-hidden" aria-hidden>
         {track.segments.map((seg) => {
           const filled = Math.round(seg.fraction * seg.total);
           return Array.from({ length: seg.total }, (_, i) => (
             <span
               key={`${seg.module.slug}:${i}`}
               className={cn(
-                "w-[3px] transition-colors duration-700",
+                "min-w-0 flex-1 transition-colors duration-700",
                 i < filled ? "h-2.5" : "h-1.5 bg-border",
               )}
               style={

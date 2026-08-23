@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "mimosa-finding-ledger-batch/v1",
+  "batchId": "stop-20260822T213706996Z-2151-4604c0eea7b0",
+  "runId": "20260822T213706996Z-2151-4604c0eea7b0",
+  "runStatus": "inconclusive",
+  "coverage": {
+    "status": "partial",
+    "reasons": [
+      {
+        "code": "scanner_failed",
+        "stage": "scan",
+        "target": "next-env.d.ts",
+        "detail": "spawnSync /Users/himanshu/.hermes/node/bin/node ETIMEDOUT",
+        "affectsCompletion": true
+      },
+      {
+        "code": "project_check_failed",
+        "stage": "scan",
+        "target": "next-env.d.ts",
+        "detail": "scanner_failed: spawnSync /Users/himanshu/.hermes/node/bin/node ETIMEDOUT",
+        "affectsCompletion": true
+      }
+    ]
+  },
+  "source": {
+    "component": "zcode-hook",
+    "operationId": "Stop"
+  },
+  "revision": "651c8db4bd383ab670352299b2816fe7b4eb2e7d",
+  "diffHash": "d44e13aa5759670167c18e43033bac19d97e7511013fb3dc91b16250ed2c78f4",
+  "rulesVersion": "unavailable",
+  "sessionHash": "19f1c75a071c4c1bdcced2d58a4fd63bb056324385fd5660be7aa590708ce0a3",
+  "reportRef": ".mimosa/reports/task-review-sess_45239954-27da-4cde-b801-6351129b57bd-20260822T213706996Z-2151-4604c0eea7b0.json",
+  "events": [],
+  "observedFindingIds": [],
+  "verifiedFiles": [],
+  "recordedAt": "2026-08-22T21:37:07.605Z"
+}

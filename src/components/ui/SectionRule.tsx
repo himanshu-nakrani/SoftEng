@@ -20,12 +20,7 @@ export function SectionRule({
   className?: string;
 }) {
   return (
-    <div
-      className={cn(
-        "flex min-w-0 items-baseline gap-3 [&>*]:shrink-0",
-        className,
-      )}
-    >
+    <div className={cn("flex min-w-0 items-baseline gap-3", className)}>
       {children}
       <span aria-hidden className="tech-rule min-w-8 flex-1" />
       {trailing}
