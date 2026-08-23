@@ -184,6 +184,26 @@ test.describe("mobile nav drawer", () => {
     await expect(targetLink).toBeVisible();
     await expect(targetLink).toHaveAttribute("href", TARGET.route);
     await expect(drawer.getByRole("link", { name: "Learning path" })).toBeVisible();
+
+    // The appearance control lives in the drawer footer. Its own Escape key
+    // closes the preference panel, not the navigation context that contains it.
+    await drawer
+      .getByRole("button", { name: "Customize color and reading size" })
+      .click();
+    const preferences = drawer.getByRole("region", { name: "Appearance preferences" });
+    await expect(preferences).toBeVisible();
+    await preferences.getByRole("radio", { name: "Teal accent" }).click();
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          document.documentElement.style.getPropertyValue("--user-accent"),
+        ),
+      )
+      .toBe("#167C7A");
+    await page.keyboard.press("Escape");
+    await expect(preferences).toHaveCount(0);
+    await expect(drawer).toBeVisible();
+
     // A modal drawer that pushes the page sideways would be worse than none,
     // and the lesson behind it must not scroll under the learner's thumb.
     await expectNoHorizontalScroll(page, "lesson page with the drawer open");
@@ -233,7 +253,9 @@ test.describe("expand-to-full-screen stage", () => {
     await gotoAndSettle(page, DRIVEN.route);
 
     const figure = page.locator("figure").first();
-    const clock = figure.getByText(/^t=\d+(\.\d+)?s$/);
+    const clock = figure.locator("span.tech-num").filter({
+      hasText: /^t=\d+(\.\d+)?s$/,
+    });
     const play = figure.getByRole("button", { name: "Play simulation" });
     const pause = figure.getByRole("button", { name: "Pause simulation" });
     const expand = figure.getByRole("button", {
@@ -308,6 +330,52 @@ test.describe("expand-to-full-screen stage", () => {
     ).toBeGreaterThanOrEqual(across);
 
     expectQuiet(watcher, "while toggling full screen");
+  });
+});
+
+test.describe("meter readouts", () => {
+  test("keeps each metric value and unit on one readable baseline", async ({ page }) => {
+    const watcher = watchConsole(page);
+    await gotoAndSettle(page, DRIVEN.route);
+
+    const figure = page.locator("figure").first();
+    await figure.scrollIntoViewIfNeeded();
+    const throughputMeter = figure
+      .getByText("throughput", { exact: true })
+      .locator("..");
+    const reading = throughputMeter.locator("[data-meter-reading]");
+    const value = reading.locator("[data-meter-value]");
+    const unit = reading.locator("[data-meter-unit]");
+
+    await expect(reading).toBeVisible();
+    await expect(value).toBeVisible();
+    await expect(unit).toBeVisible();
+    const readingLayout = await reading.evaluate((el) => {
+      const style = getComputedStyle(el);
+      return { display: style.display, alignItems: style.alignItems };
+    });
+    // As a flex item, CSS blockifies `inline-flex` to `flex`; the essential
+    // contract is still the baseline-aligned flex pair, not its outer display.
+    expect(readingLayout.display).toBe("flex");
+    expect(readingLayout.alignItems).toBe("baseline");
+
+    const [valueBox, unitBox] = await Promise.all([
+      value.boundingBox(),
+      unit.boundingBox(),
+    ]);
+    expect(valueBox, "throughput value needs a measurable box").not.toBeNull();
+    expect(unitBox, "throughput unit needs a measurable box").not.toBeNull();
+    expect(
+      Math.abs(unitBox!.y - valueBox!.y),
+      "throughput value and unit should remain on the same meter row",
+    ).toBeLessThan(valueBox!.height);
+    expect(
+      unitBox!.x,
+      "throughput unit should begin after the numeric value, not overlap it",
+    ).toBeGreaterThanOrEqual(valueBox!.x + valueBox!.width);
+
+    await expectNoHorizontalScroll(page, "lesson page with meter readouts");
+    expectQuiet(watcher, "while measuring the throughput meter");
   });
 });
 

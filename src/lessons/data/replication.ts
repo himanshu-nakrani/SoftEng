@@ -484,6 +484,69 @@ export const replicationSim: LessonSim<ReplState> = {
     }
   },
 
+  workbench: {
+    experiment: {
+      id: "trace-an-async-write",
+      title: "Trace an asynchronous write",
+      prompt:
+        "Start the system and follow a committed leader write until its replicas catch up; then widen the replication lag and compare reads.",
+      actionLabel: "Start replication",
+      focusId: "leader-commit",
+      action: { kind: "play" },
+    },
+    focuses: [
+      {
+        id: "leader-commit",
+        label: "A write commits before every replica sees it",
+        phase: "baseline",
+        at: 2,
+        nodes: ["client", "leader", "f1", "f2"],
+        edges: ["write", "repl-f1", "repl-f2"],
+        metrics: ["version", "lagVersions", "stalePct"],
+        summary:
+          "The leader accepts the write first and sends replication afterward, creating a visible interval in which replicas legitimately hold an older version.",
+        nextAction: "Compare the leader badge with replica badges before increasing replication lag.",
+      },
+      {
+        id: "lagged-read",
+        label: "Lag turns replica reads into past reads",
+        phase: "change",
+        at: 19,
+        nodes: ["client", "leader", "f1", "f2"],
+        edges: ["read-f1", "read-f2", "repl-f1", "repl-f2"],
+        metrics: ["lagVersions", "stalePct"],
+        summary:
+          "Increasing replication lag stretches the time between the leader’s commit and a replica’s update, so reads routed to replicas can return an older value.",
+        nextAction: "Raise replication lag and watch stale reads move with the replica-version gap.",
+        trigger: { kind: "param-change", id: "lag" },
+      },
+      {
+        id: "leader-loss",
+        label: "The replication gap becomes an RPO gap",
+        phase: "impact",
+        at: 22,
+        nodes: ["client", "leader", "f1", "f2"],
+        edges: ["write", "repl-f1", "repl-f2"],
+        metrics: ["lagVersions", "lostWrites"],
+        summary:
+          "When the leader fails, writes that were committed there but had not reached a replica are absent from every surviving copy.",
+        nextAction: "Pause here and use the replica versions to identify which writes the new leader cannot recover.",
+      },
+      {
+        id: "promoted-replica",
+        label: "Failover restores service from the surviving truth",
+        phase: "resolution",
+        at: 25,
+        nodes: ["client", "leader", "f1", "f2"],
+        edges: ["read-f1", "read-f2", "cross"],
+        metrics: ["version", "lagVersions", "lostWrites"],
+        summary:
+          "The most up-to-date surviving replica is promoted and can accept new work, but the new system truth excludes the writes that never crossed the old replication gap.",
+        nextAction: "Lower lag, replay the failure, and compare the lost-write boundary.",
+      },
+    ],
+  },
+
   timeline: [
     {
       at: 2,

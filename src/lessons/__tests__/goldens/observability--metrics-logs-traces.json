@@ -1,0 +1,47 @@
+{
+  "lesson": "observability/metrics-logs-traces",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:signals-root-cause@17",
+      "t": 17,
+      "metrics": {
+        "dbQueue": 31,
+        "errorRate": 0,
+        "incident": 1,
+        "p95": 2087,
+        "signalMode": 0,
+        "throughput": 5.143264
+      },
+      "packets": 19,
+      "nextPacketId": 1016,
+      "nodes": {
+        "api": "healthy",
+        "browser": "healthy",
+        "db": "healthy",
+        "worker": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "dbQueue": 36,
+        "errorRate": 20.353982,
+        "incident": 1,
+        "p95": 2297,
+        "signalMode": 0,
+        "throughput": 5.110263
+      },
+      "packets": 28,
+      "nextPacketId": 1702,
+      "nodes": {
+        "api": "healthy",
+        "browser": "healthy",
+        "db": "healthy",
+        "worker": "healthy"
+      }
+    }
+  ]
+}

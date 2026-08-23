@@ -5,6 +5,7 @@ import { ProgressSettings } from "@/components/navigation/ProgressSettings";
 import { GlowCard } from "@/components/ui/GlowCard";
 import { SectionRule } from "@/components/ui/SectionRule";
 import type { LessonMeta, Module } from "@/curriculum/types";
+import type { LearningActivity } from "@/hooks/use-lesson-progress";
 import { useHydrated } from "@/hooks/use-hydrated";
 import {
   lessonFraction,
@@ -19,6 +20,14 @@ import { useProgress } from "@/stores/progress";
 import { ArrowRight, Sparkles } from "lucide-react";
 import Link from "next/link";
 
+
+const activityLabel: Record<LearningActivity, string> = {
+  untouched: "not started",
+  explored: "explored",
+  predicted: "predicted",
+  complete: "complete",
+  mastered: "mastered",
+};
 
 /**
  * Track-level readout: one headline % plus a section-weighted segmented bar,
@@ -91,6 +100,10 @@ export function TrackProgress() {
         ))}
         <span className="tech-num ml-auto text-[11px] text-fg-faint">
           {track.done} / {track.total} sections
+          <span className="hidden sm:inline">
+            {` · ${track.lessonsExplored}/${track.lessons} explored`}
+            {track.lessonsPredicted > 0 && ` · ${track.lessonsPredicted} predicted`}
+          </span>
           {track.lessonsMastered > 0 && (
             <span className="text-accent"> · {track.lessonsMastered} mastered</span>
           )}
@@ -239,7 +252,17 @@ function MapNode({
             coming soon
           </span>
         )}
-        {!soon && (
+        {!soon && progress.activity !== "untouched" && (
+          <span
+            className={cn(
+              "ml-auto font-mono text-[9px] tracking-widest uppercase",
+              progress.activity === "mastered" ? "text-accent" : "text-fg-faint",
+            )}
+          >
+            {activityLabel[progress.activity]}
+          </span>
+        )}
+        {!soon && progress.activity === "untouched" && (
           <ArrowRight className="ml-auto size-3.5 shrink-0 text-fg-faint opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
         )}
       </div>
@@ -302,8 +325,8 @@ export function LessonMap() {
           <SectionRule
             className="mb-5"
             trailing={
-              <span className="hidden font-mono text-[11px] text-fg-faint sm:inline">
-                {mod.description}
+              <span className="tech-num shrink-0 rounded-sm border border-border bg-raised px-2.5 py-1 text-[10px] text-fg-faint">
+                {mod.lessons.length} lessons
               </span>
             }
           >
@@ -314,10 +337,10 @@ export function LessonMap() {
                 boxShadow: `0 0 8px ${accentCssVar[mod.accent]}`,
               }}
             />
-            <span className="tech-num text-xs text-fg-faint">
+            <span className="tech-num shrink-0 text-xs text-fg-faint">
               mod.{String(i + 1).padStart(2, "0")}
             </span>
-            <h2 className="font-display text-xl font-bold">{mod.title}</h2>
+            <h2 className="font-display text-xl font-bold tracking-tight">{mod.title}</h2>
           </SectionRule>
 
           <ul className="ml-1">

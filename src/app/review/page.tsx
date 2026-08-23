@@ -1,5 +1,6 @@
 import { SiteHeader } from "@/components/navigation/SiteChrome";
 import { SectionRule } from "@/components/ui/SectionRule";
+import { JournalTools } from "./JournalTools";
 import { shareMetadata } from "@/lib/site";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -57,6 +58,7 @@ export default function ReviewPage() {
           </p>
         </div>
 
+        <JournalTools />
         <ReviewDeck />
       </main>
     </div>

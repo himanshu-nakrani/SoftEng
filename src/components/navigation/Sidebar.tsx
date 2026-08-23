@@ -11,12 +11,18 @@ import { Wordmark } from "@/components/navigation/SiteChrome";
 export function Sidebar() {
   return (
     <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col gap-1 overflow-y-auto border-r border-border bg-surface/50 px-3 py-5 md:flex">
-      <Wordmark className="mb-4 px-2.5" />
+      {/* wordmark row doubles as the plate header: series label on the right */}
+      <div className="mb-4 flex items-baseline px-2.5">
+        <Wordmark />
+        <span className="ml-auto font-mono text-[9px] tracking-[0.14em] text-fg-faint uppercase">
+          track 01
+        </span>
+      </div>
 
       <SidebarTree />
 
-      <p className="mt-auto px-2.5 pt-4 font-mono text-[9px] tracking-widest text-fg-faint uppercase">
-        v0.1 · progress in localStorage
+      <p className="mt-auto border-t border-border px-2.5 pt-4 font-mono text-[9px] tracking-widest text-fg-faint uppercase">
+        saved locally · no account needed
       </p>
     </aside>
   );

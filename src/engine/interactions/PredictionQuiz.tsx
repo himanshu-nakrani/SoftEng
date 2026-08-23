@@ -11,6 +11,8 @@ interface PredictionQuizProps {
   quiz: QuizCheckpoint | null;
   answer: string | null;
   onAnswer: (choiceId: string) => void;
+  /** Dismiss an answered quiz but leave its deterministic frame paused. */
+  onDismiss: () => void;
   onResume: () => void;
 }
 
@@ -36,12 +38,16 @@ export function PredictionQuiz({
   quiz,
   answer,
   onAnswer,
+  onDismiss,
   onResume,
 }: PredictionQuizProps) {
   const titleId = useId();
+  const descriptionId = useId();
+  const dialogRef = useRef<HTMLDivElement | null>(null);
   const choiceRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const resumeRef = useRef<HTMLButtonElement | null>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
+  const fallbackFocusRef = useRef<HTMLElement | null>(null);
   const quizId = quiz?.id ?? null;
 
   // A checkpoint fired: pull focus into the dialog. Keyed on the quiz id so a
@@ -51,16 +57,18 @@ export function PredictionQuiz({
   // dismissing the dialog drops a keyboard user at the top of the document.
   useEffect(() => {
     if (quizId === null) return;
+    const active = document.activeElement;
     returnFocusRef.current =
-      document.activeElement instanceof HTMLElement
-        ? document.activeElement
-        : null;
+      active instanceof HTMLElement && active !== document.body ? active : null;
+    // A pointer may trigger a checkpoint without leaving a meaningful active
+    // element. The figure itself is a safe, keyboard-operable fallback in that
+    // edge case, so dismissing the dialog never leaves screen readers at <body>.
+    fallbackFocusRef.current = dialogRef.current?.closest<HTMLElement>("figure") ?? null;
     choiceRefs.current[0]?.focus();
-    return () => {
-      const previous = returnFocusRef.current;
-      returnFocusRef.current = null;
-      if (previous?.isConnected) previous.focus();
-    };
+    // AnimatePresence keeps the dialog mounted through its exit animation. Its
+    // `onExitComplete` callback below performs focus restoration only after the
+    // fading subtree is gone; restoring here would be discarded by Chromium.
+    return undefined;
   }, [quizId]);
 
   // Answered: the choices just became disabled, so hand focus to the only
@@ -69,6 +77,55 @@ export function PredictionQuiz({
     if (quizId === null || answer === null) return;
     resumeRef.current?.focus();
   }, [quizId, answer]);
+
+  // `aria-modal` is only honest when focus cannot escape. The dialog owns a
+  // small, explicit button set, so trap Tab at document level as well: this
+  // catches both ordinary traversal and the rare case where a pointer left
+  // focus outside the overlay before its next keypress.
+  useEffect(() => {
+    if (quizId === null) return;
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== "Tab") return;
+      const dialog = dialogRef.current;
+      const items = Array.from(
+        dialog?.querySelectorAll<HTMLButtonElement>("button:not(:disabled)") ?? [],
+      );
+      if (items.length === 0) {
+        event.preventDefault();
+        dialog?.focus();
+        return;
+      }
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement;
+      if (!(active instanceof HTMLElement) || !dialog?.contains(active)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (event.shiftKey && active === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [quizId]);
+
+  // Escape is deliberately unavailable until an answer has been committed: a
+  // checkpoint must not be skippable, but an answered explanation must never
+  // trap the learner over the simulation.
+  useEffect(() => {
+    if (quizId === null || answer === null) return;
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      onDismiss();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [quizId, answer, onDismiss]);
 
   const onChoiceKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const count = quiz?.choices.length ?? 0;
@@ -98,6 +155,15 @@ export function PredictionQuiz({
     choiceRefs.current[next]?.focus();
   };
 
+  const restoreFocus = () => {
+    const previous = returnFocusRef.current;
+    const fallback = fallbackFocusRef.current;
+    returnFocusRef.current = null;
+    fallbackFocusRef.current = null;
+    if (previous?.isConnected) previous.focus();
+    else if (fallback?.isConnected) fallback.focus();
+  };
+
   const correctLabel =
     quiz?.choices.find((c) => c.id === quiz.correctChoiceId)?.label ?? "";
   const verdict =
@@ -108,7 +174,7 @@ export function PredictionQuiz({
         : `Not quite — the correct answer was ${correctLabel}.`;
 
   return (
-    <AnimatePresence>
+    <AnimatePresence onExitComplete={restoreFocus}>
       {quiz && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -121,9 +187,12 @@ export function PredictionQuiz({
           <motion.div
             initial={{ scale: 0.96, y: 8 }}
             animate={{ scale: 1, y: 0 }}
+            ref={dialogRef}
             role="alertdialog"
             aria-modal="true"
             aria-labelledby={titleId}
+            aria-describedby={descriptionId}
+            tabIndex={-1}
             className="relative max-h-full w-full max-w-md overflow-y-auto rounded-sm border border-border bg-surface p-5 shadow-[0_0_40px_-16px_var(--color-bg)]"
           >
             <CornerTicks inset={8} />
@@ -139,6 +208,12 @@ export function PredictionQuiz({
               className="relative mb-4 text-sm leading-relaxed font-medium"
             >
               {quiz.question}
+            </p>
+
+            <p id={descriptionId} className="sr-only">
+              {answer === null
+                ? "Choose one prediction. The simulation is paused until you answer."
+                : `${verdict} ${quiz.explain} Choose Close and inspect to study the paused state, or Watch it happen to resume playback.`}
             </p>
 
             <div className="relative flex flex-col gap-2" onKeyDown={onChoiceKeyDown}>
@@ -180,7 +255,7 @@ export function PredictionQuiz({
             {/* Present from the moment the dialog opens so the verdict is a
                 content change inside a live region, not a region that appears
                 already populated (which several screen readers skip). */}
-            <p role="status" className="sr-only">
+            <p role="status" aria-live="polite" aria-atomic="true" className="sr-only">
               {verdict}
             </p>
 
@@ -194,15 +269,24 @@ export function PredictionQuiz({
                   <p className="mt-4 border-l-2 border-accent/50 pl-3 text-[13px] leading-relaxed text-fg-muted">
                     {quiz.explain}
                   </p>
-                  <button
-                    ref={resumeRef}
-                    type="button"
-                    onClick={onResume}
-                    className="mt-4 flex w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-bg transition-all hover:brightness-110"
-                  >
-                    Watch it happen
-                    <ArrowRight className="size-4" />
-                  </button>
+                  <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                    <button
+                      type="button"
+                      onClick={onDismiss}
+                      className="cursor-pointer rounded-md border border-border bg-raised px-4 py-2.5 text-sm font-semibold text-fg transition-colors hover:border-border-bright hover:bg-surface"
+                    >
+                      Close and inspect
+                    </button>
+                    <button
+                      ref={resumeRef}
+                      type="button"
+                      onClick={onResume}
+                      className="flex cursor-pointer items-center justify-center gap-2 rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-bg transition-all hover:brightness-110"
+                    >
+                      Watch it happen
+                      <ArrowRight className="size-4" />
+                    </button>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>

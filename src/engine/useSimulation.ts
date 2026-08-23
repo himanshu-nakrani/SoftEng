@@ -116,6 +116,8 @@ export interface Simulation {
   /** Records the answer; overlay then shows explain + resume button. */
   answerQuiz: (choiceId: string) => void;
   quizAnswer: string | null;
+  /** Close an answered checkpoint and remain paused at its exact state. */
+  dismissQuiz: () => void;
   resumeFromQuiz: () => void;
   /** Fires once on first meaningful interaction (play, param change…). */
   onEngage?: () => void;
@@ -518,9 +520,20 @@ export function useSimulation<L>(
     [activeQuiz, emit],
   );
 
+  const dismissQuiz = useCallback(() => {
+    // A learner may need more time with the explanation before continuing. Close
+    // the overlay without moving the runner or spending another tick, leaving
+    // the world visibly paused at the checkpoint for inspection or a later play.
+    setActiveQuiz(null);
+    setQuizAnswer(null);
+    statusRef.current = "paused";
+    setStatus("paused");
+  }, []);
+
   const resumeFromQuiz = useCallback(() => {
     setActiveQuiz(null);
     setQuizAnswer(null);
+    statusRef.current = "playing";
     setStatus("playing");
   }, []);
 
@@ -545,6 +558,7 @@ export function useSimulation<L>(
     activeQuiz,
     answerQuiz,
     quizAnswer,
+    dismissQuiz,
     resumeFromQuiz,
   };
 }

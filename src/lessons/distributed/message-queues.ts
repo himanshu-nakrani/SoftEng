@@ -169,6 +169,70 @@ export const messageQueuesSim: LessonSim<MQState> = {
     state.metrics.dropped = L.droppedTotal;
   },
 
+  workbench: {
+    experiment: {
+      id: "pause-the-consumer",
+      title: "Pause the consumer",
+      prompt:
+        "Start the producer and pause the consumer to turn an availability interruption into a measurable backlog rather than an immediate producer failure.",
+      actionLabel: "Start messages",
+      focusId: "decoupled-flow",
+      action: { kind: "play" },
+    },
+    focuses: [
+      {
+        id: "decoupled-flow",
+        label: "The queue decouples producer and consumer",
+        phase: "baseline",
+        at: 2,
+        nodes: ["producer", "queue", "consumer"],
+        edges: ["in", "out"],
+        metrics: ["depth", "inRate", "outRate", "lagSec"],
+        summary:
+          "The producer records work to orders-q independently of worker-1’s processing pace, allowing each side to operate at its own rate while the queue has space.",
+        nextAction: "Pause the consumer and watch depth and delivery lag become the record of the interruption.",
+        trigger: { kind: "param-change", id: "paused" },
+      },
+      {
+        id: "backlog-not-loss",
+        label: "Paused work becomes backlog and latency",
+        phase: "change",
+        at: 8,
+        nodes: ["producer", "queue", "consumer"],
+        edges: ["in", "out"],
+        metrics: ["depth", "inRate", "outRate", "lagSec"],
+        summary:
+          "While the consumer is paused, the producer continues to enqueue messages, so the interruption appears as stored depth and growing delivery lag rather than an immediate loss.",
+        nextAction: "Resume the consumer only after predicting the net drain rate from in and out.",
+      },
+      {
+        id: "bounded-overflow",
+        label: "A buffer absorbs bursts, not sustained overload",
+        phase: "impact",
+        at: 17,
+        nodes: ["producer", "queue", "consumer"],
+        edges: ["in", "out"],
+        metrics: ["depth", "inRate", "outRate", "dropped"],
+        summary:
+          "During a sustained producer surge above consumer capacity, the bounded queue fills to its cap and then converts every additional arrival into dropped work.",
+        nextAction: "Compare the in and out rates, then identify why a fixed backlog cannot stabilize while the surplus persists.",
+      },
+      {
+        id: "net-drain",
+        label: "Recovery speed is the surplus consumer rate",
+        phase: "resolution",
+        at: 26,
+        nodes: ["queue", "consumer"],
+        edges: ["out"],
+        metrics: ["depth", "inRate", "outRate", "lagSec", "dropped"],
+        summary:
+          "Once incoming work falls below consumer capacity, the queue drains at the difference between outflow and inflow; recovery is gradual because each retained message still needs service.",
+        nextAction: "Set consumer rate above producer rate and estimate the backlog’s drain time from the displayed rates.",
+        trigger: { kind: "param-change", id: "consume" },
+      },
+    ],
+  },
+
   timeline: [
     {
       at: 2,

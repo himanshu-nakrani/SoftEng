@@ -227,7 +227,10 @@ async function pausedFigure(page: Page, route: string): Promise<Locator> {
     pause,
     "figure should autoplay once scrolled into view (our hydration gate)",
   ).toBeVisible();
-  await pause.click();
+  // Restart is a stronger post-hydration reset than a pause toggle: it both
+  // stops the runner and returns it to a known frame, avoiding an observer
+  // timing race where scroll state could resume just after the click.
+  await figure.getByRole("button", { name: "Restart simulation" }).click();
   await expect(play, "the figure should be paused before seeking").toBeVisible();
 
   // Self-hosted woff2 files land after hydration; shooting before they do
@@ -283,7 +286,9 @@ async function seekTo(figure: Locator, t: number): Promise<void> {
 
   // Proof the replay landed where we asked. `seekTo` ticks until `t >= target`,
   // so it can overshoot by at most one TICK (0.033s) — well inside 0.05.
-  const clock = figure.getByText(/^t=\d+(\.\d+)?s$/);
+  const clock = figure.locator("span.tech-num").filter({
+    hasText: /^t=\d+(\.\d+)?s$/,
+  });
   await expect
     .poll(async () => readClock(clock), {
       message: `sim clock should read t=${t}s after the seek`,
@@ -301,9 +306,9 @@ async function readClock(clock: Locator): Promise<number> {
 }
 
 /**
- * The stage: the one `svg[role="img"]` in the figure. Every other svg inside
- * (lucide icons, including the ones nested in `SystemNode`) ships without a
- * role, which is what makes this selector unambiguous.
+ * The stage: the one `svg[data-sim-stage]` in the figure. The explicit marker
+ * stays stable even when accessibility semantics differ between an interactive
+ * diagram group and a static image.
  *
  * WORTH KNOWING: an element screenshot is the page screenshot CLIPPED to the
  * element's box — not an isolated render of its subtree. So the "stage" shots
@@ -314,7 +319,7 @@ async function readClock(clock: Locator): Promise<number> {
  * every shot, not just the composites.
  */
 const stageOf = (figure: Locator): Locator =>
-  figure.locator('svg[role="img"]').first();
+  figure.locator("svg[data-sim-stage]").first();
 
 /**
  * Hide the timeline caption card before every shot.

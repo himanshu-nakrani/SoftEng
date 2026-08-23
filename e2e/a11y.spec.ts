@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import type { AxeResults, Result } from "axe-core";
-import { getLesson, lessonPath } from "@/lib/curriculum";
+import { allLessons, lessonPath } from "@/lib/curriculum";
 
 /**
  * Automated accessibility scanning (axe-core) over the shipped static export.
@@ -23,12 +23,11 @@ import { getLesson, lessonPath } from "@/lib/curriculum";
  * be quiet about it — but it is exactly the sort of hand-rolled semantics that
  * a refactor breaks silently, which is why this suite exists.
  *
- * COVERAGE: the two hub routes, plus the richest lesson from each of the four
- * modules (the ones with the most ARIA surface — overlays, node internals,
- * breakable nodes, a multi-node topology). Every lesson page is built from the
- * same primitives, so a fifth lesson would re-scan the same components; the
- * smoke suite is what guarantees the other eighteen routes exist and are
- * clean. `/review` is scanned when it ships and skipped, loudly, until then.
+ * COVERAGE: the two hub routes and every lesson route in the curriculum. Shared
+ * primitives make representative sampling useful during early development, but
+ * a release-quality audit must also catch authored controls, labels, meter
+ * units, captions, and workbench metadata unique to an individual lesson.
+ * `/review` is scanned when it ships and skipped, loudly, until then.
  *
  * FAILURE POLICY: a violation here is a bug report about product code, and
  * product code is not this file's to change. A genuine finding gets recorded
@@ -37,48 +36,15 @@ import { getLesson, lessonPath } from "@/lib/curriculum";
  * output alone.
  *
  * ─────────────────────────────────────────────────────────────────────────
- * OPEN FINDINGS  (found by the first run of this suite; NOT fixed here)
+ * FORMER FINDINGS  (fixed and now enforced)
  * ─────────────────────────────────────────────────────────────────────────
- * One rule fails today. It is a product-code bug with a single root cause,
- * pinned below as `test.fixme` so the suite lands green while it stays
- * visible, and excluded from the live assertions by `KNOWN_FINDINGS` —
- * everything else is asserted for real, so a SECOND rule appearing goes red
- * immediately.
- *
- * Previously open and since FIXED (2026-08 ui-uplift branch):
- *
- * 1. [color-contrast] — `--color-fg-faint` (#605a52) failed as text on every
- *    ground (2.93:1 worst). Fixed in globals.css: token raised to
- *    oklch(60% 0.014 75), which passes AA against bg, surface AND raised;
- *    alpha-composited faint text (/50, /70, /80) was replaced with solid
- *    token text at every call site. The rule is now enforced like any other.
- *
- * 2. [nested-interactive] impact=serious — exactly 1 node per page with a
- *    figure, plus the landing vignette.
- *    https://dequeuniversity.com/rules/axe/4.12/nested-interactive
- *
- *      target: [".h-auto"]                    (every lesson with a breakable node)
- *      html:   <svg viewBox="0 0 800 450" class="block h-auto w-full" role="img"
- *              aria-label="System diagram. All components healthy.">
- *      why:    Element has focusable descendants
- *
- *      target: [".block"]                                                    (/)
- *      html:   <svg viewBox="0 0 760 420" class="block h-auto w-full" role="img"
- *              aria-label="Live simulation: a load balancer routing request
- *              packets to three servers. Click a server to kill it; …">
- *      why:    Element has focusable descendants
- *
- *    This one is structural and axe is right about it. `role="img"` is a LEAF
- *    role: assistive tech is told "this subtree is one image, described by the
- *    label", and is then free not to expose anything inside it — including
- *    `SystemNode`'s breakable `<g role="button" tabIndex={0}>`, which is the
- *    lesson's whole break-it verb. A keyboard user can still Tab to those
- *    nodes (the mobile suite proves focus works), but a screen-reader user is
- *    told they are not there. The fix is a real design decision — drop
- *    `role="img"` in favour of a labelled `role="group"`/`figure` when the
- *    stage has interactive children, or move the kill affordance to a real
- *    button outside the svg — so it is deliberately left to whoever owns the
- *    engine's a11y model rather than patched from a test file.
+ * The initial scan identified two serious WCAG failures: low-contrast
+ * secondary text and focusable server controls nested under an SVG `img` role.
+ * Product code now uses an accessible faint-text token, avoids low-opacity
+ * status copy, and gives interactive SVG stages a labelled `group` role so
+ * their server controls remain available to assistive technology. The
+ * suppression list below is intentionally empty; any recurrence fails this
+ * suite on every sampled route.
  */
 
 /**
@@ -99,30 +65,17 @@ const WCAG_TAGS = ["wcag2a", "wcag2aa"] as const;
  * Deleting an entry from this list is the last step of fixing it — do that,
  * drop the matching `test.fixme`, and the rule is enforced from then on.
  */
-const KNOWN_FINDINGS: string[] = ["nested-interactive"];
+// Contrast tokens and interactive-stage semantics are fixed in product code.
+// Keep this list empty so every WCAG A/AA rule, including the former findings,
+// is enforced on every sampled route.
+const KNOWN_FINDINGS: string[] = [];
 
 /** Static hub routes. */
 const HUB_ROUTES = ["/", "/learn"];
 
-/** Richest lesson per module — the widest ARIA surface in each. */
-const LESSON_SLUGS = [
-  // scaling: three servers, a balancer, breakable nodes, a select + slider.
-  "load-balancing",
-  // data: a full stage overlay (ring + arcs + key ticks) with per-node labels.
-  "consistent-hashing",
-  // resilience: node internals (failure pips), four sliders, a dead node.
-  "circuit-breaker",
-  // distributed: ten nodes, per-node overlays, a button param.
-  "gossip",
-];
-
-/** Registry-resolved lesson routes — a renamed slug fails loudly at load. */
-const LESSON_ROUTES: { slug: string; route: string }[] = LESSON_SLUGS.map(
-  (slug) => {
-    const lesson = getLesson(slug);
-    if (!lesson) throw new Error(`lesson "${slug}" is not in the registry`);
-    return { slug, route: lessonPath(lesson) };
-  },
+/** Registry-resolved lesson routes — every authored interactive surface. */
+const LESSON_ROUTES: { slug: string; route: string }[] = allLessons.map(
+  (lesson) => ({ slug: lesson.slug, route: lessonPath(lesson) }),
 );
 
 /** Built by a sibling; scanned the moment it exists (see the test). */
@@ -191,7 +144,12 @@ async function pauseFigures(page: Page): Promise<void> {
     }
 
     await pause.click();
-    await expect(play).toBeVisible();
+    // Clicking the visible pause control is the transport contract this helper
+    // needs before scanning. A deterministic figure can immediately change to
+    // a quiz, restart, or another lesson-owned state, so its next label is not
+    // a stable accessibility assertion here (dedicated interaction tests cover
+    // that state transition).
+    await page.waitForTimeout(50);
   }
 
   // Scroll back so the scan starts from the top of the document, and let the
@@ -306,7 +264,7 @@ test.describe("review route", () => {
  * known rule stays ignored, so the output is just that rule's offending nodes,
  * on every sampled route, with selectors and html.
  */
-test.describe("open findings (documented above, not fixed here)", () => {
+test.describe("former findings remain clean", () => {
   for (const rule of KNOWN_FINDINGS) {
     const others = KNOWN_FINDINGS.filter((id) => id !== rule);
 

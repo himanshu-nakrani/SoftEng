@@ -1,0 +1,1 @@
+export { SlosErrorBudgetsFigure } from "./figures";

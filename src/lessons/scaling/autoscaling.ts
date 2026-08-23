@@ -464,6 +464,70 @@ export const autoscalingSim: LessonSim<AutoscaleState> = {
     }
   },
 
+  workbench: {
+    experiment: {
+      id: "watch-a-trend-scale",
+      title: "Watch a trend scale safely",
+      prompt:
+        "Start the gradual demand ramp and watch the control loop order capacity before the existing fleet becomes a queue.",
+      actionLabel: "Start demand ramp",
+      focusId: "fleet-signal",
+      action: { kind: "play" },
+    },
+    focuses: [
+      {
+        id: "fleet-signal",
+        label: "The fleet decides from one shared signal",
+        phase: "baseline",
+        at: 1.5,
+        nodes: ["client", "lb", "s1", "s2", "s3", "s4", "s5", "s6"],
+        edges: ["in", "to-s1", "to-s2", "to-s3", "to-s4", "to-s5", "to-s6"],
+        metrics: ["avgLoad", "capacity", "booting"],
+        summary:
+          "Two live servers serve the rising demand while dashed servers represent capacity the autoscaler can request but cannot use yet.",
+        nextAction: "Watch average load cross the scale-out threshold, then identify which server begins booting.",
+      },
+      {
+        id: "provisioning-lag",
+        label: "Requested capacity is not live capacity",
+        phase: "change",
+        at: 4,
+        nodes: ["lb", "s1", "s2", "s3"],
+        edges: ["to-s1", "to-s2", "to-s3"],
+        metrics: ["avgLoad", "capacity", "booting"],
+        summary:
+          "Crossing the threshold starts provisioning, but a booting server remains outside the traffic rotation until its lag expires.",
+        nextAction: "Change provisioning lag and observe how long the capacity meter remains unchanged.",
+        trigger: { kind: "param-change", id: "lag" },
+      },
+      {
+        id: "provisioning-gap",
+        label: "A spike outruns the control loop",
+        phase: "impact",
+        at: 17.5,
+        nodes: ["client", "lb", "s1", "s2", "s3", "s4"],
+        edges: ["in", "to-s1", "to-s2", "to-s3", "to-s4"],
+        metrics: ["booting", "queued", "dropped"],
+        summary:
+          "The demand spike arrives while new servers are still booting, so existing queues absorb traffic until they fill and then work is shed.",
+        nextAction: "Pause while booting is nonzero and explain why an order for capacity has not prevented drops.",
+      },
+      {
+        id: "capacity-lands",
+        label: "Recovery drains what can still be served",
+        phase: "resolution",
+        at: 23,
+        nodes: ["lb", "s1", "s2", "s3", "s4", "s5", "s6"],
+        edges: ["to-s1", "to-s2", "to-s3", "to-s4", "to-s5", "to-s6"],
+        metrics: ["capacity", "queued", "dropped"],
+        summary:
+          "Once the additional servers enter rotation, live capacity catches demand and queues drain, but requests shed during the gap cannot be recovered.",
+        nextAction: "Increase cooldown or widen the scale thresholds, then test whether the fleet avoids oscillation.",
+        trigger: { kind: "param-change", id: "cooldown" },
+      },
+    ],
+  },
+
   timeline: [
     {
       at: 1.5,

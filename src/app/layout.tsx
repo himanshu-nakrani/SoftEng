@@ -8,11 +8,7 @@ import {
   siteUrl,
 } from "@/lib/site";
 import type { Metadata, Viewport } from "next";
-import {
-  Bricolage_Grotesque,
-  IBM_Plex_Mono,
-  IBM_Plex_Sans,
-} from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
 /**
@@ -34,32 +30,32 @@ const basePath = rawBasePath
   ? `/${rawBasePath.replace(/^\/+/, "").replace(/\/+$/, "")}`
   : "";
 
-const bricolage = Bricolage_Grotesque({
-  subsets: ["latin"],
+// Self-hosted Latin subsets keep the same visual system while ensuring a
+// GitHub Pages export never depends on a build-time Google Fonts request.
+const bricolage = localFont({
+  src: "./fonts/bricolage-grotesque-latin.woff2",
+  weight: "200 800",
   variable: "--font-bricolage",
+  display: "swap",
 });
 
-// 700 is currently unused — every `font-bold` in the app sits on a
-// `font-display` element — but it stays. Google serves Plex Sans as a variable
-// font, so all four weights resolve to the *same* six woff2 files: dropping 700
-// removes six `@font-face` lines and zero bytes, while making the next
-// `font-bold` on a sans element synthesise a fake bold from 600.
-const plexSans = IBM_Plex_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+// Plex Sans is a variable source covering the weights used by body copy and
+// interface text. Keeping the range avoids synthetic bolds in future content.
+const plexSans = localFont({
+  src: "./fonts/ibm-plex-sans-latin.woff2",
+  weight: "400 700",
   variable: "--font-plex-sans",
+  display: "swap",
 });
 
-// Plex Mono is NOT variable — each weight and style is its own set of files,
-// and the italic files share nothing with the normal ones. The site has no
-// italic monospace (`<em>` only appears in body prose, never inside `<Term>`,
-// `.tech-label` or `.tech-num`, and no `italic` utility lands on a mono
-// element), so requesting the italic face downloaded 15 woff2 files — 112 KiB,
-// 3 of them preloaded on every page — to render nothing. Dropped.
-const plexMono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
+// Plex Mono is static, so the two shipped interface weights stay explicit.
+const plexMono = localFont({
+  src: [
+    { path: "./fonts/ibm-plex-mono-400-latin.woff2", weight: "400" },
+    { path: "./fonts/ibm-plex-mono-500-latin.woff2", weight: "500" },
+  ],
   variable: "--font-plex-mono",
+  display: "swap",
 });
 
 /**
@@ -75,6 +71,21 @@ export const metadata: Metadata = {
   },
   description: siteDescription,
   applicationName: siteName,
+  alternates: { canonical: absoluteUrl("/") },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+  creator: siteName,
+  publisher: siteName,
+  referrer: "strict-origin-when-cross-origin",
   // Unlike icons and OG images, Next emits `manifest` verbatim — it is not
   // resolved against `metadataBase`. So it has to carry the base path itself,
   // and it cannot be document-relative: `manifest.webmanifest` on
@@ -88,6 +99,11 @@ export const metadata: Metadata = {
     "caching",
     "load balancing",
     "learn by doing",
+    "software engineering education",
+    "system architecture course",
+    "distributed systems course",
+    "observability training",
+    "resilience engineering",
   ],
   category: "education",
   openGraph: {
@@ -110,8 +126,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1a1712",
-  colorScheme: "dark",
+  themeColor: "#f7f6f1",
+  colorScheme: "light dark",
 };
 
 export default function RootLayout({
@@ -120,14 +136,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" data-theme="light" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(() => { try { const root = document.documentElement; const saved = localStorage.getItem('syslab-appearance'); const theme = saved === 'dark' || saved === 'light' ? saved : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); root.dataset.theme = theme; root.classList.toggle('dark', theme === 'dark'); const accent = localStorage.getItem('syslab-accent'); if (/^#[0-9a-f]{6}$/i.test(accent || '')) { const value = accent; const n = (i) => parseInt(value.slice(i, i + 2), 16) / 255; const linear = (v) => v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; const l = .2126 * linear(n(1)) + .7152 * linear(n(3)) + .0722 * linear(n(5)); root.style.setProperty('--user-accent', value); root.style.setProperty('--color-accent', value); root.style.setProperty('--color-accent-dim', `color-mix(in srgb, ${value} 14%, transparent)`); root.style.setProperty('--color-accent-ink', l > .34 ? '#10201f' : '#fffdf7'); } const size = localStorage.getItem('syslab-reading-size'); if (size === 'compact' || size === 'default' || size === 'comfortable') root.dataset.readingSize = size; } catch {} })();",
+          }}
+        />
+      </head>
       <body
         className={`${bricolage.variable} ${plexSans.variable} ${plexMono.variable} font-sans antialiased`}
       >
         {/* Keyboard-only escape hatch past the nav; invisible until focused. */}
         <a
           href="#main"
-          className="sr-only rounded-md font-semibold focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[200] focus:bg-accent focus:px-4 focus:py-2 focus:text-sm focus:text-bg"
+          className="sr-only rounded-md font-semibold focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[200] focus:bg-accent focus:px-4 focus:py-2 focus:text-sm focus:text-accent-ink"
         >
           Skip to content
         </a>

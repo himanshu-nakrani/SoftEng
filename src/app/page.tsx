@@ -8,6 +8,7 @@ import { PlateLabel } from "@/components/ui/PlateLabel";
 import { SectionRule } from "@/components/ui/SectionRule";
 import { accentCssVar } from "@/lib/accent";
 import { allLessons, modules, track } from "@/lib/curriculum";
+import { absoluteUrl, siteDescription, siteName } from "@/lib/site";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
@@ -46,9 +47,58 @@ export default function Home() {
     (l) => l.status === "available",
   ).length;
   const allLive = availableCount === allLessons.length;
+  const totalMinutes = allLessons
+    .filter((lesson) => lesson.status === "available")
+    .reduce((sum, lesson) => sum + lesson.estimatedMinutes, 0);
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": `${absoluteUrl("/")}#website`,
+        name: siteName,
+        url: absoluteUrl("/"),
+        description: siteDescription,
+        inLanguage: "en-US",
+      },
+      {
+        "@type": "Organization",
+        "@id": `${absoluteUrl("/")}#organization`,
+        name: siteName,
+        url: absoluteUrl("/"),
+      },
+      {
+        "@type": "Course",
+        "@id": `${absoluteUrl("/learn")}#course`,
+        name: track.title,
+        description:
+          "A self-paced interactive course in system design, distributed systems, data infrastructure, resilience, and observability.",
+        url: absoluteUrl("/learn"),
+        inLanguage: "en-US",
+        educationalLevel: "Beginner to advanced",
+        timeRequired: `PT${totalMinutes}M`,
+        provider: { "@id": `${absoluteUrl("/")}#organization` },
+        hasPart: modules.map((module, index) => ({
+          "@type": "Course",
+          position: index + 1,
+          name: module.title,
+          description: module.description,
+          numberOfItems: module.lessons.filter(
+            (lesson) => lesson.status === "available",
+          ).length,
+        })),
+      },
+    ],
+  };
 
   return (
     <div className="relative">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),
+        }}
+      />
       <div className="dot-grid dot-grid-fade pointer-events-none absolute inset-x-0 top-0 -z-10 h-[90vh]" />
       <SiteHeader nav={<LandingNav />} />
 
@@ -58,7 +108,12 @@ export default function Home() {
         {/* ---- hero: the product, running ---- */}
         <section className="mx-auto grid max-w-6xl items-center gap-12 px-6 pt-16 pb-28 lg:grid-cols-[1fr_1.05fr]">
           <div>
-            <h1 className="font-display mb-6 text-[2.7rem] leading-[1.02] font-bold tracking-tight text-balance sm:text-6xl lg:text-[4.2rem]">
+            <div className="mb-5 flex items-center gap-3 font-mono text-[10px] tracking-[0.18em] text-fg-faint uppercase">
+              <span className="text-accent">syslab / interactive systems</span>
+              <span className="h-px w-10 bg-border-bright" />
+              <span>01</span>
+            </div>
+            <h1 className="hero-copy font-display mb-6 text-[2.7rem] leading-[1.02] font-bold tracking-tight text-balance sm:text-6xl lg:text-[4.2rem]">
               Learn systems by{" "}
               <span className="text-outline">breaking</span> them.
             </h1>
@@ -133,7 +188,7 @@ export default function Home() {
                 <Link
                   key={mod.slug}
                   href={`/learn#${mod.slug}`}
-                  className="group relative grid items-baseline gap-x-8 gap-y-2 border-t border-border py-6 transition-colors last:border-b hover:bg-surface/60 md:grid-cols-[110px_240px_1fr_auto]"
+                  className="module-row group relative grid items-baseline gap-x-8 gap-y-2 py-6 md:grid-cols-[110px_240px_1fr_auto]"
                 >
                   <span
                     className="absolute top-0 bottom-0 left-0 w-0.5 opacity-0 transition-opacity group-hover:opacity-100"

@@ -1,0 +1,45 @@
+{
+  "lesson": "observability/slos-error-budgets",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:slo-burn-rate@15.5",
+      "t": 15.533333,
+      "metrics": {
+        "availability": 99.690402,
+        "budget": 0,
+        "burn": 3.095975,
+        "rollout": 10,
+        "throughput": 18.639618
+      },
+      "packets": 73,
+      "nextPacketId": 1770,
+      "nodes": {
+        "api": "healthy",
+        "edge": "healthy",
+        "index": "healthy",
+        "users": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "availability": 99.668874,
+        "budget": 0,
+        "burn": 3.311258,
+        "rollout": 10,
+        "throughput": 22.965067
+      },
+      "packets": 61,
+      "nextPacketId": 3459,
+      "nodes": {
+        "api": "healthy",
+        "edge": "healthy",
+        "index": "healthy",
+        "users": "healthy"
+      }
+    }
+  ]
+}

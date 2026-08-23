@@ -34,25 +34,24 @@ export const ogDynamic = "force-static";
 
 /**
  * Card palette. Satori has no CSS custom properties, so the design tokens are
- * inlined as hex — these are the sRGB values of the `@theme` oklch tokens in
- * globals.css, with the same warm-graphite lift the site card uses (the card
- * sits on #1a1712 rather than the page's near-black, so "faint" text is
- * lighter here than `--color-fg-faint` would be).
+ * inlined as hex — sRGB stand-ins for the `@theme` oklch Arctic tokens in
+ * globals.css. The card sits on a slightly lifted Polar Night surface
+ * (#2e3440) so faint text stays readable.
  *
- * Keep in sync with src/app/opengraph-image.tsx.
+ * Keep in sync with src/app/opengraph-image/route.tsx.
  */
-const BG = "#1a1712";
-const FG = "#eee6da";
-const MUTED = "#bdb2a4";
-const FAINT = "#8a8075";
+const BG = "#2e3440";
+const FG = "#eceff4";
+const MUTED = "#d8dee9";
+const FAINT = "#8a93a6";
 
 /** Module accent → the same hue `accentCssVar` resolves to, as hex. */
 const ACCENT_HEX: Record<Accent, string> = {
-  amber: "#f0b135",
-  violet: "#b995f6",
-  cyan: "#58d1e5",
-  green: "#6ed889",
-  red: "#f0584b",
+  amber: "#88c0d0", // brand frost (legacy key = scaling module)
+  violet: "#b48ead",
+  cyan: "#81a1c1",
+  green: "#a3be8c",
+  red: "#bf616a",
 };
 
 /**

@@ -2,8 +2,10 @@
 
 import { ProgressRing } from "@/components/navigation/ProgressRing";
 import type { LessonMeta, Module } from "@/curriculum/types";
+import type { LearningActivity } from "@/hooks/use-lesson-progress";
 import { useLessonProgress } from "@/hooks/use-lesson-progress";
 import { cn } from "@/lib/cn";
+import { accentCssVar } from "@/lib/accent";
 import { lessonPath, modules } from "@/lib/curriculum";
 import { ListChecks, Map as MapIcon } from "lucide-react";
 import Link from "next/link";
@@ -11,7 +13,15 @@ import { usePathname } from "next/navigation";
 
 /** Shared row geometry for every navigable line in the tree. */
 const ROW =
-  "flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] transition-colors";
+  "flex items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-[13px] transition-[background,color,transform] duration-150";
+
+const activityLabel: Record<LearningActivity, string> = {
+  untouched: "not started",
+  explored: "explored",
+  predicted: "predicted",
+  complete: "complete",
+  mastered: "mastered",
+};
 
 function SidebarLesson({
   lesson,
@@ -33,10 +43,10 @@ function SidebarLesson({
       className={cn(
         ROW,
         active
-          ? "bg-raised text-fg"
+          ? "sidebar-active-row bg-raised/90 text-fg"
           : soon
             ? "text-fg-faint"
-            : "text-fg-muted hover:bg-surface hover:text-fg",
+            : "text-fg-muted hover:translate-x-px hover:bg-surface/80 hover:text-fg",
       )}
     >
       <ProgressRing
@@ -46,6 +56,18 @@ function SidebarLesson({
         accent={module.accent}
       />
       <span className="truncate">{lesson.title}</span>
+      {!soon && progress.activity !== "untouched" && (
+        <span
+          className={cn(
+            "ml-auto shrink-0 font-mono text-[9px] tracking-widest uppercase",
+            progress.activity === "mastered"
+              ? "text-accent"
+              : "text-fg-faint",
+          )}
+        >
+          {progress.activity === "mastered" ? "mastered" : activityLabel[progress.activity]}
+        </span>
+      )}
       {soon && (
         <span className="ml-auto font-mono text-[9px] tracking-widest text-fg-faint uppercase">
           soon
@@ -62,6 +84,7 @@ function SidebarLesson({
       <Link
         href={href}
         aria-current={active ? "page" : undefined}
+        aria-label={`${lesson.title} — ${activityLabel[progress.activity]}`}
         onClick={onNavigate}
       >
         {row}
@@ -96,8 +119,8 @@ export function SidebarTree({ onNavigate }: { onNavigate?: () => void }) {
           ROW,
           "mb-3",
           onMap
-            ? "bg-raised text-fg"
-            : "text-fg-muted hover:bg-surface hover:text-fg",
+            ? "sidebar-active-row bg-raised/90 text-fg"
+            : "text-fg-muted hover:translate-x-px hover:bg-surface/80 hover:text-fg",
         )}
       >
         <MapIcon className="size-4" strokeWidth={1.75} />
@@ -105,8 +128,13 @@ export function SidebarTree({ onNavigate }: { onNavigate?: () => void }) {
       </Link>
 
       {modules.map((module) => (
-        <nav key={module.slug} className="mb-3" aria-label={module.title}>
-          <p className="tech-label mb-1.5 px-2.5">{module.title}</p>
+        <nav
+          key={module.slug}
+          className="sidebar-module mb-4"
+          aria-label={module.title}
+          style={{ ["--module-accent" as string]: accentCssVar[module.accent] }}
+        >
+          <p className="tech-label mb-1.5 pl-4">{module.title}</p>
           <ul className="flex flex-col gap-0.5">
             {module.lessons.map((lesson) => (
               <SidebarLesson
@@ -130,7 +158,7 @@ export function SidebarTree({ onNavigate }: { onNavigate?: () => void }) {
         <Link
           href="/review"
           onClick={onNavigate}
-          className={cn(ROW, "text-fg-muted hover:bg-surface hover:text-fg")}
+          className={cn(ROW, "text-fg-muted hover:translate-x-px hover:bg-surface/80 hover:text-fg")}
         >
           <ListChecks className="size-4" strokeWidth={1.75} />
           Review deck

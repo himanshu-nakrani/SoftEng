@@ -420,6 +420,70 @@ export const deliveryGuaranteesSim: LessonSim<DGState> = {
     state.metrics.absorbed = L.absorbed;
   },
 
+  workbench: {
+    experiment: {
+      id: "follow-the-ack",
+      title: "Follow the acknowledgement",
+      prompt:
+        "Start payment messages and locate the acknowledgement before causing a worker crash at the point where its position changes the delivery guarantee.",
+      actionLabel: "Start payments",
+      focusId: "ack-after-effect",
+      action: { kind: "play" },
+    },
+    focuses: [
+      {
+        id: "ack-after-effect",
+        label: "At-least-once acknowledges after the side effect",
+        phase: "baseline",
+        at: 1.5,
+        nodes: ["producer", "queue", "consumer", "db"],
+        edges: ["in", "out", "charge"],
+        metrics: ["processed", "depth", "doubleCharged", "lost"],
+        summary:
+          "With at-least-once delivery, payments-q retains the message until worker-1 charges the card and sends an acknowledgement, favoring recovery over silent loss.",
+        nextAction: "Watch the acknowledgement return to the queue, then crash the worker between charge and acknowledgement.",
+      },
+      {
+        id: "ack-placement",
+        label: "Moving the acknowledgement changes the promise",
+        phase: "change",
+        at: 9,
+        nodes: ["queue", "consumer", "db"],
+        edges: ["out", "charge"],
+        metrics: ["doubleCharged", "lost", "processed"],
+        summary:
+          "At-least-once acknowledges after work, allowing redelivery; at-most-once acknowledges at take, preventing redelivery but allowing unfinished work to disappear.",
+        nextAction: "Switch acknowledgement mode before the next crash and predict whether the failure will repeat or lose the payment.",
+        trigger: { kind: "param-change", id: "ackMode" },
+      },
+      {
+        id: "redelivery-duplicate",
+        label: "Unacknowledged work is intentionally redelivered",
+        phase: "impact",
+        at: 12.5,
+        nodes: ["queue", "consumer", "db"],
+        edges: ["out", "charge"],
+        metrics: ["depth", "doubleCharged", "lost"],
+        summary:
+          "After a crash that occurs after the charge but before the acknowledgement, the queue reissues the message because it has no durable evidence that the first side effect succeeded.",
+        nextAction: "Use the duplicate-charge meter to distinguish delivery safety from an exactly-once business effect.",
+      },
+      {
+        id: "idempotent-effect",
+        label: "Idempotency turns a duplicate into a safe no-op",
+        phase: "resolution",
+        at: 21,
+        nodes: ["consumer", "db"],
+        edges: ["charge"],
+        metrics: ["doubleCharged", "absorbed", "processed"],
+        summary:
+          "Idempotency keys do not stop at-least-once redelivery; they let payments-db recognize the repeated message and absorb its second side effect safely.",
+        nextAction: "Enable idempotency keys, press crash consumer, and verify that a duplicate delivery increments deduped rather than double charged.",
+        trigger: { kind: "param-change", id: "dedup" },
+      },
+    ],
+  },
+
   timeline: [
     {
       at: 1.5,

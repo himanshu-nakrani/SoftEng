@@ -9,9 +9,16 @@ import { difficultyClass } from "@/lib/accent";
 import { getLesson, moduleOf } from "@/lib/curriculum";
 import { useProgress } from "@/stores/progress";
 import { SectionRule } from "@/components/ui/SectionRule";
-import { Sparkles } from "lucide-react";
-import { useCallback, type ReactNode } from "react";
-import { LessonCompletionContext, LessonContext } from "./context";
+import { BookOpen, Focus, Sparkles } from "lucide-react";
+import { useCallback, useState, type ReactNode } from "react";
+import {
+  LessonCompletionContext,
+  LessonContext,
+  LessonUiContext,
+} from "./context";
+import { LearningConnections } from "./LearningConnections";
+import { ReflectionCard } from "./ReflectionCard";
+import { LearningSummary } from "./LearningSummary";
 import { NextLessonCard } from "./NextLessonCard";
 
 
@@ -76,6 +83,66 @@ function MasteryMark({ meta }: { meta: LessonMeta }) {
   );
 }
 
+const activityCopy = {
+  untouched: "not started",
+  explored: "explored",
+  predicted: "predicted",
+  complete: "complete",
+  mastered: "mastered",
+} as const;
+
+function LessonProgressStrip({ meta }: { meta: LessonMeta }) {
+  const hydrated = useHydrated();
+  const completed = useProgress((s) => s.completedSections[meta.slug]);
+  const progress = useLessonProgress(meta);
+  const done = new Set(hydrated ? (completed ?? []) : []);
+  const nextSection = meta.sections.find((section) => !done.has(section.id));
+
+  return (
+    <div
+      className="mt-5 rounded-sm border border-border bg-bg/25 px-3.5 py-3"
+      aria-label={`Lesson progress: ${progress.done} of ${progress.total} sections, ${activityCopy[progress.activity]}`}
+    >
+      <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10px] tracking-widest text-fg-faint uppercase">
+        <span className="inline-flex items-center gap-1.5 text-fg-muted">
+          <BookOpen className="size-3.5 text-accent" strokeWidth={1.75} />
+          learning state
+        </span>
+        <span className="text-accent">{activityCopy[progress.activity]}</span>
+        <span className="ml-auto text-fg-faint">
+          {progress.done}/{progress.total} sections
+          {progress.quizzesAttempted > 0 &&
+            ` · ${progress.quizzesAttempted} prediction${progress.quizzesAttempted === 1 ? "" : "s"}`}
+        </span>
+      </div>
+      {/* tick-scale tally — one tick per section, matching the learn hub */}
+      <div className="flex items-end gap-[3px]" aria-hidden>
+        {meta.sections.map((section, i) => (
+          <span
+            key={section.id}
+            className={cn(
+              "w-[3px] transition-colors duration-500",
+              i < progress.done ? "h-2.5 bg-accent" : "h-1.5 bg-border",
+            )}
+          />
+        ))}
+      </div>
+      <p className="mt-2 text-xs text-fg-muted">
+        {nextSection ? (
+          <>
+            <span className="font-medium text-fg">Next:</span> {nextSection.title}
+          </>
+        ) : (
+          <>
+            <span className="font-medium text-fg">All sections visited.</span>{" "}
+            Revisit a causal state or open the review deck.
+          </>
+        )}
+      </p>
+    </div>
+  );
+}
+
 interface LessonProps {
   slug: string;
   children: ReactNode;
@@ -87,6 +154,7 @@ interface LessonProps {
  * pages never restate it.
  */
 export function Lesson({ slug, children }: LessonProps) {
+  const [calibration, setCalibration] = useState(false);
   const completeSection = useProgress((s) => s.completeSection);
   const completeLessonSection = useCallback(
     (sectionId: string) => completeSection(slug, sectionId),
@@ -105,31 +173,32 @@ export function Lesson({ slug, children }: LessonProps) {
 
   return (
     <LessonContext.Provider value={meta}>
-      <LessonCompletionContext.Provider value={completeLessonSection}>
-        <article>
-          <header className="relative mb-14">
-            {/* kicker as marginalia — module name left, plate number right.
-                No ghost numeral behind the type: on this ground, nothing
-                overlaps; hierarchy comes from luminance alone. */}
-            <SectionRule
-              className="mb-4"
-              trailing={
-                <>
-                  <MasteryMark meta={meta} />
-                  <span className="tech-num text-xs text-fg-faint">
-                    plate {nn} / {String(mod.lessons.length).padStart(2, "0")}
-                  </span>
-                </>
-              }
-            >
-              <span className="tech-label">{mod.title}</span>
-            </SectionRule>
+      <LessonUiContext.Provider value={{ calibration, setCalibration }}>
+        <LessonCompletionContext.Provider value={completeLessonSection}>
+          <article data-calibration={calibration ? "true" : undefined}>
+            <header className="relative mb-14">
+              {/* kicker as marginalia — module name left, plate number right.
+                  No ghost numeral behind the type: on this ground, nothing
+                  overlaps; hierarchy comes from luminance alone. */}
+              <SectionRule
+                className="mb-4"
+                trailing={
+                  <>
+                    <MasteryMark meta={meta} />
+                    <span className="tech-num text-xs text-fg-faint">
+                      plate {nn} / {String(mod.lessons.length).padStart(2, "0")}
+                    </span>
+                  </>
+                }
+              >
+                <span className="tech-label">{mod.title}</span>
+              </SectionRule>
 
-            <div>
-              <h1 className="font-display mb-3 text-3xl font-bold tracking-tight sm:text-4xl">
-                {meta.title}
+              <div>
+                <h1 className="font-display mb-3 text-3xl font-bold tracking-tight sm:text-4xl">
+                  {meta.title}
               </h1>
-              <p className="mb-6 max-w-xl leading-relaxed text-fg-muted">
+              <p className="mb-6 max-w-2xl leading-relaxed text-fg-muted">
                 {meta.tagline}
               </p>
 
@@ -155,14 +224,36 @@ export function Lesson({ slug, children }: LessonProps) {
                   </span>
                 )}
               </div>
+
+              <LessonProgressStrip meta={meta} />
+
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-xs text-fg-faint">
+                    Read the causal story first, then restore the full instrument.
+                  </p>
+                  <button
+                    type="button"
+                    aria-pressed={calibration}
+                    aria-label={calibration ? "Return to experiment mode" : "Enter reading mode"}
+                    onClick={() => setCalibration((value) => !value)}
+                    className="inline-flex min-h-8 cursor-pointer items-center gap-2 rounded-md border border-border bg-raised px-3 py-1.5 font-mono text-[10px] tracking-widest text-fg-muted uppercase transition-colors hover:border-border-bright hover:bg-surface hover:text-fg"
+                  >
+                  <Focus className="size-3.5 text-accent" strokeWidth={1.75} />
+                  {calibration ? "Return to experiment" : "Reading mode"}
+                </button>
+              </div>
             </div>
           </header>
 
           <CheckpointRail slug={slug} />
           {children}
+          <LearningSummary meta={meta} />
+          <ReflectionCard meta={meta} />
+          <LearningConnections meta={meta} />
           <NextLessonCard />
-        </article>
-      </LessonCompletionContext.Provider>
+          </article>
+        </LessonCompletionContext.Provider>
+      </LessonUiContext.Provider>
     </LessonContext.Provider>
   );
 }

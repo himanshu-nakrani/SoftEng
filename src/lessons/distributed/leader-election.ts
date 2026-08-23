@@ -525,6 +525,70 @@ export const leaderElectionSim: LessonSim<ElectionState> = {
     state.metrics.leaderless = L.leaderlessFor;
   },
 
+  workbench: {
+    experiment: {
+      id: "follow-a-leader-failure",
+      title: "Follow a leader failure",
+      prompt:
+        "Start the peer cluster, identify the steady heartbeat state, then follow the gap between leader loss and a quorum-backed replacement.",
+      actionLabel: "Start the cluster",
+      focusId: "heartbeat-stability",
+      action: { kind: "play" },
+    },
+    focuses: [
+      {
+        id: "heartbeat-stability",
+        label: "Heartbeats keep followers from campaigning",
+        phase: "baseline",
+        at: 4.5,
+        nodes: ["app", "n1", "n2", "n3", "n4", "n5"],
+        edges: ["app-n1"],
+        metrics: ["term", "elections", "rejectedWrites", "liveNodes"],
+        summary:
+          "Once a leader is elected, its heartbeats reset follower timers so the cluster remains in one term and client writes have a stable destination.",
+        nextAction: "Increase heartbeat interval toward the election timeout and watch an otherwise healthy leader become unstable.",
+        trigger: { kind: "param-change", id: "heartbeat" },
+      },
+      {
+        id: "leaderless-window",
+        label: "Leader loss creates a bounded write gap",
+        phase: "change",
+        at: 12,
+        nodes: ["app", "n1", "n2", "n3", "n4", "n5"],
+        edges: ["app-n1"],
+        metrics: ["term", "elections", "rejectedWrites", "liveNodes"],
+        summary:
+          "When the leader fails, heartbeats stop and writes cannot commit until a follower’s election timer expires and a new candidate earns a majority.",
+        nextAction: "Press kill leader and track rejected writes until the next election completes.",
+        trigger: { kind: "button-press", id: "killLeader" },
+      },
+      {
+        id: "quorum-boundary",
+        label: "Two survivors cannot form a majority of five",
+        phase: "impact",
+        at: 26,
+        nodes: ["n1", "n2", "n3", "n4", "n5"],
+        metrics: ["term", "elections", "rejectedWrites", "liveNodes"],
+        summary:
+          "With only two live nodes, campaigns can continue and terms can rise, but no candidate can reach the fixed three-of-five majority needed to safely become leader.",
+        nextAction: "Compare rising terms with a flat elections-won meter to distinguish activity from progress.",
+      },
+      {
+        id: "quorum-restored",
+        label: "Restoring one peer restores the right to elect",
+        phase: "resolution",
+        at: 27.5,
+        nodes: ["app", "n1", "n2", "n3", "n4", "n5"],
+        edges: ["app-n1"],
+        metrics: ["term", "elections", "rejectedWrites", "liveNodes"],
+        summary:
+          "When a third node returns, the cluster again has a majority of its configured membership, so one election round can establish a leader and resume writes.",
+        nextAction: "Vary election timeout and observe the trade-off between faster failover and spurious candidacy.",
+        trigger: { kind: "param-change", id: "timeout" },
+      },
+    ],
+  },
+
   timeline: [
     {
       at: 0.3,

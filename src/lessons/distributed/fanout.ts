@@ -408,6 +408,69 @@ export const fanoutSim: LessonSim<FanoutState> = {
     state.metrics.writesApplied = L.writesApplied;
   },
 
+  workbench: {
+    experiment: {
+      id: "post-to-a-timeline",
+      title: "Post to a timeline",
+      prompt:
+        "Start in push mode, post once at a normal audience, then compare its fast reads with the write amplification created by a celebrity audience.",
+      actionLabel: "Start the feed",
+      focusId: "push-read-path",
+      action: { kind: "play" },
+    },
+    focuses: [
+      {
+        id: "push-read-path",
+        label: "Push makes feed reads cheap",
+        phase: "baseline",
+        at: 2,
+        nodes: ["poster", "api", "fanout-q", "tl-1", "tl-2", "tl-3", "reader"],
+        edges: ["post", "enqueue", "w1", "w2", "w3", "read", "tlread"],
+        metrics: ["writeCost", "readCost", "readOps"],
+        summary:
+          "Push fan-out precomputes each follower timeline at write time, so later feed reads use a cheap timeline lookup instead of merging many author feeds.",
+        nextAction: "Post at the normal audience size and compare write cost with the reader-side cost.",
+      },
+      {
+        id: "celebrity-write-storm",
+        label: "A large audience turns one post into a fleet-wide job",
+        phase: "change",
+        at: 15,
+        nodes: ["poster", "api", "fanout-q", "tl-1", "tl-2", "tl-3"],
+        edges: ["post", "enqueue", "w1", "w2", "w3"],
+        metrics: ["writeCost", "backlog", "staleness"],
+        summary:
+          "In push mode, a celebrity post creates one timeline write per follower, so a single action can inject millions of writes into the fan-out queue.",
+        nextAction: "Use writes per post and backlog to predict when the last follower will see the post.",
+      },
+      {
+        id: "backlog-staleness",
+        label: "The queue turns write work into delayed visibility",
+        phase: "impact",
+        at: 18.5,
+        nodes: ["fanout-q", "tl-1", "tl-2", "tl-3"],
+        edges: ["w1", "w2", "w3"],
+        metrics: ["backlog", "staleness", "writeCost"],
+        summary:
+          "The fan-out fleet drains at a fixed rate, so a large write backlog directly becomes timeline staleness for the followers waiting at the end of the queue.",
+        nextAction: "Compare the backlog with the fleet drain rate before choosing a different fan-out mode.",
+      },
+      {
+        id: "hybrid-tradeoff",
+        label: "Hybrid moves exceptional write cost to reads",
+        phase: "resolution",
+        at: 23,
+        nodes: ["api", "fanout-q", "tl-2", "reader", "posts"],
+        edges: ["enqueue", "tlread", "read", "store"],
+        metrics: ["writeCost", "readCost", "readOps", "staleness"],
+        summary:
+          "Hybrid fan-out keeps ordinary accounts pushed while expensive celebrity posts are stored once and merged at read time, trading exceptional write storms for a bounded read-time cost.",
+        nextAction: "Switch to hybrid, post again, and compare the reduced write cost with the added read operations.",
+        trigger: { kind: "param-change", id: "mode" },
+      },
+    ],
+  },
+
   timeline: [
     {
       at: 2,

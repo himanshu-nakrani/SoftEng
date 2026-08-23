@@ -212,6 +212,48 @@ function meterAria(
 }
 
 /**
+ * Keep a metric's number and suffix as separate baseline-aligned flex items.
+ * Inline text lets a smaller suffix inherit a different line box, which can
+ * visually collide with a large value at high zoom or constrained widths.
+ */
+function MeterReadout({
+  display,
+  unit,
+  className,
+  unitClassName,
+}: {
+  display: string;
+  unit?: string;
+  className?: string;
+  unitClassName?: string;
+}) {
+  return (
+    <span
+      data-meter-reading
+      className={cn(
+        "tech-num inline-flex min-w-0 items-baseline gap-1 whitespace-nowrap",
+        className,
+      )}
+    >
+      <span data-meter-value className="shrink-0">
+        {display}
+      </span>
+      {unit && (
+        <span
+          data-meter-unit
+          className={cn(
+            "shrink-0 whitespace-nowrap font-normal leading-none text-fg-faint",
+            unitClassName,
+          )}
+        >
+          {unit}
+        </span>
+      )}
+    </span>
+  );
+}
+
+/**
  * One live instrument. Values arrive at 10Hz; CSS transitions interpolate
  * so the display reads continuous.
  */
@@ -233,19 +275,15 @@ export function Meter({ spec, value, series }: MeterProps) {
       <span className="tech-label truncate">{spec.label}</span>
 
       {spec.kind === "counter" && (
-        <span
+        <MeterReadout
+          display={display}
+          unit={spec.unit}
           className={cn(
-            "tech-num text-lg leading-none font-semibold transition-colors",
+            "text-lg leading-none font-semibold transition-colors",
             danger ? "text-glow-red" : "text-fg",
           )}
-        >
-          {display}
-          {spec.unit && (
-            <span className="ml-1 text-[11px] font-normal text-fg-faint">
-              {spec.unit}
-            </span>
-          )}
-        </span>
+          unitClassName="text-[11px]"
+        />
       )}
 
       {spec.kind === "bar" && (
@@ -274,33 +312,29 @@ export function Meter({ spec, value, series }: MeterProps) {
               />
             ))}
           </div>
-          <span
+          <MeterReadout
+            display={display}
+            unit={spec.unit}
             className={cn(
-              "tech-num w-12 text-right text-xs",
+              "w-auto text-right text-xs",
               danger ? "text-glow-red" : "text-fg-muted",
             )}
-          >
-            {display}
-            {spec.unit}
-          </span>
+            unitClassName="text-[10px]"
+          />
         </div>
       )}
 
       {spec.kind === "sparkline" && (
         <div className="flex items-center gap-2">
-          <span
+          <MeterReadout
+            display={display}
+            unit={spec.unit}
             className={cn(
-              "tech-num text-sm font-semibold transition-colors",
+              "text-sm font-semibold transition-colors",
               danger ? "text-glow-red" : "text-fg",
             )}
-          >
-            {display}
-            {spec.unit && (
-              <span className="ml-0.5 text-[10px] font-normal text-fg-faint">
-                {spec.unit}
-              </span>
-            )}
-          </span>
+            unitClassName="text-[10px]"
+          />
           <svg
             width={SPARK_W}
             height={SPARK_H}
@@ -366,19 +400,15 @@ export function Meter({ spec, value, series }: MeterProps) {
               );
             })}
           </svg>
-          <span
+          <MeterReadout
+            display={display}
+            unit={spec.unit}
             className={cn(
-              "tech-num text-sm font-semibold",
+              "text-sm font-semibold",
               danger ? "text-glow-red" : "text-fg",
             )}
-          >
-            {display}
-            {spec.unit && (
-              <span className="ml-0.5 text-[10px] font-normal text-fg-faint">
-                {spec.unit}
-              </span>
-            )}
-          </span>
+            unitClassName="text-[10px]"
+          />
         </div>
       )}
     </div>

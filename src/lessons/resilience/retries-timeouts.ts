@@ -372,6 +372,71 @@ export const retriesTimeoutsSim: LessonSim<RetryState> = {
     state.metrics.wasted = L.wasted;
   },
 
+  workbench: {
+    experiment: {
+      id: "trace-one-deadline",
+      title: "Trace one deadline",
+      prompt:
+        "Start the calls and follow the deadline from api-1 to pg-main before an outage converts failures into retry traffic.",
+      actionLabel: "Start calls",
+      focusId: "deadline-baseline",
+      action: { kind: "play" },
+    },
+    focuses: [
+      {
+        id: "deadline-baseline",
+        label: "A timeout bounds how long a caller waits",
+        phase: "baseline",
+        at: 2,
+        nodes: ["client", "api", "db"],
+        edges: ["front", "back"],
+        metrics: ["amplification", "attempts", "served", "timeouts"],
+        summary:
+          "Every client request reaches api-1, which makes a deadline-bound database attempt; with a realistic timeout, offered load remains close to the load clients actually asked for.",
+        nextAction: "Lower the timeout cautiously and observe when healthy calls become impossible to complete.",
+        trigger: { kind: "param-change", id: "timeout" },
+      },
+      {
+        id: "retry-amplification",
+        label: "Each failure can become more downstream load",
+        phase: "change",
+        at: 8,
+        nodes: ["api", "db"],
+        edges: ["back"],
+        metrics: ["amplification", "attempts", "timeouts"],
+        summary:
+          "A retry repeats the downstream attempt after an error or timeout, so amplification reveals the difference between user demand and work imposed on pg-main.",
+        nextAction: "Increase the retry budget and use amplification to measure the added downstream pressure.",
+        trigger: { kind: "param-change", id: "retries" },
+      },
+      {
+        id: "silent-outage",
+        label: "Silence holds work until every deadline expires",
+        phase: "impact",
+        at: KILL_AT,
+        nodes: ["api", "db"],
+        edges: ["back"],
+        metrics: ["attempts", "served", "timeouts", "amplification"],
+        summary:
+          "When pg-main goes silent, calls occupy their full timeout before retrying, which creates a growing backlog of attempts that no user explicitly requested.",
+        nextAction: "Compare offered load with served work before and after the database returns.",
+      },
+      {
+        id: "backoff-recovery",
+        label: "Recovery needs the retry load to decay",
+        phase: "resolution",
+        at: 28,
+        nodes: ["api", "db"],
+        edges: ["back"],
+        metrics: ["amplification", "attempts", "served", "wasted"],
+        summary:
+          "A recovered database can remain overloaded by the retry backlog; exponential backoff with jitter spreads retries so useful work can drain ahead of abandoned attempts.",
+        nextAction: "Replay the outage under each backoff policy and compare whether amplification falls back toward one.",
+        trigger: { kind: "param-change", id: "backoff" },
+      },
+    ],
+  },
+
   timeline: [
     {
       at: 2,

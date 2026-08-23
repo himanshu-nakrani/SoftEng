@@ -195,6 +195,68 @@ export const clientServerSim: LessonSim<CSState> = {
     },
   ],
 
+  workbench: {
+    experiment: {
+      id: "queue-saturation",
+      title: "Make the queue reveal the bottleneck",
+      prompt:
+        "Start from the healthy baseline, then let the scripted traffic spike push arrivals past the server’s capacity. Watch the queue before you look at drops.",
+      actionLabel: "Run the spike",
+      focusId: "healthy-flow",
+      action: { kind: "play" },
+    },
+    focuses: [
+      {
+        id: "healthy-flow",
+        label: "Healthy request flow",
+        phase: "baseline",
+        at: 1.5,
+        nodes: ["client", "server"],
+        edges: ["wire"],
+        metrics: ["throughput", "latency", "queue"],
+        summary:
+          "Requests arrive below service capacity, so the server drains work as quickly as it accepts it and the queue stays near zero.",
+        nextAction: "Run to the traffic spike and predict which instrument moves first.",
+      },
+      {
+        id: "traffic-spike",
+        label: "Traffic outruns capacity",
+        phase: "change",
+        at: 14,
+        nodes: ["client", "server"],
+        edges: ["wire"],
+        metrics: ["queue", "latency", "throughput"],
+        summary:
+          "The arrival rate now exceeds the server’s fixed service rate. Work has only one place to wait: the server queue.",
+        nextAction: "Follow the queue and p50 latency through the prediction checkpoint.",
+      },
+      {
+        id: "saturation",
+        label: "Queue growth becomes user latency",
+        phase: "impact",
+        at: 15.2,
+        nodes: ["server"],
+        edges: ["wire"],
+        metrics: ["queue", "latency", "dropped"],
+        summary:
+          "Each queued request waits behind the ones before it. Once the bounded queue fills, new arrivals are shed rather than accepted indefinitely.",
+        nextAction: "Inspect the queue, then compare this overload with a total server failure.",
+      },
+      {
+        id: "recovery",
+        label: "Backlog drains after demand falls",
+        phase: "resolution",
+        at: 21.5,
+        nodes: ["server"],
+        edges: ["wire"],
+        metrics: ["queue", "latency", "throughput"],
+        summary:
+          "Demand returns below capacity, allowing the server to drain the backlog. Latency recovers only after the queued work has cleared.",
+        nextAction: "Use the component inspector to see why a dead server freezes the same backlog.",
+      },
+    ],
+  },
+
   quiz: [
     {
       id: "cs-queue-growth",

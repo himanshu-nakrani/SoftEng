@@ -215,6 +215,70 @@ export const rateLimitingSim: LessonSim<RLState> = {
     state.metrics.dropped = L.droppedTotal;
   },
 
+  workbench: {
+    experiment: {
+      id: "spend-a-token-bucket",
+      title: "Spend a token bucket",
+      prompt:
+        "Start steady traffic, then send a burst to see how bucket depth and refill rate make different promises.",
+      actionLabel: "Start traffic",
+      focusId: "full-bucket",
+      action: { kind: "play" },
+    },
+    focuses: [
+      {
+        id: "full-bucket",
+        label: "Tokens are stored burst headroom",
+        phase: "baseline",
+        at: 2,
+        nodes: ["client", "limiter", "api"],
+        edges: ["in", "out"],
+        metrics: ["tokens", "allowed", "rejected"],
+        summary:
+          "The limiter refills tokens up to its bucket size; under sustained traffic below the refill rate, unused tokens accumulate as capacity for a short burst.",
+        nextAction: "Adjust refill rate and bucket size separately, then describe the sustained and burst limits each controls.",
+        trigger: { kind: "param-change", id: "refill" },
+      },
+      {
+        id: "burst-spend",
+        label: "A burst spends the stored headroom first",
+        phase: "change",
+        at: 15,
+        nodes: ["client", "limiter", "api"],
+        edges: ["in", "out"],
+        metrics: ["tokens", "allowed", "rejected"],
+        summary:
+          "A burst is admitted immediately only while tokens remain; once the bucket empties, the refill rate becomes the maximum continuing admission rate.",
+        nextAction: "Press send burst at a different bucket size and count how many requests are admitted before 429 responses begin.",
+        trigger: { kind: "button-press", id: "burst" },
+      },
+      {
+        id: "policy-rejection",
+        label: "A 429 is a deliberate boundary",
+        phase: "impact",
+        at: 20,
+        nodes: ["client", "limiter", "api"],
+        edges: ["in", "out"],
+        metrics: ["tokens", "allowed", "rejected", "dropped"],
+        summary:
+          "The limiter absorbs the spike at the boundary: it lets a bounded number through and rejects the remainder before they can consume API queue capacity.",
+        nextAction: "Compare rejected requests with dropped requests to distinguish policy enforcement from a capacity failure.",
+      },
+      {
+        id: "downstream-failure",
+        label: "Rate limiting does not repair a dead service",
+        phase: "resolution",
+        at: 26,
+        nodes: ["limiter", "api"],
+        edges: ["out"],
+        metrics: ["allowed", "rejected", "dropped"],
+        summary:
+          "The limiter continues enforcing its own token policy when api-1 fails, so it can cap incoming work but cannot make admitted requests succeed against a dead downstream service.",
+        nextAction: "Kill api-1 and explain why a bounded arrival rate still needs independent health and recovery controls.",
+      },
+    ],
+  },
+
   timeline: [
     {
       at: 2,

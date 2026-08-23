@@ -10,7 +10,7 @@ import { Meter } from "@/components/ui/Meter";
 import { PlateLabel } from "@/components/ui/PlateLabel";
 import { cn } from "@/lib/cn";
 import { buildPaths } from "../paths";
-import type { LessonSim, LessonSimView, NodeRuntime, NodeSpec } from "../types";
+import type { LessonSim, LessonSimView, NodeRuntime, NodeSpec, WorkbenchFocus } from "../types";
 import { STAGE_H, STAGE_W } from "../types";
 import type { SimSnapshot } from "../snapshot";
 import {
@@ -28,6 +28,12 @@ import { PacketLegend } from "./PacketLegend";
 import { SystemNode } from "./SystemNode";
 import { PredictionQuiz } from "../interactions/PredictionQuiz";
 import {
+  CausalEventTape,
+  CausalInspector,
+  ExperimentCard,
+  StaticViewToggle,
+} from "./CausalWorkbench";
+import {
   TransportBar,
   type ScrubCheckpoint,
   type ScrubEvent,
@@ -39,6 +45,8 @@ interface InteractiveFigureProps<L> {
   description: string;
   /** Start playing when scrolled into view (the "observe" verb). */
   autoplay?: boolean;
+  /** Page-level reading mode; changes chrome visibility, never sim state. */
+  calibrationMode?: boolean;
   seed?: number;
   /**
    * Deep-linked sim moment: replay to this sim-second once on mount and stay
@@ -93,6 +101,8 @@ function StageContent({
   stageOverlay,
   nodeOverlay,
   fill,
+  activeFocus,
+  staticView,
 }: {
   sim: LessonSimView;
   simulation: Simulation;
@@ -100,6 +110,9 @@ function StageContent({
   nodeOverlay?: InteractiveFigureProps<never>["nodeOverlay"];
   /** Expanded figure: fill the stage box instead of being width-driven. */
   fill?: boolean;
+  activeFocus?: WorkbenchFocus;
+  /** Explicit static state view, which shares the reduced-motion edge encoding. */
+  staticView?: boolean;
 }) {
   const snapshot = useSimSnapshot(simulation);
   const registry = useMemo(() => buildPaths(sim.topology), [sim.topology]);
@@ -107,6 +120,11 @@ function StageContent({
   // One resolution shared by the packets and the edges that stand in for them
   // under reduced motion, so both read the same colors.
   const packetStyles = useMemo(() => resolvePacketStyles(sim), [sim]);
+  const interactive = sim.topology.nodes.some((node) => node.breakable);
+  const description = liveDescription(snapshot.nodes, sim);
+  const staticState = Boolean(reduced || staticView);
+  const focusedNodes = new Set(activeFocus?.nodes ?? []);
+  const focusedEdges = new Set(activeFocus?.edges ?? []);
 
   return (
     <>
@@ -116,8 +134,14 @@ function StageContent({
         // where preserveAspectRatio's default centres the drawing for us. Same
         // viewBox either way, so nothing in the sim knows the difference.
         className={fill ? "block size-full" : "block h-auto w-full"}
-        role="img"
-        aria-label={liveDescription(snapshot.nodes, sim)}
+        data-sim-stage
+        role={interactive ? "group" : "img"}
+        aria-roledescription={interactive ? "interactive system diagram" : undefined}
+        aria-label={
+          interactive
+            ? `${description} Activate a component to toggle its failure state.`
+            : description
+        }
       >
         <defs>
           <pattern
@@ -181,9 +205,10 @@ function StageContent({
               // Reduced motion hides the packets, so the edges have to say
               // where the traffic is. Normal motion passes nothing extra and
               // renders exactly as before.
-              reducedMotion={Boolean(reduced)}
-              activity={reduced ? snapshot.edgeActivity[edge.id] : undefined}
+              reducedMotion={staticState}
+              activity={staticState ? snapshot.edgeActivity[edge.id] : undefined}
               packetStyles={packetStyles}
+              focused={focusedEdges.has(edge.id)}
             />
           );
         })}
@@ -193,7 +218,7 @@ function StageContent({
         <PacketLayer
           simulation={simulation}
           registry={registry}
-          hidden={Boolean(reduced)}
+          hidden={staticState}
           sim={sim}
         />
 
@@ -213,6 +238,7 @@ function StageContent({
                   : undefined
               }
               overlay={nodeOverlay?.(spec, runtime, snapshot)}
+              focused={focusedNodes.has(spec.id)}
             />
           );
         })}
@@ -237,21 +263,26 @@ function liveDescription(
 function MetersRow({
   sim,
   simulation,
+  activeFocus,
 }: {
   sim: LessonSimView;
   simulation: Simulation;
+  activeFocus?: WorkbenchFocus;
 }) {
   const snapshot = useSimSnapshot(simulation);
   if (sim.meters.length === 0) return null;
   return (
-    <div className="grid grid-cols-2 gap-y-3 border-t border-border px-4 py-3 sm:flex sm:flex-wrap sm:items-stretch">
+    <div className="sim-meters grid grid-cols-2 gap-y-3 border-t border-border px-4 py-3 sm:flex sm:flex-wrap sm:items-stretch">
       {sim.meters.map((spec, i) => (
         <div
           key={spec.metricKey}
           className={
-            i === 0
-              ? "sm:pr-6"
-              : "sm:border-l sm:border-border sm:px-6 max-sm:odd:pl-4"
+            cn(
+              i === 0
+                ? "sm:pr-6"
+                : "sm:border-l sm:border-border sm:px-6 max-sm:odd:pl-4",
+              activeFocus?.metrics?.includes(spec.metricKey) && "causal-meter-focus",
+            )
           }
         >
           <Meter
@@ -312,6 +343,7 @@ function FigureBody<L>({
   sim,
   description,
   autoplay = true,
+  calibrationMode = false,
   seed,
   initialSeekT,
   stageOverlay,
@@ -326,9 +358,19 @@ function FigureBody<L>({
     onQuizResult,
     onSimEvent,
   });
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLElement>(null);
   const reduced = useReducedMotion();
+  const snapshot = useSimSnapshot(simulation);
+  const workbench = sim.workbench;
   const [expanded, setExpanded] = useState(false);
+  const [staticView, setStaticView] = useState(false);
+  const [activeFocusId, setActiveFocusId] = useState<string | undefined>(
+    workbench?.experiment?.focusId ?? workbench?.focuses[0]?.id,
+  );
+  const [selectedNodeId, setSelectedNodeId] = useState<string | undefined>(
+    workbench?.focuses[0]?.nodes?.[0] ?? sim.topology.nodes[0]?.id,
+  );
+  const activeFocus = workbench?.focuses.find((focus) => focus.id === activeFocusId);
 
   // Any breakable node makes this figure a *touch* target at every width, not
   // just a small one — so it earns the expand affordance on desktop too.
@@ -355,6 +397,58 @@ function FigureBody<L>({
   }, [expanded]);
 
   // Observe verb: autoplay on first scroll-into-view; pause when off-screen.
+  const selectFocus = (focus: WorkbenchFocus, seek = true) => {
+    setActiveFocusId(focus.id);
+    if (focus.nodes?.[0]) setSelectedNodeId(focus.nodes[0]);
+    if (seek && focus.at !== undefined) simulation.controls.seekTo(focus.at);
+  };
+
+  const dismissQuizAndReturnToFigure = () => {
+    simulation.dismissQuiz();
+    // The quiz exits through AnimatePresence. The figure survives that exit and
+    // is the stable, labelled keyboard surface where a learner can inspect the
+    // paused system or invoke its documented shortcuts.
+    requestAnimationFrame(() => containerRef.current?.focus());
+  };
+
+  const startExperiment = () => {
+    const experiment = workbench?.experiment;
+    if (!experiment) return;
+    const focus = workbench?.focuses.find((item) => item.id === experiment.focusId);
+    if (focus) selectFocus(focus, false);
+    switch (experiment.action.kind) {
+      case "play":
+        simulation.controls.play();
+        break;
+      case "seek":
+        simulation.controls.seekTo(experiment.action.at);
+        break;
+      case "button":
+        simulation.controls.pressButton(experiment.action.id);
+        break;
+      case "param":
+        simulation.controls.setParam(experiment.action.id, experiment.action.value);
+        break;
+    }
+  };
+
+
+  const applyParam = (key: string, value: Parameters<typeof simulation.controls.setParam>[1]) => {
+    simulation.controls.setParam(key, value);
+    const triggered = workbench?.focuses.find(
+      (focus) => focus.trigger?.kind === "param-change" && focus.trigger.id === key,
+    );
+    if (triggered) selectFocus(triggered, false);
+  };
+
+  const pressScenario = (key: string) => {
+    simulation.controls.pressButton(key);
+    const triggered = workbench?.focuses.find(
+      (focus) => focus.trigger?.kind === "button-press" && focus.trigger.id === key,
+    );
+    if (triggered) selectFocus(triggered, false);
+  };
+
   const controlsRef = useRef(simulation.controls);
   controlsRef.current = simulation.controls;
   const statusRef = useRef(simulation.status);
@@ -476,26 +570,29 @@ function FigureBody<L>({
   return (
     <figure
       ref={containerRef}
+      data-calibration={calibrationMode ? "true" : undefined}
       // ONE element, ONE class list — expanding swaps `className` on the very
       // same node in the very same position, so React reconciles in place and
       // the running sim (runner, RNG cursor, quiz progress) is untouched.
       className={cn(
-        "border-border bg-surface",
+        "sim-figure border-border bg-surface",
         expanded
           ? "fixed inset-0 z-50 m-0 flex flex-col overflow-y-auto rounded-none border-0"
-          : "my-6 overflow-hidden rounded-lg border",
+          : "my-8 overflow-hidden rounded-xl border",
       )}
       tabIndex={0}
       onKeyDown={onFigureKeyDown}
       aria-keyshortcuts="Space . R 1 2 3"
     >
-      <div className={cn("relative bg-bg/40", expanded && "min-h-0 flex-1")}>
+      <div className={cn("sim-figure-stage relative", expanded && "min-h-0 flex-1")}>
         <StageContent
           sim={sim}
           simulation={simulation}
           stageOverlay={stageOverlay}
           nodeOverlay={nodeOverlay}
           fill={expanded}
+          activeFocus={activeFocus}
+          staticView={staticView}
         />
         <CornerTicks />
         {/* Top-right rail: the figure plate (every sim is a numbered
@@ -504,6 +601,12 @@ function FigureBody<L>({
             opts back out. */}
         <div className="absolute top-2 right-2.5 flex items-center gap-2.5">
           <PlateLabel>fig · {sim.id} · seed {seed ?? 42}</PlateLabel>
+          {workbench && (
+            <StaticViewToggle
+              active={staticView}
+              onToggle={() => setStaticView((value) => !value)}
+            />
+          )}
           <IconButton
             onClick={() => setExpanded((v) => !v)}
             aria-expanded={expanded}
@@ -533,23 +636,54 @@ function FigureBody<L>({
           quiz={simulation.activeQuiz}
           answer={simulation.quizAnswer}
           onAnswer={simulation.answerQuiz}
+          onDismiss={dismissQuizAndReturnToFigure}
           onResume={simulation.resumeFromQuiz}
         />
       </div>
       <figcaption className="sr-only">{description}</figcaption>
+      {workbench?.experiment && (
+        <div className="calibration-secondary">
+          <ExperimentCard
+            experiment={workbench.experiment}
+            focus={activeFocus}
+            onStart={startExperiment}
+          />
+        </div>
+      )}
+      {workbench && (
+        <CausalEventTape
+          focuses={workbench.focuses}
+          activeId={activeFocus?.id}
+          onSelect={selectFocus}
+        />
+      )}
       {/* Directly under the stage, above the instruments: the key belongs next
           to the thing it explains, and it stays out of the meters row, whose
           flex dividers and 2-column mobile grid a chip row would break. Renders
           nothing — not an empty strip — for sims with no `packetLegend`. */}
-      <PacketLegend sim={sim} />
-      <MetersRow sim={sim} simulation={simulation} />
-      <ControlPanel
-        specs={sim.params}
-        values={simulation.params}
-        onChange={simulation.controls.setParam}
-        onPress={simulation.controls.pressButton}
-      />
-      <Clock sim={sim} simulation={simulation} />
+      <div className="calibration-secondary">
+        <PacketLegend sim={sim} />
+        <MetersRow sim={sim} simulation={simulation} activeFocus={activeFocus} />
+      </div>
+      <div className="calibration-secondary">
+        {workbench && (
+          <CausalInspector
+            focus={activeFocus}
+            nodes={sim.topology.nodes}
+            snapshotNodes={snapshot.nodes}
+            selectedNodeId={selectedNodeId}
+            onSelectNode={setSelectedNodeId}
+            onRestart={simulation.controls.restart}
+          />
+        )}
+        <ControlPanel
+          specs={sim.params}
+          values={simulation.params}
+          onChange={applyParam}
+          onPress={pressScenario}
+        />
+        <Clock sim={sim} simulation={simulation} />
+      </div>
     </figure>
   );
 }

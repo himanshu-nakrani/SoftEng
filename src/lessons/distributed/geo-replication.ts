@@ -630,6 +630,71 @@ export const geoReplicationSim: LessonSim<GeoState> = {
     }
   },
 
+  workbench: {
+    experiment: {
+      id: "compare-global-write-paths",
+      title: "Compare global write paths",
+      prompt:
+        "Start in active-active mode, then compare local latency and replication lag with the conflict and remote-commit costs of changing the write topology.",
+      actionLabel: "Start regional writes",
+      focusId: "local-active-active",
+      action: { kind: "play" },
+    },
+    focuses: [
+      {
+        id: "local-active-active",
+        label: "Each region can acknowledge locally",
+        phase: "baseline",
+        at: 1.5,
+        nodes: ["cli-e", "db-e", "db-w", "cli-w"],
+        edges: ["in-e", "in-w", "repl"],
+        metrics: ["latEast", "latWest", "replLag", "conflicts"],
+        summary:
+          "In active-active mode, each region accepts its nearby users’ writes locally and sends replication across the ocean afterward, producing low local latency with a visible lag window.",
+        nextAction: "Increase inter-region RTT and observe how the replication window affects conflict opportunity.",
+        trigger: { kind: "param-change", id: "rtt" },
+      },
+      {
+        id: "conflict-window",
+        label: "Replication lag is a window for conflicting truths",
+        phase: "change",
+        at: 8.5,
+        nodes: ["db-e", "db-w"],
+        edges: ["repl"],
+        metrics: ["replLag", "conflicts", "lostWrites"],
+        summary:
+          "While replication is in flight, both databases can accept incompatible writes to the same key; last-write-wins resolves the convergence by silently discarding one acknowledged value.",
+        nextAction: "Raise write rate and RTT together, then relate the wider flight window to the conflict counter.",
+        trigger: { kind: "param-change", id: "rate" },
+      },
+      {
+        id: "single-primary-latency",
+        label: "One writer removes conflicts by adding distance",
+        phase: "impact",
+        at: FLIP_AT,
+        nodes: ["cli-e", "db-e", "db-w", "cli-w"],
+        edges: ["in-e", "in-w", "fwd"],
+        metrics: ["latEast", "latWest", "conflicts", "replLag"],
+        summary:
+          "Single-primary mode eliminates concurrent writers, but eu-west writes must travel to the us-east primary and return, trading conflict risk for an unavoidable inter-region latency floor.",
+        nextAction: "Choose single-primary mode and compare the two regional latency meters before judging the conflict counter.",
+        trigger: { kind: "param-change", id: "mode" },
+      },
+      {
+        id: "regional-failure-tradeoff",
+        label: "Write topology decides the regional failure story",
+        phase: "resolution",
+        at: KILL_AT,
+        nodes: ["db-e", "db-w", "cli-w"],
+        edges: ["in-w", "fwd"],
+        metrics: ["latWest", "conflicts", "lostWrites"],
+        summary:
+          "After us-east fails, active-active eu-west continues local writes, while single-primary eu-west has no reachable writer until promotion and may lose unshipped primary writes.",
+        nextAction: "Replay the regional failure in both modes and compare continuous availability with conflict and lost-write costs.",
+      },
+    ],
+  },
+
   timeline: [
     {
       at: 1.5,

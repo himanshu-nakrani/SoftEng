@@ -242,6 +242,69 @@ export const loadBalancingSim: LessonSim<LBState> = {
     }
   },
 
+  workbench: {
+    experiment: {
+      id: "trace-a-routing-decision",
+      title: "Trace a routing decision",
+      prompt:
+        "Run the baseline, then switch to least-connections when api-2's smaller capacity becomes visible.",
+      actionLabel: "Start traffic",
+      focusId: "balanced-entry",
+      action: { kind: "play" },
+    },
+    focuses: [
+      {
+        id: "balanced-entry",
+        label: "Every request enters through one decision point",
+        phase: "baseline",
+        at: 2,
+        nodes: ["client", "lb", "s1", "s2", "s3"],
+        edges: ["in", "to-s1", "to-s2", "to-s3"],
+        metrics: ["throughput", "latency"],
+        summary:
+          "The load balancer is the decision point between incoming traffic and the service fleet; its routing policy determines whose queue each request joins.",
+        nextAction: "Watch the three load bars before changing the routing strategy.",
+      },
+      {
+        id: "uneven-capacity",
+        label: "Equal shares overload the smaller server",
+        phase: "change",
+        at: 6,
+        nodes: ["lb", "s1", "s2", "s3"],
+        edges: ["to-s1", "to-s2", "to-s3"],
+        metrics: ["latency", "throughput"],
+        summary:
+          "Round-robin sends equal request counts, not equal work, so the smaller api-2 accumulates a queue even while the other servers have room.",
+        nextAction: "Select least-connections and verify that the api-2 queue begins to drain.",
+        trigger: { kind: "param-change", id: "strategy" },
+      },
+      {
+        id: "health-check-window",
+        label: "A failed server is not immediately invisible",
+        phase: "impact",
+        at: 12,
+        nodes: ["lb", "s3"],
+        edges: ["to-s3"],
+        metrics: ["dropped", "latency"],
+        summary:
+          "When api-3 dies, requests already in flight and requests routed before the next failed health check become dropped work.",
+        nextAction: "Follow the api-3 path until the balancer’s belief catches up with reality.",
+      },
+      {
+        id: "traffic-rerouted",
+        label: "Detection changes the available path",
+        phase: "resolution",
+        at: 17,
+        nodes: ["lb", "s1", "s2", "s3"],
+        edges: ["to-s1", "to-s2", "to-s3"],
+        metrics: ["throughput", "dropped"],
+        summary:
+          "After the health check updates, the balancer stops choosing the dead path and the remaining healthy servers carry the load.",
+        nextAction: "Revive api-3, then compare the detection and recovery windows.",
+      },
+    ],
+  },
+
   timeline: [
     {
       at: 2,

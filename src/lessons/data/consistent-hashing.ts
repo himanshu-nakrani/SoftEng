@@ -369,6 +369,66 @@ export const consistentHashingSim: LessonSim<CHState> = {
     },
   ],
 
+  workbench: {
+    experiment: {
+      id: "local-remap",
+      title: "Add one node without moving the world",
+      prompt:
+        "Start with the ownership ring, then add the fourth cache. The remapped meter shows the local cost of growth; the highlighted arc shows where it came from.",
+      actionLabel: "Show ownership",
+      focusId: "ownership",
+      action: { kind: "seek", at: 2 },
+    },
+    focuses: [
+      {
+        id: "ownership",
+        label: "Keys follow the next cache clockwise",
+        phase: "baseline",
+        at: 2,
+        nodes: ["n1", "n2", "n3"],
+        edges: ["to-n1", "to-n2", "to-n3"],
+        metrics: ["nodes", "spread"],
+        summary:
+          "Each cache owns the arc that ends at its ring position. A key walks clockwise only as far as its first live owner.",
+        nextAction: "Increase ring nodes and inspect the remapped-key meter before enabling virtual nodes.",
+      },
+      {
+        id: "local-remap",
+        label: "A new node claims one neighbouring arc",
+        phase: "change",
+        at: 9,
+        nodes: ["n3", "n4"],
+        edges: ["to-n3", "to-n4"],
+        metrics: ["nodes", "remapped"],
+        summary:
+          "Adding cache-4 changes ownership only around its new position. Keys outside that local interval keep their prior owner.",
+        nextAction: "Compare this local remap with the global reshuffle caused by hash % N.",
+      },
+      {
+        id: "failure-remap",
+        label: "A dead cache hands its arc clockwise",
+        phase: "impact",
+        nodes: ["n1", "n2", "n3", "n4"],
+        edges: ["to-n1", "to-n2", "to-n3", "to-n4"],
+        metrics: ["remapped", "spread"],
+        summary:
+          "A failed cache disappears from placement, so only its keys move to the next live owner. The rest of the ring remains stable.",
+        nextAction: "Toggle a cache only after inspecting its ownership and queue chip.",
+      },
+      {
+        id: "virtual-nodes",
+        label: "Virtual nodes smooth uneven ownership",
+        phase: "resolution",
+        nodes: ["n1", "n2", "n3", "n4"],
+        metrics: ["spread", "remapped"],
+        summary:
+          "Three positions per physical cache distribute ownership across the ring, shrinking the gap between the fattest and thinnest share.",
+        nextAction: "Switch VNODES on and use the arc-spread meter to verify the distribution change.",
+        trigger: { kind: "param-change", id: "vnodes" },
+      },
+    ],
+  },
+
   quiz: [
     {
       id: "ring-remap",

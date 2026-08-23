@@ -239,6 +239,69 @@ export const shardingSim: LessonSim<ShardingState> = {
     state.metrics.hotShard = L.skew;
   },
 
+  workbench: {
+    experiment: {
+      id: "trace-key-ownership",
+      title: "Trace key ownership",
+      prompt:
+        "Start the queries, then use the ownership strip and routed paths to see how one key deterministically selects one shard.",
+      actionLabel: "Start queries",
+      focusId: "modulo-routing",
+      action: { kind: "play" },
+    },
+    focuses: [
+      {
+        id: "modulo-routing",
+        label: "A key has one owner",
+        phase: "baseline",
+        at: 2,
+        nodes: ["client", "router", "s0", "s1", "s2"],
+        edges: ["in", "to-s0", "to-s1", "to-s2"],
+        metrics: ["shards", "throughput", "hotShard"],
+        summary:
+          "The router computes a shard from each key, so a query has a deterministic destination rather than a replica set to fall back to.",
+        nextAction: "Watch the ownership strip and locate the routed destination for several requests.",
+      },
+      {
+        id: "dark-key-slice",
+        label: "A failed shard makes its key slice unavailable",
+        phase: "change",
+        at: 3,
+        nodes: ["router", "s0", "s1", "s2"],
+        edges: ["to-s0", "to-s1", "to-s2"],
+        metrics: ["throughput", "dropped"],
+        summary:
+          "With simple modulo routing, a failed shard does not have an alternate owner, so all keys mapped to that shard become errors until it returns.",
+        nextAction: "Kill one live shard and use dropped requests to quantify the unavailable key slice.",
+      },
+      {
+        id: "modulo-remap-preview",
+        label: "Changing N changes most answers",
+        phase: "impact",
+        at: 13.4,
+        nodes: ["router", "s0", "s1", "s2", "s3"],
+        edges: ["to-s0", "to-s1", "to-s2", "to-s3"],
+        metrics: ["shards", "remapped"],
+        summary:
+          "Changing the modulus from three to four changes the ownership answer for most keys, turning a scale-out event into a broad data-migration problem.",
+        nextAction: "Read the remapped preview before dragging the shard-count control.",
+      },
+      {
+        id: "reshard-disruption",
+        label: "Scale-out exposes the migration cost",
+        phase: "resolution",
+        at: 18,
+        nodes: ["router", "s0", "s1", "s2", "s3"],
+        edges: ["to-s0", "to-s1", "to-s2", "to-s3"],
+        metrics: ["shards", "remapped", "hotShard"],
+        summary:
+          "The additional shard creates capacity, but modulo-based ownership forces the keyspace to recolor broadly; the hot-shard ratio shows that distribution is only approximately even.",
+        nextAction: "Change shard count and compare the migration percentage with the distribution pressure.",
+        trigger: { kind: "param-change", id: "shards" },
+      },
+    ],
+  },
+
   timeline: [
     {
       at: 2,

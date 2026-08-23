@@ -172,7 +172,7 @@ export function MobileNav() {
           aria-modal="true"
           aria-label="Site navigation"
           {...panelMotion}
-          className="fixed inset-y-0 left-0 z-50 flex w-[17.5rem] max-w-[85vw] flex-col border-r border-border bg-surface shadow-2xl md:hidden"
+          className="fixed inset-y-0 left-0 z-50 flex w-[17.5rem] max-w-[85vw] flex-col border-r border-border-bright bg-surface/95 shadow-[1.5rem_0_4rem_-2rem_oklch(5%_0.02_255_/_90%)] backdrop-blur-xl md:hidden"
         >
           <div className="flex items-center gap-2 border-b border-border px-4 py-3">
             <Wordmark onClick={close} />
@@ -190,7 +190,7 @@ export function MobileNav() {
           </div>
 
           <p className="border-t border-border px-4 py-3 font-mono text-[9px] tracking-widest text-fg-faint uppercase">
-            v0.1 · progress in localStorage
+            saved locally · no account needed
           </p>
         </motion.div>
       )}
