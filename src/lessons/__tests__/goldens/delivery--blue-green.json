@@ -1,0 +1,43 @@
+{
+  "lesson": "delivery/blue-green",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:cutover-is-all-at-once@7.05",
+      "t": 7.066667,
+      "metrics": {
+        "errorRate": 0.343368,
+        "errors": 1,
+        "liveOnGreen": 0,
+        "served": 57
+      },
+      "packets": 21,
+      "nextPacketId": 261,
+      "nodes": {
+        "blue": "healthy",
+        "client": "healthy",
+        "green": "healthy",
+        "router": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "errorRate": 0.000148,
+        "errors": 40,
+        "liveOnGreen": 0,
+        "served": 259
+      },
+      "packets": 28,
+      "nextPacketId": 1082,
+      "nodes": {
+        "blue": "healthy",
+        "client": "healthy",
+        "green": "healthy",
+        "router": "healthy"
+      }
+    }
+  ]
+}

@@ -521,6 +521,27 @@ export const learningGuides: Record<string, LearningGuide> = {
     "Hold the share at 5% and notice the error rate barely moves — then ask what a slow leak or a rare-input bug would have shown at that share in two minutes, and why a clean canary is a reason to widen rather than a proof it is safe.",
     [],
   ),
+  "outbox-pattern": guide(
+    "A service commits a row and then publishes an event. What happens if it crashes between the two writes?",
+    "The row and an outbox record now commit in one local transaction, and a separate relay publishes the outbox to the broker.",
+    "The event can no longer be lost, because it becomes durable at the same instant the data does. A dual write can silently commit a row whose event never arrives, and nothing downstream ever notices — there is no rollback and no retry, just a gap.",
+    "In outbox mode, crash the service while the relay is mid-publish: duplicates rise while lost events stays at zero. That is at-least-once, and it is why consumers still need idempotency.",
+    [{ slug: "delivery-guarantees", relation: "builds on" }],
+  ),
+  "distributed-locks": guide(
+    "If a lock can expire, what stops a paused holder from writing after someone else has taken over?",
+    "The lock became a lease with an expiry, and every grant now carries a monotonic fencing token that the shared store checks before accepting a write.",
+    "A GC pause or a descheduled VM can outlive any lease you pick, so two workers can believe they hold the lock at the same time — and no timeout tuning fixes that. Only the store refusing the lower token stops the second writer, which moves safety off the clock entirely.",
+    "Turn fencing off and watch the stale write land; turn it on and watch the same write get rejected while the split brain still exists. The two holders do not go away — the damage does.",
+    [{ slug: "leader-election", relation: "builds on" }],
+  ),
+  "blue-green": guide(
+    "How does a blue-green deploy trade off against a canary?",
+    "The deploy control is a two-position switch rather than a share: cutting over sends every request to green at once, and reverting flips straight back.",
+    "Blue-green bounds the TIME a bad version is live, because one atomic flip undoes it — but not the blast radius, because everyone is exposed at once, and it costs a second full fleet. That is the mirror image of a canary, which bounds the radius but exposes users for longer. Neither dominates.",
+    "Cut over, watch the error rate hit green's own failure rate for everybody, then revert and note the tail of in-flight requests — then ask why a schema migration makes that revert dangerous.",
+    [{ slug: "canary-releases", relation: "builds on" }],
+  ),
 };
 
 export function getLearningGuide(slug: string): LearningGuide {

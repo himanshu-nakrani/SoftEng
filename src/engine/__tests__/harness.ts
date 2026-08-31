@@ -46,6 +46,9 @@ import { clientServerSim } from "@/lessons/scaling/client-server";
 import { loadBalancingSim } from "@/lessons/scaling/load-balancing";
 import { realtimeDeliverySim } from "@/lessons/scaling/realtime-delivery";
 import { scalingStrategiesSim } from "@/lessons/scaling/scaling-strategies";
+import { blueGreenSim } from "@/lessons/delivery/blue-green";
+import { distributedLocksSim } from "@/lessons/distributed/distributed-locks";
+import { outboxPatternSim } from "@/lessons/distributed/outbox-pattern";
 import { canaryReleasesSim } from "@/lessons/delivery/canary-releases";
 import { bulkheadsSim } from "@/lessons/resilience/bulkheads";
 import { quorumsSim } from "@/lessons/distributed/quorums";
@@ -108,6 +111,9 @@ const SIM_BY_KEY: Record<string, LessonSim<unknown>> = {
   "distributed/quorums": widen(quorumsSim),
   "resilience/bulkheads": widen(bulkheadsSim),
   "delivery/canary-releases": widen(canaryReleasesSim),
+  "distributed/outbox-pattern": widen(outboxPatternSim),
+  "distributed/distributed-locks": widen(distributedLocksSim),
+  "delivery/blue-green": widen(blueGreenSim),
 };
 
 export interface LessonUnderTest {

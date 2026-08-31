@@ -10,7 +10,7 @@ An interactive system-design learning site. Not articles — every concept is a 
 
 ### Track 01 — System Design Fundamentals
 
-29 lessons across 5 modules, about 6h 36m end to end.
+31 lessons across 5 modules, about 7h 4m end to end.
 
 | Module | Lessons |
 |---|---|
@@ -18,7 +18,7 @@ An interactive system-design learning site. Not articles — every concept is a 
 | **Data at Scale** | Caching · Cache Stampede · CDN & Edge Caching · Database Replication · Sharding · Consistent Hashing |
 | **Resilience** | Tail Latency · Timeouts & Retries · Circuit Breakers · Load Shedding · Bulkheads |
 | **Observability & Incident Response** | Metrics, Logs & Traces · SLOs & Error Budgets · Incident Triage |
-| **Distributed Systems** | Rate Limiting · Message Queues & Backpressure · Delivery Guarantees & Idempotency · Fan-out: Push vs Pull · The CAP Theorem · Leader Election · Gossip Protocols · Two-Phase Commit · Geo-Replication · Quorums |
+| **Distributed Systems** | Rate Limiting · Message Queues & Backpressure · Delivery Guarantees & Idempotency · Fan-out: Push vs Pull · The CAP Theorem · Leader Election · Gossip Protocols · Two-Phase Commit · Geo-Replication · Quorums · The Outbox Pattern · Distributed Locks & Clock Skew |
 
 ### Track 02 — Concurrency
 
@@ -47,12 +47,12 @@ An interactive system-design learning site. Not articles — every concept is a 
 
 ### Track 05 — Version Control & Delivery
 
-3 lessons across 2 modules, about 36 minutes end to end.
+4 lessons across 2 modules, about 47 minutes end to end.
 
 | Module | Lessons |
 |---|---|
 | **Shaping History** | Merge vs Rebase · Fast-Forward |
-| **Shipping It** | Canary Releases |
+| **Shipping It** | Canary Releases · Blue-Green Deploys |
 
 <!-- CURRICULUM:END -->
 
