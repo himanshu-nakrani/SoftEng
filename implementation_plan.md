@@ -9,7 +9,7 @@ and invariants; this document is only *what is done, what is left, and what has
 already been decided*. Open debt lives in [`debt.md`](./debt.md).
 
 **State verified 2026-08-31**, by running the gate rather than recalling:
-52 lessons · 173 sections · **5 tracks** · 561 unit tests (18 files) · 121 e2e
+52 lessons · 173 sections · **5 tracks** · 576 unit tests (18 files) · 121 e2e
 tests sampled (65 run, 56 in the opt-in visual suite) and 156 on the full
 smoke+axe+search sweep · clean static export. `npm run check` green.
 
