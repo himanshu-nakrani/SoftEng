@@ -8,11 +8,16 @@ running, deterministic simulation.
 and invariants; this document is only *what is done, what is left, and what has
 already been decided*. Open debt lives in [`debt.md`](./debt.md).
 
-**State verified 2026-08-31**, by running the gate rather than recalling:
-58 lessons · 197 sections · **5 tracks** · 627 unit tests (19 files) · 132 e2e
-tests sampled (70 run, 62 in the opt-in visual suite) and 165 on the full
-smoke+axe+search sweep · clean static export, 26 legacy redirect stubs.
-`npm run check` green.
+**State verified 2026-09-02**, by running the gate rather than recalling:
+70 lessons · 240 sections · **8 tracks** · 749 unit tests (26 files) · 47 quizzes ·
+clean static export, 26 legacy redirect stubs. `npm run check` green.
+
+Phase 2 F and G are now RESOLVED, both BUILD: the F spike proved a real code
+metric (cyclomatic complexity) moves as a consequence of a toy-AST refactoring,
+and the G gate proved a scenario choice mutates a real archetype-B run's measured
+outcome. Both unlocked tracks opened with a first module — Software Design &
+Architecture (`software-design`, 3 lessons) and Engineering Practice
+(`engineering-practice`, 2 lessons).
 
 **Every number in this document was re-checked against the repository on the date
 above.** If you change the curriculum, the honest way to update them is to run the
@@ -78,10 +83,10 @@ in order, every time:
 |---|---|---|
 | 0 | Thesis + repo/doc debt | **Done** |
 | 1 | Multi-track foundation | **Done**, ⌘K search included |
-| 2 | Engine archetypes | A–E **done**; F and G remain, both conditional |
+| 2 | Engine archetypes | A–E done; **F and G now RESOLVED — both BUILD** (see §3), archetypes shipped as `refactor.ts` + `scenario.ts` |
 | 3 | Authoring pipeline | **Done** |
 | 4 | CI + weight budget | **Done** (OG consolidation deferred with a measurement) |
-| 5 | Track rollout | 5 of 11 tracks; 58 lessons of ~120 |
+| 5 | Track rollout | 8 of 11 tracks; 70 lessons of ~120 |
 
 ### Foundations in place
 
@@ -94,12 +99,14 @@ in order, every time:
 - Two engines: **A** packet flow (`src/engine/`), **B** discrete steps
   (`src/engine/algo/`). Registry field `engine?: "flow" | "steps"` selects one;
   omitted means flow.
-- **C, D and E are not engines.** Thread interleaving, the mutation harness and the
-  repo DAG are all state shapes on archetype B. Five step producers exist:
-  `concurrency.ts`, `mutation.ts`, `repo.ts`, `transactions.ts`, `wal.ts` — the
-  last of them the first with no scheduler at all.
-- Six views: `ArrayView`, `ThreadsView`, `MutationView`, `RepoView`, `TableView`,
-  `WalView`.
+- **C, D, E, F and G are not engines.** Thread interleaving, the mutation harness,
+  the repo DAG, the refactor workbench and the branching scenario are all state
+  shapes on archetype B. Nine step producers exist: `concurrency.ts`,
+  `mutation.ts`, `repo.ts`, `transactions.ts`, `wal.ts`, `mvcc.ts`, `refactor.ts`
+  (F — computes cyclomatic complexity and fan-out from a toy AST), and
+  `scenario.ts` (G — drives a real sub-run per option and measures the outcome).
+- Nine views: `ArrayView`, `ThreadsView`, `MutationView`, `RepoView`, `TableView`,
+  `WalView`, `VersionsView`, `RefactorView`, `ScenarioView`.
 - `check-curriculum.mts` enforces route parity both ways, track integrity, globally
   unique module slugs, `AlgoDef` shape, code-panel width, prerequisite ordering,
   quiz-id uniqueness, and the README table.
@@ -121,27 +128,52 @@ If it is, it is a state contract + a step producer + a view + a test file.
 
 ## 3 · What remains
 
-### Phase 2 · F and G — both conditional
+### Phase 2 · F and G — RESOLVED, both BUILD
 
-**F · Code-transform workbench** (unlocks track 10: refactoring, patterns, SOLID).
-Try archetype B first: state is `{ files, activeFile, highlights, metrics }`, each
-step one transformation.
+**F · Code-transform workbench** (unlocked track 10: Software Design &
+Architecture). **Built**, on archetype B, as `algo/refactor.ts` + `views/refactor.ts`
++ `views/RefactorView.tsx`.
 
-*The open question:* can coupling / complexity / duplication be computed honestly
-from a toy AST? **Spike one refactoring and see whether a real metric moves.** If
-the number has to be hand-authored per step, the figure is theatre — cut F and
-teach those topics with A/B/G instead.
+*The open question was:* can coupling / complexity / duplication be computed
+honestly from a toy AST? **Answer: yes.** The spike implemented Extract Function
+over a toy AST (statement nodes over branch / loop / && / || / case / call /
+plain) and computed McCabe cyclomatic complexity (1 + decision points) and fan-out
+(distinct callees) by FOLDING over the tree. Measured, before → after the
+extraction: the hot function `handle` went **cc 7 → 2**, the new `validate` arrived
+at **cc 6**, and the module's max complexity fell **7 → 6** — while the total
+decision points stayed **6**, because a pure extraction MOVES complexity, it does
+not invent it. That conservation law is asserted on every frame and is the proof
+the number is not hand-authored: a hand-authored metric could not obey it by
+construction. De-duplication (the `dedupe` transform, reuse an existing function)
+is the one refactoring that genuinely reduces total decision points, measured
+**4 → 2**. So F is not theatre; it ships. First module: **Extract Function ·
+Duplicated Logic · Inline & Rename** (3 lessons).
 
-**G · Branching scenario** (unlocks track 11: requirements, review, on-call,
-ethics). The archetype most at risk of becoming a quiz with prose consequences.
+**G · Branching scenario** (unlocked track 11: Engineering Practice). **Built**, on
+archetype B, as `algo/scenario.ts` + `views/scenario.ts` + `views/ScenarioView.tsx`.
 
-*Hard gate:* **a scenario choice must mutate the parameters of a real A or B run,
-or the lesson does not ship.** A choice that only reveals text is a quiz, and
-`/review` already does quizzes better.
+*Hard gate:* a scenario choice must mutate the parameters of a real A or B run, or
+the lesson does not ship — a choice that only reveals text is a quiz, and
+`/review` already does quizzes better. **The gate is met.** The producer runs a
+REAL `interleave()` (or another archetype-B producer) per option over a sample of
+seeds and MEASURES the outcome; the size slider IS the choice, exactly as WAL uses
+size as the crash point. Measured divergence: the counter-fix scenario is correct
+in **54/200** runs if you leave the race and **200/200** if you take the mutex; the
+lock-ordering scenario completes **200/200** with one global order and **102/200**
+(the rest deadlock) with opposite orders. The numbers move with the choice because
+they are the output of running the scheduler, not prose. So G ships as a lesson
+archetype. First module: **The Mutex Call · Retry or Back Off (lock ordering)**
+(2 lessons); the module is a coherent first argument and will grow.
+
+**The archetype design that made G safe.** The `ScenarioState` contract carries no
+"consequence text" field, by construction — only the measured `ScenarioOutcome`
+(score, value/outOf) of each option's real run. There is nowhere to put a prose
+consequence, so a scenario that could only reveal text cannot be authored on this
+view. That is the structural enforcement of the hard gate.
 
 ### Phase 5 · Track rollout
 
-Roughly **62 lessons remain**. Each track is independently shippable; the gate for
+Roughly **50 lessons remain**. Each track is independently shippable; the gate for
 each is the per-lesson loop in §1 plus a regenerated README.
 
 **A track's number is its POSITION IN THE REGISTRY ARRAY**, not an identity —
@@ -156,12 +188,12 @@ these numbers as the current display order.
 | 03 | Databases & Transactions (`databases`) | B | ~10 | **open — 8 shipped** |
 | 04 | Testing & Verification (`testing`) | D + C | ~8 | **open — 4 shipped, 2 modules** |
 | 05 | Version Control & Delivery (`version-control`) | E + A | ~8 | **open — 6 shipped, 2 modules** |
-| — | Networking & the Web | A + B | ~10 | not started |
+| 06 | Networking & the Web (`networking`) | A + B | ~10 | **open — 4 shipped, 1 module** |
+| 07 | Software Design & Architecture (`software-design`) | F on B | ~10 | **open — 3 shipped, 1 module** |
+| 08 | Engineering Practice (`engineering-practice`) | G on B | ~8 | **open — 2 shipped, 1 module** |
 | — | Security Engineering | A + B + D | ~12 | not started |
 | — | Languages & Runtimes | B | ~12 | not started |
 | — | Operating Systems | B + C | ~12 | not started |
-| — | Software Design & Architecture | F | ~14 | blocked on the F spike |
-| — | Engineering Practice | G | ~10 | blocked on the G gate |
 
 **Estimates are ~30% lower than originally planned, deliberately.** Track 02 was
 projected at ~14 and came in at 9, because nine covered the subject without
@@ -375,8 +407,14 @@ Do not re-litigate these without new information.
 3. **Track 03's remaining topics** — MVCC and the storage/index lessons, each
    needing a new view. MVCC also changes a model five shipped lessons depend on, so
    it is the most expensive thing on this list.
-4. **F spike, then the G gate** — two small experiments that decide roughly 24
-   lessons. Resolve them before committing to either track.
+4. **Extend tracks 07 and 08** — F and G are RESOLVED (both BUILD, §3) and their
+   archetypes (`refactor.ts`, `scenario.ts`), views and tests are built and
+   screenshot-verified, so the expensive part is paid. Track 07 can add lessons
+   on more refactorings and coupling metrics (the `dedupe`, `inline`, `rename`
+   transforms all exist); track 08 can add more on-call scenarios (any real
+   archetype-B run can drive an option via `ScenarioChoice.run`). The refactor
+   AST is deliberately a toy — extending it toward SOLID/patterns means adding
+   node kinds and metrics, and keeping the conservation-law honesty check green.
 
 **Track 01 is effectively finished** at 31 lessons against an estimate of 26. Of
 its original addition list only **API design** and **sagas with compensation**

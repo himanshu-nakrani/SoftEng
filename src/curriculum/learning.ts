@@ -631,6 +631,41 @@ export const learningGuides: Record<string, LearningGuide> = {
       { slug: "write-skew", relation: "connects to" },
     ],
   ),
+  "extract-function": guide(
+    "How do you turn 'this function does too much' into a number that moves?",
+    "Lifting a validate block out of a handler drops its cyclomatic complexity from 7 to 2, and a new function takes on 6.",
+    "Complexity is folded from the code's structure, so the same restructuring that eases reading also lowers a measurable score — and the module's total decision points are conserved, proving the number is not hand-authored.",
+    "Count the tinted decision lines against each function's header, then confirm the module's decision-point total is identical before and after.",
+    [{ slug: "duplicated-logic", relation: "leads to" }],
+  ),
+  "inline-and-rename": guide(
+    "Does every refactoring lower a metric?",
+    "Inlining an over-thin helper removes a function and a coupling edge; renaming a vague function moves no metric at all.",
+    "Structure is a dial, not a ratchet: extraction and inlining are inverse moves, and the most valuable change — a clearer name — is invisible to every number.",
+    "Inline the helper and watch fan-out fall, then rename and watch every metric hold while the call sites all update.",
+    [{ slug: "extract-function", relation: "builds on" }],
+  ),
+  "duplicated-logic": guide(
+    "What is the difference between extracting a copy and removing one?",
+    "Extracting the shared guard once and then reusing it from the second handler drops duplication to 0 and total decision points from 4 to 2.",
+    "De-duplication is the one refactoring that reduces total decision points, because a rule that lived in two bodies now lives in one — extracting a second copy would leave duplication untouched.",
+    "On the second step, notice the handler gets a call to the shared function rather than a second copy; that reuse is what collapses the duplication.",
+    [{ slug: "extract-function", relation: "builds on" }],
+  ),
+  "the-mutex-call": guide(
+    "Does taking the lock actually change what the system does, or just what you say about it?",
+    "Choosing 'leave the race' keeps the counter correct in only 54 of 200 interleavings; choosing the mutex keeps it correct in all 200.",
+    "The choice sets a real parameter of a real run and the measured outcome diverges — which is what separates an engineering decision worth studying from a quiz with a prose answer.",
+    "Move the slider between the two calls and read the measured pass bars, then note that the option you did not pick was measured too.",
+    [{ slug: "retry-or-back-off", relation: "leads to" }],
+  ),
+  "retry-or-back-off": guide(
+    "Is it worth imposing one global lock order across teams?",
+    "Enforcing A-then-B everywhere completes all 200 runs; letting each team pick its own order deadlocks in about half of them.",
+    "The unsafe choice fails intermittently, not always, which is exactly why lock-ordering bugs survive review and testing — a rate measured over 200 seeds makes the risk arguable in numbers.",
+    "Slide to opposite orders and watch the completion bar fall to roughly half; the missing runs deadlocked rather than erroring.",
+    [{ slug: "the-mutex-call", relation: "builds on" }],
+  ),
 };
 
 export function getLearningGuide(slug: string): LearningGuide {

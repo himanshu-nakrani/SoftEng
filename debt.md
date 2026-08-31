@@ -13,7 +13,13 @@ Closed items stay listed, briefly, so the same ground is not rediscovered.
 an unlisted problem is an unnoticed one. Close an item by moving it to the bottom
 section with the evidence that closed it, not by deleting the row.
 
-Last reviewed: 2026-09-01, at 58 lessons / 627 unit tests / e2e green (sampled, and 165 on the full smoke+axe+search sweep).
+Last reviewed: 2026-09-02, at 70 lessons / 749 unit tests (26 files) / 8 tracks /
+240 sections. Phase 2 F and G are RESOLVED (both BUILD — see `implementation_plan.md`
+§3): tracks 07 Software Design & Architecture (`refactor.ts`, cyclomatic complexity
+and fan-out folded from a toy AST) and 08 Engineering Practice (`scenario.ts`, a
+choice sets a real sub-run's parameter and the measured outcome diverges) each
+opened with a first module. Both new views' first renders were screenshot-inspected
+and cost one real defect (below).
 
 Nothing in the Open list below blocks shipping a lesson. **D5 is the only item
 that needs the owner rather than an engineer.**
@@ -93,6 +99,8 @@ leaving it half-enabled is not.
 
 | Item | Closed by |
 |---|---|
+| F and G unresolved (blocked archetypes) | The F spike and G gate were run (`implementation_plan.md` §3). F: cyclomatic complexity moved **7 → 2** on the hot function under Extract Function, computed from a toy AST, with total decision points **conserved** (the honesty law, asserted every frame) — so BUILT, not cut. G: a scenario choice set a real `interleave()` parameter and the measured outcome diverged (**54/200** vs **200/200** correct; **200/200** vs **102/200** complete) — so BUILT as a lesson archetype, not left a quiz. `ScenarioState` carries no consequence-text field by construction, so the hard gate is structurally enforced. Two tracks opened (5 lessons), each with claim tests proven to fail. |
+| `RefactorView`/`ScenarioView` first render (F/G defect budget) | Screenshotted every first render and inspected it, per the §1 loop. One real defect the green headless suite missed: `ScenarioView`'s prompt wrapped to full stage width, so its first line ran under the figure's floating top-right `PlateLabel`. Fixed by narrowing the prompt wrap to the left two-thirds and dropping the centre stamp. The refactor cards rendered clean on the first pass. The prediction held again: a first render always has at least one defect. |
 | `MutationView` and `RepoView` never rendered (D1) | Tracks 04 Testing and 05 Version Control opened, rendering both for the first time. **The debt was real: three defects that a green headless suite and a compile-time view-contract assertion had both missed.** `MutationView`'s rotated test-name headers were anchored shallow enough to reach up into the figure's `PlateLabel`, illegible; `RepoView` drew orphaned commits at border-grey and 0.5 opacity, so "your commits are now unreachable" — the entire point of the rebase figure — was technically drawn and effectively invisible; and mutant labels carried markdown backticks, which SVG text renders as literal characters. Fixed, re-screenshotted, and 40 new claim tests pin the lessons' numbers. |
 | 3 e2e tests for the appearance/personalization panel dropped in `cfb4618` | Deleted (90 lines). `data-theme` existed nowhere in `src`; all three failed at unmodified HEAD. |
 | Flaky "play advances the sim clock" (9 of 10 runs) | Three real product bugs, found by instrumentation after three wrong guesses: the transport dispatched `controls.toggle` so the button could do the opposite of its label; the scroll observer acted on mid-scroll threshold crossings, pausing and resuming ~17ms apart; autoplay's once-only guard was a closure variable that reset when `useReducedMotion()` settled. |

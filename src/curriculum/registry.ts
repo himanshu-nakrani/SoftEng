@@ -1289,5 +1289,124 @@ export const curriculum: Curriculum = {
         },
       ],
     },
+    {
+      slug: "software-design",
+      title: "Software Design & Architecture",
+      description:
+        "Structure as a measurable thing — refactorings that move complexity and coupling, watched on the code they rewrite.",
+      accent: "green",
+      modules: [
+        {
+          slug: "refactoring",
+          title: "Refactoring by the Numbers",
+          description:
+            "Every refactoring changes a metric. Extract, inline, and de-duplicate, and watch cyclomatic complexity and coupling move on the AST itself.",
+          lessons: [
+            {
+              slug: "extract-function",
+              moduleSlug: "refactoring",
+              title: "Extract Function",
+              tagline:
+                "TODO: one line that states the tension, not the topic.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: [],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "the-long-method", title: "The long method", kind: "concept" },
+                { id: "extract-it", title: "Extract the block", kind: "interactive" },
+                { id: "what-moved", title: "What the metric proves", kind: "concept" },
+              ],
+            },
+                      {
+              slug: "inline-and-rename",
+              moduleSlug: "refactoring",
+              title: "Inline & Rename",
+              tagline:
+                "TODO: one line that states the tension, not the topic.",
+              difficulty: "intermediate",
+              estimatedMinutes: 11,
+              prerequisites: ["extract-function"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "over-abstracted", title: "Over-abstracted", kind: "concept" },
+                { id: "inline-it", title: "Inline and rename", kind: "interactive" },
+                { id: "structure-is-a-dial", title: "Structure is a dial", kind: "concept" },
+              ],
+            },
+                      {
+              slug: "duplicated-logic",
+              moduleSlug: "refactoring",
+              title: "Duplicated Logic",
+              tagline:
+                "TODO: one line that states the tension, not the topic.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["extract-function"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "copy-paste", title: "The copy-paste smell", kind: "concept" },
+                { id: "de-duplicate", title: "Extract the shared block", kind: "interactive" },
+                { id: "what-moved", title: "Duplication as a number", kind: "concept" },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      slug: "engineering-practice",
+      title: "Engineering Practice",
+      description:
+        "The judgement calls — on-call decisions where a choice sets a real parameter of a running system and the outcome you measure follows from it.",
+      accent: "violet",
+      modules: [
+        {
+          slug: "on-call",
+          title: "On-Call Decisions",
+          description:
+            "A choice is only a lesson if it changes a measured outcome. Each scenario sets a parameter of a real run and shows the numbers diverge by what you picked.",
+          lessons: [
+            {
+              slug: "the-mutex-call",
+              moduleSlug: "on-call",
+              title: "The Mutex Call",
+              tagline:
+                "TODO: one line that states the tension, not the topic.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: [],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "the-page", title: "The page at 2am", kind: "concept" },
+                { id: "make-the-call", title: "Make the call", kind: "interactive" },
+                { id: "what-the-run-measured", title: "What the run measured", kind: "concept" },
+              ],
+            },
+                      {
+              slug: "retry-or-back-off",
+              moduleSlug: "on-call",
+              title: "Retry or Back Off",
+              tagline:
+                "TODO: one line that states the tension, not the topic.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["the-mutex-call"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "the-storm", title: "The retry storm", kind: "concept" },
+                { id: "make-the-call", title: "Choose a retry policy", kind: "interactive" },
+                { id: "what-diverged", title: "What diverged", kind: "concept" },
+              ],
+            },
+          ],
+        },
+      ],
+    },
   ],
 };

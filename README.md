@@ -64,6 +64,22 @@ An interactive system-design learning site. Not articles — every concept is a 
 |---|---|
 | **Making a Web Request** | DNS Resolution · The TCP Handshake · HTTP Request & Response · Keep-Alive & Connection Reuse |
 
+### Track 07 — Software Design & Architecture
+
+3 lessons across 1 module, about 35 minutes end to end.
+
+| Module | Lessons |
+|---|---|
+| **Refactoring by the Numbers** | Extract Function · Inline & Rename · Duplicated Logic |
+
+### Track 08 — Engineering Practice
+
+2 lessons across 1 module, about 24 minutes end to end.
+
+| Module | Lessons |
+|---|---|
+| **On-Call Decisions** | The Mutex Call · Retry or Back Off |
+
 <!-- CURRICULUM:END -->
 
 Nothing is locked; start anywhere.
