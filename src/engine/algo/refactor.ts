@@ -385,7 +385,7 @@ export function runRefactor(script: RefactorScript): AlgoStep<RefactorState>[] {
   const rec = new StepRecorder<RefactorState>(() => snapshot);
   rec.record({ note: snapshot.note });
 
-  script.steps.forEach((step, i) => {
+  script.steps.forEach((step) => {
     let changed = new Set<string>();
     let activeFn: string | null = null;
     let transformLabel = "";
@@ -404,8 +404,6 @@ export function runRefactor(script: RefactorScript): AlgoStep<RefactorState>[] {
       activeFn = result.created;
       transformLabel = "Extract Function";
       rec.bump(REFACTOR_COUNTERS.extracted);
-      const before = i === 0 ? maxCcOf(script.module) : undefined;
-      void before;
       note = `Extract ${step.into} from ${step.from}: ${step.from} sheds decision points, a new function gains them`;
     } else if (step.kind === "dedupe") {
       const src = working.fns.find((f) => f.name === step.from)!;
@@ -447,7 +445,6 @@ export function runRefactor(script: RefactorScript): AlgoStep<RefactorState>[] {
 function maxCc(module: RefactorModule): number {
   return Math.max(...module.fns.map(cyclomatic));
 }
-const maxCcOf = maxCc;
 function hottest(module: RefactorModule): string {
   return hotName(module);
 }

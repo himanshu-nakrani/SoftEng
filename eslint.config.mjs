@@ -201,9 +201,12 @@ const eslintConfig = [
       "@typescript-eslint/no-explicit-any": "off",
       // Test tooling is allowed to drive the headless runner directly — that is
       // exactly how a flow lesson's prose is pinned (see networking-claims and
-      // the engine harness). The authoring ban above protects shipped sim code,
-      // not the tests that verify it.
-      "no-restricted-imports": "off",
+      // the engine harness). Only the LAYERING patterns are lifted here (a claim
+      // test legitimately imports the runner / buildAlgoSteps); the project-wide
+      // `framer-motion` ban is RESTATED, because flat config replaces rather than
+      // merges rule options — `"off"` would silently drop it for test files, the
+      // trap this file's header comment warns about.
+      "no-restricted-imports": ["error", { paths: [LEGACY_MOTION] }],
     },
   },
 ];

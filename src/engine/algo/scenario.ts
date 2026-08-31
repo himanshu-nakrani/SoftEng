@@ -81,7 +81,16 @@ export interface ScenarioSpec {
   /** Human name of the parameter the options differ on ("mutex on the counter"). */
   parameter: string;
   choices: ScenarioChoice[];
-  /** How the chosen option's measured outcome is summarised in the verdict. */
+  /**
+   * Summarise the chosen option's measured outcome for the verdict banner.
+   *
+   * CONTRACT: the returned string MUST be assembled only from the measured
+   * `ScenarioOutcome` fields of its arguments (`score`, `value`, `outOf`,
+   * `headline`) — never from authored prose. The structural gate (G) requires
+   * every consequence shown to a reader to be measured, not described, so the
+   * verdict is the last mile of that promise: it phrases numbers the sub-runs
+   * produced, it does not editorialize.
+   */
   verdict: (chosen: MeasuredChoice, all: MeasuredChoice[]) => string;
   /** Seeds to sample each option over. Deterministic; same sample every build. */
   sampleSize?: number;
@@ -213,10 +222,22 @@ export function runScenario(spec: ScenarioSpec, choiceIndex: number): AlgoStep<S
 }
 
 /**
- * A small seeded RNG for the sub-runs — the same 0..1 shape `mulberry32` has, so
- * a scenario's measured figures are identical every build. Kept local so the
- * scenario producer never reaches for `Math.random` (lint-banned) and never
- * depends on the top-level RNG the size slider does not thread here.
+ * A small seeded RNG for the sub-runs — the same GENERATOR as `@/engine/rng`'s
+ * `mulberry32` (identical step function), kept local so the scenario producer
+ * never reaches for `Math.random` (lint-banned) and never depends on the
+ * top-level RNG the size slider does not thread here.
+ *
+ * MUST STAY ARITHMETICALLY IDENTICAL to `mulberry32`'s step: a scenario's
+ * measured figures (and the committed claim numbers in on-call-claims.test.ts)
+ * would move silently if the generator diverged.
+ *
+ * NOTE — do NOT replace this with a bare `mulberry32(seed)` import: the seed
+ * mixing here differs deliberately (`seed + 0x6d2b79f5` vs `mulberry32`'s
+ * `seed >>> 0`), so the two produce different sequences for the same seed. The
+ * measured goldens were pinned against THIS seeding; switching to the exported
+ * initializer would change every scenario's numbers. If a shared, offset-aware
+ * factory is ever added to `@/engine/rng`, prefer importing that — but only
+ * after confirming the claim numbers are unchanged.
  */
 function mulberry(seed: number): () => number {
   let a = seed + 0x6d2b79f5;
