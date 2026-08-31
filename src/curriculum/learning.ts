@@ -577,6 +577,49 @@ export const learningGuides: Record<string, LearningGuide> = {
     "Reset back with no safety net and watch two commits turn red and dashed, then set a backup branch first and watch the same reset orphan nothing.",
     [{ slug: "cherry-pick-revert", relation: "builds on" }],
   ),
+  "dns-resolution": guide(
+    "Why is the first request to a new site slower than the ones after it?",
+    "A cold name walks the root, TLD, and authoritative servers in sequence; a cached name is answered by the resolver in one short hop until its TTL lapses.",
+    "DNS is the cache in front of the whole web: the TTL is both the grace period during an outage and the staleness you risk on a change — one number read two ways.",
+    "Drag the TTL down and watch the authoritative server's load climb, then kill it and count how long cached names keep resolving.",
+    [
+      { slug: "tcp-handshake", relation: "leads to" },
+      { slug: "cdn-edge", relation: "connects to" },
+    ],
+  ),
+  "tcp-handshake": guide(
+    "Why does a fresh connection cost a round trip before the request even goes out?",
+    "TCP spends one full round trip on a SYN / SYN-ACK / ACK handshake before data may flow, so time-to-first-byte on a new connection is about two RTTs, half of it pure setup.",
+    "On a lossy link a dropped setup packet is not noticed until a retransmit timeout — much longer than an RTT — so packet loss wrecks tail connection latency long before it moves the average.",
+    "Open connections on a clean link and read time-to-send, then raise the loss slider and watch worst-first-byte jump on the retransmit timeout.",
+    [
+      { slug: "dns-resolution", relation: "builds on" },
+      { slug: "connection-reuse", relation: "leads to" },
+      { slug: "retries-timeouts", relation: "connects to" },
+    ],
+  ),
+  "http-request-response": guide(
+    "Why does a page with eight small requests take so much longer than one request?",
+    "On a single HTTP/1.1 connection requests are served strictly in order, so the page-load time is the SUM of every round trip, not the largest — and a slow response blocks everything queued behind it.",
+    "Each extra connection is an independent lane that lets requests overlap, which is why browsers open several per host and why HTTP/2 multiplexing exists to remove the single-lane limit entirely.",
+    "Load a page on one connection, then raise the connections slider and watch the page time fall toward the batch divided by the lane count.",
+    [
+      { slug: "tcp-handshake", relation: "builds on" },
+      { slug: "connection-reuse", relation: "leads to" },
+      { slug: "message-queues", relation: "connects to" },
+    ],
+  ),
+  "connection-reuse": guide(
+    "If opening a connection costs a round trip, why pay it on every request?",
+    "A new connection per request pays the handshake every time (~2 RTT); a reused keep-alive connection pays it once, so every request after the first is ~1 RTT — the two strategies tie only on the very first request.",
+    "The saving is the setup cost times the number of requests you avoided repeating it on, which is why busy clients keep connection pools of warm connections ready in advance.",
+    "Run both clients, then toggle keep-alive off and watch the reused lane converge with the new-connection lane.",
+    [
+      { slug: "http-request-response", relation: "builds on" },
+      { slug: "tcp-handshake", relation: "builds on" },
+      { slug: "thread-pools", relation: "connects to" },
+    ],
+  ),
 };
 
 export function getLearningGuide(slug: string): LearningGuide {

@@ -55,6 +55,14 @@ An interactive system-design learning site. Not articles — every concept is a 
 | **Shaping History** | Merge vs Rebase · Fast-Forward · Cherry-Pick and Revert · Reset |
 | **Shipping It** | Canary Releases · Blue-Green Deploys · Feature Flags |
 
+### Track 06 — Networking & the Web
+
+4 lessons across 1 module, about 48 minutes end to end.
+
+| Module | Lessons |
+|---|---|
+| **Making a Web Request** | DNS Resolution · The TCP Handshake · HTTP Request & Response · Keep-Alive & Connection Reuse |
+
 <!-- CURRICULUM:END -->
 
 Nothing is locked; start anywhere.

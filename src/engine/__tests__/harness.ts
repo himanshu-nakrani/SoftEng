@@ -46,6 +46,10 @@ import { clientServerSim } from "@/lessons/scaling/client-server";
 import { loadBalancingSim } from "@/lessons/scaling/load-balancing";
 import { realtimeDeliverySim } from "@/lessons/scaling/realtime-delivery";
 import { scalingStrategiesSim } from "@/lessons/scaling/scaling-strategies";
+import { connectionReuseSim } from "@/lessons/web-requests/connection-reuse";
+import { httpRequestResponseSim } from "@/lessons/web-requests/http-request-response";
+import { tcpHandshakeSim } from "@/lessons/web-requests/tcp-handshake";
+import { dnsResolutionSim } from "@/lessons/web-requests/dns-resolution";
 import { featureFlagsSim } from "@/lessons/delivery/feature-flags";
 import { blueGreenSim } from "@/lessons/delivery/blue-green";
 import { distributedLocksSim } from "@/lessons/distributed/distributed-locks";
@@ -116,6 +120,10 @@ const SIM_BY_KEY: Record<string, LessonSim<unknown>> = {
   "distributed/distributed-locks": widen(distributedLocksSim),
   "delivery/blue-green": widen(blueGreenSim),
   "delivery/feature-flags": widen(featureFlagsSim),
+  "web-requests/dns-resolution": widen(dnsResolutionSim),
+  "web-requests/tcp-handshake": widen(tcpHandshakeSim),
+  "web-requests/http-request-response": widen(httpRequestResponseSim),
+  "web-requests/connection-reuse": widen(connectionReuseSim),
 };
 
 export interface LessonUnderTest {

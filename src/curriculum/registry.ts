@@ -1178,5 +1178,90 @@ export const curriculum: Curriculum = {
         },
       ],
     },
+    {
+      slug: "networking",
+      title: "Networking & the Web",
+      description:
+        "What a browser actually does to fetch a URL — names, connections, and the round trips you pay before the first byte.",
+      accent: "cyan",
+      modules: [
+        {
+          slug: "web-requests",
+          title: "Making a Web Request",
+          description:
+            "Name it, connect to it, exchange bytes, and reuse the connection — the request lifecycle, one round trip at a time.",
+          lessons: [
+            {
+              slug: "dns-resolution",
+              moduleSlug: "web-requests",
+              title: "DNS Resolution",
+              tagline:
+                "TODO: one line that states the tension, not the topic.",
+              difficulty: "foundational",
+              estimatedMinutes: 12,
+              prerequisites: [],
+              status: "available",
+              sections: [
+                { id: "names-not-addresses", title: "A name is not an address", kind: "concept" },
+                { id: "resolve-it", title: "Walk the hierarchy", kind: "interactive" },
+                { id: "ttl-and-cache", title: "Caching and TTL", kind: "interactive" },
+                { id: "when-it-goes-stale", title: "When the cache goes stale", kind: "concept" },
+              ],
+            },
+                      {
+              slug: "tcp-handshake",
+              moduleSlug: "web-requests",
+              title: "The TCP Handshake",
+              tagline:
+                "TODO: one line that states the tension, not the topic.",
+              difficulty: "foundational",
+              estimatedMinutes: 12,
+              prerequisites: ["dns-resolution"],
+              status: "available",
+              sections: [
+                { id: "before-any-data", title: "Before any data", kind: "concept" },
+                { id: "do-the-handshake", title: "Do the handshake", kind: "interactive" },
+                { id: "lossy-links", title: "When a packet is lost", kind: "interactive" },
+                { id: "cost-of-a-connection", title: "The cost of a connection", kind: "concept" },
+              ],
+            },
+                      {
+              slug: "http-request-response",
+              moduleSlug: "web-requests",
+              title: "HTTP Request & Response",
+              tagline:
+                "TODO: one line that states the tension, not the topic.",
+              difficulty: "foundational",
+              estimatedMinutes: 12,
+              prerequisites: ["tcp-handshake"],
+              status: "available",
+              sections: [
+                { id: "one-connection", title: "One connection at a time", kind: "concept" },
+                { id: "send-a-request", title: "Send some requests", kind: "interactive" },
+                { id: "head-of-line", title: "Requests wait in line", kind: "interactive" },
+                { id: "what-a-request-costs", title: "What a request really costs", kind: "concept" },
+              ],
+            },
+                      {
+              slug: "connection-reuse",
+              moduleSlug: "web-requests",
+              title: "Keep-Alive & Connection Reuse",
+              tagline:
+                "TODO: one line that states the tension, not the topic.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["http-request-response"],
+              status: "available",
+              sections: [
+                { id: "paying-twice", title: "Paying the setup cost twice", kind: "concept" },
+                { id: "reuse-it", title: "Reuse the connection", kind: "interactive" },
+                { id: "pool-under-load", title: "A pool under load", kind: "interactive" },
+                { id: "what-reuse-buys", title: "What reuse buys you", kind: "concept" },
+              ],
+            },
+          ],
+        },
+      ],
+    },
   ],
 };

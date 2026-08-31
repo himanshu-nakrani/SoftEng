@@ -51,6 +51,10 @@ import { clientServerSim } from "@/lessons/scaling/client-server";
 import { loadBalancingSim } from "@/lessons/scaling/load-balancing";
 import { realtimeDeliverySim } from "@/lessons/scaling/realtime-delivery";
 import { scalingStrategiesSim } from "@/lessons/scaling/scaling-strategies";
+import { connectionReuseSim } from "@/lessons/web-requests/connection-reuse";
+import { httpRequestResponseSim } from "@/lessons/web-requests/http-request-response";
+import { tcpHandshakeSim } from "@/lessons/web-requests/tcp-handshake";
+import { dnsResolutionSim } from "@/lessons/web-requests/dns-resolution";
 import { featureFlagsSim } from "@/lessons/delivery/feature-flags";
 import { blueGreenSim } from "@/lessons/delivery/blue-green";
 import { distributedLocksSim } from "@/lessons/distributed/distributed-locks";
@@ -112,6 +116,10 @@ export const simBySlug: Record<string, LessonSim<unknown>> = {
   "distributed-locks": widen(distributedLocksSim),
   "blue-green": widen(blueGreenSim),
   "feature-flags": widen(featureFlagsSim),
+  "dns-resolution": widen(dnsResolutionSim),
+  "tcp-handshake": widen(tcpHandshakeSim),
+  "http-request-response": widen(httpRequestResponseSim),
+  "connection-reuse": widen(connectionReuseSim),
 };
 
 /** Slugs already reported by `getSim`, so dev warns once per slug, not per render. */

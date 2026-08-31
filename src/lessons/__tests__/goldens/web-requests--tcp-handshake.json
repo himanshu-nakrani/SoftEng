@@ -1,0 +1,39 @@
+{
+  "lesson": "web-requests/tcp-handshake",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:tcp-lost-syn@13",
+      "t": 13.033333,
+      "metrics": {
+        "retransmits": 0,
+        "setupMs": 499.504824,
+        "ttfbMs": 1032.054129,
+        "worstMs": 1033.333333
+      },
+      "packets": 2,
+      "nextPacketId": 160,
+      "nodes": {
+        "client": "healthy",
+        "server": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "retransmits": 16,
+        "setupMs": 1755.984998,
+        "ttfbMs": 2648.74292,
+        "worstMs": 7066.666667
+      },
+      "packets": 3,
+      "nextPacketId": 366,
+      "nodes": {
+        "client": "healthy",
+        "server": "healthy"
+      }
+    }
+  ]
+}

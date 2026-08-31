@@ -199,6 +199,11 @@ const eslintConfig = [
       "no-restricted-properties": "off",
       "react-hooks/rules-of-hooks": "off",
       "@typescript-eslint/no-explicit-any": "off",
+      // Test tooling is allowed to drive the headless runner directly — that is
+      // exactly how a flow lesson's prose is pinned (see networking-claims and
+      // the engine harness). The authoring ban above protects shipped sim code,
+      // not the tests that verify it.
+      "no-restricted-imports": "off",
     },
   },
 ];
