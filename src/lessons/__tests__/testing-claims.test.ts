@@ -10,6 +10,12 @@ import {
   boundaryMutantsAlgo,
   boundaryMutantsEdgeAlgo,
 } from "@/lessons/test-quality/boundary-mutants";
+import {
+  equivalentMutantsAlgo,
+  equivalentMutantsStrengthenedAlgo,
+  equivalentMutantsBaseline,
+  equivalentMutantFns,
+} from "@/lessons/test-quality/equivalent-mutants";
 import { describe, expect, it } from "vitest";
 
 /**
@@ -217,6 +223,142 @@ describe("boundary-mutants · edge inputs kill everything", () => {
       const r = run(boundaryMutantsEdgeAlgo, seed);
       expect(r.killed).toBe(5);
       expect(r.survived).toBe(0);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// equivalent-mutants
+// ---------------------------------------------------------------------------
+
+describe("equivalent-mutants · the baseline is green and there are five mutants", () => {
+  it("passes the unmutated code and tries five mutants per suite", () => {
+    // "Five mutants are tried against it, one per row."
+    for (const def of [equivalentMutantsAlgo, equivalentMutantsStrengthenedAlgo]) {
+      const { state } = run(def);
+      expect(state.baselineGreen).toBe(true);
+      expect(state.mutants).toHaveLength(5);
+    }
+  });
+
+  it("runs both suites over the SAME five mutants", () => {
+    // "the completed suite below keeps the same five mutants"
+    const partial = run(equivalentMutantsAlgo).state.mutants.map((m) => m.id).sort();
+    const complete = run(equivalentMutantsStrengthenedAlgo)
+      .state.mutants.map((m) => m.id)
+      .sort();
+    expect(partial).toEqual(complete);
+  });
+});
+
+describe("equivalent-mutants · the partial suite leaves a mixed grid", () => {
+  it("kills two and lets three survive", () => {
+    // "The score line reads 2 killed, 3 survived."
+    const r = run(equivalentMutantsAlgo);
+    expect(r.killed).toBe(2);
+    expect(r.survived).toBe(3);
+    expect(r.counters[C.killed]).toBe(2);
+    expect(r.counters[C.survived]).toBe(3);
+  });
+
+  it("the two kills are real holes, both caught by '-20 clamps to 0'", () => {
+    // "it checks that ... a negative score clamps to zero" — the negative probe
+    // kills the two negative-domain holes.
+    const r = run(equivalentMutantsAlgo);
+    expect(r.killedIds.sort()).toEqual(
+      ["equivalent-mutants-hole-drop-low", "equivalent-mutants-hole-low-val"].sort(),
+    );
+    expect(r.killedBy("equivalent-mutants-hole-low-val")).toBe("-20 clamps to 0");
+    expect(r.killedBy("equivalent-mutants-hole-drop-low")).toBe("-20 clamps to 0");
+  });
+
+  it("leaves the two equivalent mutants AND one real hole standing", () => {
+    // "Two of those survivors are equivalent mutants ... and the third is a real
+    // hole the suite simply never probes."
+    expect(run(equivalentMutantsAlgo).survivors.sort()).toEqual(
+      [
+        "equivalent-mutants-eq-lower-le",
+        "equivalent-mutants-eq-upper-ge",
+        "equivalent-mutants-hole-high-val",
+      ].sort(),
+    );
+  });
+
+  it("charges ten mutant executions", () => {
+    // Two tests over five mutants, stopping at the first failure per mutant:
+    // the three survivors run both (6), the two kills stop at the second (4).
+    expect(run(equivalentMutantsAlgo).mutantExecutions).toBe(10);
+  });
+
+  it("reaches the same verdict on every seed", () => {
+    // Rule 6: reseeding reshuffles the narrative but not the verdict.
+    for (const seed of [0, 1, 7, 42, 99, 123]) {
+      const r = run(equivalentMutantsAlgo, seed);
+      expect(r.killed).toBe(2);
+      expect(r.survived).toBe(3);
+    }
+  });
+});
+
+describe("equivalent-mutants · completing the suite plateaus on the equivalents", () => {
+  it("kills three and lets two survive", () => {
+    // "The score line moves to 3 killed, 2 survived."
+    const r = run(equivalentMutantsStrengthenedAlgo);
+    expect(r.killed).toBe(3);
+    expect(r.survived).toBe(2);
+    expect(r.counters[C.killed]).toBe(3);
+    expect(r.counters[C.survived]).toBe(2);
+  });
+
+  it("closes the high-clamp hole with the added '200 clamps to 100' test", () => {
+    // "adds one test — a score of 200 clamps to 100 ... The real hole dies."
+    const r = run(equivalentMutantsStrengthenedAlgo);
+    expect(r.killedBy("equivalent-mutants-hole-high-val")).toBe("200 clamps to 100");
+  });
+
+  it("leaves EXACTLY the two equivalent mutants standing", () => {
+    // "the two survivors that remain are the two that cannot be killed."
+    expect(run(equivalentMutantsStrengthenedAlgo).survivors.sort()).toEqual(
+      ["equivalent-mutants-eq-lower-le", "equivalent-mutants-eq-upper-ge"].sort(),
+    );
+  });
+
+  it("plateaus at three of five — a 60% score", () => {
+    // "this suite kills 3 of 5 — a score of 60% — and it is stuck there."
+    const r = run(equivalentMutantsStrengthenedAlgo);
+    expect(r.killed).toBe(3);
+    expect(r.killed + r.survived).toBe(5);
+    expect(Math.round((r.killed / (r.killed + r.survived)) * 100)).toBe(60);
+  });
+
+  it("reaches the same verdict on every seed", () => {
+    for (const seed of [0, 1, 7, 42, 99, 123]) {
+      const r = run(equivalentMutantsStrengthenedAlgo, seed);
+      expect(r.killed).toBe(3);
+      expect(r.survived).toBe(2);
+    }
+  });
+});
+
+describe("equivalent-mutants · the equivalent mutants are genuinely equivalent", () => {
+  // "each mutant was diffed against the original over every integer score from
+  // -1000 to 2000, and these two matched on every one." No test — not even a
+  // perfect one — kills an equivalent mutant, so it survives BOTH suites. These
+  // read the SHIPPING baseline and mutant fns, so a break in the def is caught.
+  it("agrees with the baseline on every integer score in -1000..2000", () => {
+    for (const fn of Object.values(equivalentMutantFns)) {
+      for (let score = -1000; score <= 2000; score++) {
+        expect(fn(score)).toBe(equivalentMutantsBaseline(score));
+      }
+    }
+  });
+
+  it("survives in BOTH the partial and the completed suite", () => {
+    for (const def of [equivalentMutantsAlgo, equivalentMutantsStrengthenedAlgo]) {
+      const survivors = run(def).survivors;
+      for (const id of Object.keys(equivalentMutantFns)) {
+        expect(survivors).toContain(id);
+      }
     }
   });
 });

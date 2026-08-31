@@ -51,6 +51,7 @@ import { clientServerSim } from "@/lessons/scaling/client-server";
 import { loadBalancingSim } from "@/lessons/scaling/load-balancing";
 import { realtimeDeliverySim } from "@/lessons/scaling/realtime-delivery";
 import { scalingStrategiesSim } from "@/lessons/scaling/scaling-strategies";
+import { loadSheddingSim } from "@/lessons/resilience/load-shedding";
 import { getLesson } from "@/lib/curriculum";
 
 /**
@@ -96,6 +97,7 @@ export const simBySlug: Record<string, LessonSim<unknown>> = {
   gossip: widen(gossipSim),
   "two-phase-commit": widen(twoPhaseCommitSim),
   "geo-replication": widen(geoReplicationSim),
+  "load-shedding": widen(loadSheddingSim),
 };
 
 /** Slugs already reported by `getSim`, so dev warns once per slug, not per render. */

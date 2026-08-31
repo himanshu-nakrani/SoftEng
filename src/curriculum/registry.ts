@@ -266,6 +266,23 @@ export const curriculum: Curriculum = {
                 { id: "half-open", title: "The half-open probe", kind: "interactive" },
               ],
             },
+                      {
+              slug: "load-shedding",
+              moduleSlug: "resilience",
+              title: "Load Shedding",
+              tagline:
+                "A queue that accepts everything ends up serving nobody. Refusing work early is what keeps the rest fast.",
+              difficulty: "advanced",
+              estimatedMinutes: 14,
+              prerequisites: ["tail-latency"],
+              status: "available",
+              sections: [
+                { id: "overload", title: "When demand outruns capacity", kind: "concept" },
+                { id: "queue-of-death", title: "The queue that kills you", kind: "interactive" },
+                { id: "shedding", title: "Refusing work early", kind: "interactive" },
+                { id: "what-to-drop", title: "Choosing what to refuse", kind: "concept" },
+              ],
+            },
           ],
         },
         {
@@ -877,6 +894,24 @@ export const curriculum: Curriculum = {
                 { id: "far-tests", title: "Values that never probe", kind: "interactive" },
                 { id: "at-the-edge", title: "Testing on the edge", kind: "interactive" },
                 { id: "why-boundaries", title: "Why boundaries hide bugs", kind: "concept" },
+              ],
+            },
+                      {
+              slug: "equivalent-mutants",
+              moduleSlug: "test-quality",
+              title: "Not Every Survivor Is a Bug",
+              tagline:
+                "A perfect suite still leaves some mutants alive. Chasing 100% means writing tests that can never fail.",
+              difficulty: "advanced",
+              estimatedMinutes: 11,
+              prerequisites: ["coverage-vs-correctness"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "chasing-100", title: "Why 100 percent is not the target", kind: "concept" },
+                { id: "unkillable", title: "A mutant no test can kill", kind: "interactive" },
+                { id: "real-holes", title: "The survivors that do matter", kind: "interactive" },
+                { id: "reading-the-score", title: "What the number is for", kind: "concept" },
               ],
             },
           ],

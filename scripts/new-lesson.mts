@@ -97,7 +97,21 @@ for (const [what, value] of [
 const title = flag("title");
 if (!title) die("--title is required (it is the registry's copy, and the page's)");
 
-const engine = (flag("engine") ?? "steps") as Engine;
+/*
+ * REQUIRED, deliberately no default.
+ *
+ * It used to default to "steps", which silently contradicted the registry —
+ * where an OMITTED `engine` means flow. Scaffolding a packet lesson and
+ * forgetting the flag produced a steps lesson that looked fine: the gate stayed
+ * green because steps lessons are excluded from the packet harness, so the
+ * missing `simBySlug`/`SIM_BY_KEY` plumbing went unnoticed. The choice decides
+ * the whole contract, so it is worth one more word on the command line.
+ */
+const engineFlag = flag("engine");
+if (!engineFlag) {
+  die('--engine is required: "flow" for the packet sim, "steps" for the discrete-step player');
+}
+const engine = engineFlag as Engine;
 if (engine !== "flow" && engine !== "steps") {
   die(`--engine must be "flow" or "steps", got "${engine}"`);
 }
@@ -138,7 +152,21 @@ const pascal = camel[0].toUpperCase() + camel.slice(1);
  * ------------------------------------------------------------------ */
 
 const writes: { path: string; body: string }[] = [];
-const edits: { path: string; anchor: string; insert: string; label: string }[] = [];
+/**
+ * `position` says which side of the anchor the line lands on.
+ *
+ * "before" suits a closing-brace anchor like "\n};" — the original and still the
+ * default. "after" suits a whole-line anchor such as an existing import, where
+ * inserting before it would splice into the middle of that line.
+ */
+type EditPosition = "before" | "after";
+const edits: {
+  path: string;
+  anchor: string;
+  insert: string;
+  label: string;
+  position: EditPosition;
+}[] = [];
 
 function plan(relPath: string, body: string): void {
   const abs = join(root, relPath);
@@ -146,14 +174,23 @@ function plan(relPath: string, body: string): void {
   writes.push({ path: abs, body });
 }
 
-function planEdit(relPath: string, anchor: string, insert: string, label: string): void {
+function planEdit(
+  relPath: string,
+  anchor: string,
+  insert: string,
+  label: string,
+  position: EditPosition = "before",
+): void {
   const abs = join(root, relPath);
   if (!existsSync(abs)) die(`${relPath} does not exist`);
   const source = readFileSync(abs, "utf8");
   if (!source.includes(anchor)) {
     die(`could not find the ${label} anchor in ${relPath}\n  looked for: ${anchor.trim().slice(0, 80)}`);
   }
-  edits.push({ path: abs, anchor, insert, label });
+  if (source.includes(insert)) {
+    die(`${relPath} already contains the ${label} line — refusing to duplicate it`);
+  }
+  edits.push({ path: abs, anchor, insert, label, position });
 }
 
 /* ---- 1. the sim or def ---- */
@@ -213,8 +250,8 @@ export const ${camel}Algo: AlgoDef<ConcurrencyState, Program> = {
   run: (input, rng) => interleave(input, rng),
 };
 `
-    : `import type { LessonSim } from "@/engine/types";
-import { advancePackets, shouldSpawn, spawnPacket } from "@/engine/sim-helpers";
+    : `import { advancePackets, shouldSpawn, spawnPacket } from "@/engine/sim-helpers";
+import type { LessonSim } from "@/engine/types";
 
 /**
  * ${title} — archetype A (the packet engine).
@@ -222,32 +259,62 @@ import { advancePackets, shouldSpawn, spawnPacket } from "@/engine/sim-helpers";
  * TODO: topology, params, step. All randomness through \`state.rng\`;
  * \`Math.random\` is lint-banned here. Verify any prediction checkpoint's premise
  * at seed 42 by driving \`createRunner\` before trusting the prose.
+ *
+ * \`src/lessons/scaling/client-server.ts\` is the minimal reference.
  */
 
-interface Params {
-  rate: number;
+/** Per-lesson state. \`state.lesson\` is this; mutate it in place in \`step\`. */
+interface ${pascal}State {
+  /** TODO: replace. Counters and queues live here, never in module scope. */
+  requests: number;
 }
 
-export const ${camel}Sim: LessonSim<Record<string, never>> = {
+export const ${camel}Sim: LessonSim<${pascal}State> = {
   id: "${slug}",
   topology: {
     nodes: [
-      { id: "client", kind: "client", label: "Client", x: 120, y: 160 },
-      { id: "server", kind: "server", label: "Server", x: 520, y: 160 },
+      { id: "client", kind: "client", label: "browser", x: 160, y: 225 },
+      { id: "server", kind: "server", label: "api-1", x: 640, y: 225, breakable: true },
     ],
-    edges: [{ id: "req", from: "client", to: "server" }],
+    edges: [{ id: "wire", from: "client", to: "server" }],
   },
   params: [
-    { key: "rate", label: "requests / sec", min: 1, max: 20, step: 1, value: 6 },
+    {
+      key: "rate",
+      label: "traffic",
+      kind: "slider",
+      min: 1,
+      max: 20,
+      step: 1,
+      unit: " req/s",
+      defaultValue: 6,
+    },
   ],
-  init: () => ({}),
-  step: (state, dt, params: Params) => {
-    if (shouldSpawn(state, dt, params.rate)) {
-      spawnPacket(state, { edgeId: "req", kind: "request" });
+  init: () => ({ requests: 0 }),
+  // \`params\` is ParamValues (Record<string, ParamValue>), so read through
+  // Number()/String() rather than declaring a narrower parameter type — a
+  // narrowed type is not assignable to the interface.
+  step: (state, dt, params) => {
+    const L = state.lesson;
+    const rate = Number(params.rate);
+
+    // shouldSpawn returns a COUNT for this tick. Note the argument order:
+    // (state, rate, dt).
+    const spawns = shouldSpawn(state, rate, dt);
+    for (let i = 0; i < spawns; i++) {
+      spawnPacket(state, "wire", "request");
+      L.requests += 1;
     }
-    advancePackets(state, dt);
+
+    for (const packet of advancePackets(state, dt)) {
+      void packet; // TODO: handle arrivals — queue, serve, drop, respond.
+    }
+
+    // Publish every metric a meter reads. \`invariants.test.ts\` fails a meter
+    // whose \`metricKey\` is never written, because it would render blank.
+    state.metrics.requests = L.requests;
   },
-  meters: [{ metricKey: "inFlight", label: "in flight", kind: "counter" }],
+  meters: [{ metricKey: "requests", label: "requests", kind: "counter" }],
 };
 `,
 );
@@ -446,11 +513,36 @@ planEdit(
 /* ---- 7. flow-engine only: the two lookup maps ---- */
 
 if (engine === "flow") {
+  /*
+   * Both files need the IMPORT as well as the map entry. Inserting only the
+   * entry produced `Cannot find name '<x>Sim'` from tsc — caught, but only
+   * after the fact, and it made the scaffolder's "output is check-clean"
+   * promise false for every flow lesson.
+   *
+   * Anchored on the last `@/lessons/scaling/...` import, which is alphabetically
+   * last in both files today. Appending after it keeps the block sorted for any
+   * module before "scaling" and merely unsorted (not broken) after it.
+   */
+  const simImport = `import { ${camel}Sim } from "@/lessons/${moduleSlug}/${slug}";`;
+  planEdit(
+    "src/lessons/index.ts",
+    'import { scalingStrategiesSim } from "@/lessons/scaling/scaling-strategies";',
+    simImport,
+    "simBySlug imports",
+    "after",
+  );
   planEdit(
     "src/lessons/index.ts",
     "\n};",
     `  "${slug}": widen(${camel}Sim),`,
     "simBySlug end",
+  );
+  planEdit(
+    "src/engine/__tests__/harness.ts",
+    'import { scalingStrategiesSim } from "@/lessons/scaling/scaling-strategies";',
+    simImport,
+    "SIM_BY_KEY imports",
+    "after",
   );
   planEdit(
     "src/engine/__tests__/harness.ts",
@@ -493,14 +585,24 @@ for (const { path, body } of writes) {
  * worst failure mode this script has, so the shape of the output is asserted
  * rather than assumed.
  */
-for (const { path, anchor, insert, label } of edits) {
+for (const { path, anchor, insert, label, position } of edits) {
   const source = readFileSync(path, "utf8");
   const at = source.lastIndexOf(anchor);
   if (at === -1) die(`lost the ${label} anchor while applying`);
-  const next = source.slice(0, at + 1) + insert + "\n" + source.slice(at + 1);
-  if (!next.includes(`${insert}\n${anchor.trimStart()}`)) {
-    die(`the ${label} insert did not land on its own line in ${path}`);
-  }
+
+  const next =
+    position === "after"
+      ? source.slice(0, at + anchor.length) + "\n" + insert + source.slice(at + anchor.length)
+      : source.slice(0, at + 1) + insert + "\n" + source.slice(at + 1);
+
+  // Assert the shape rather than trusting the arithmetic: an earlier version of
+  // this applier produced `),};` on one line — valid TypeScript, so the gate
+  // passed and it broke the NEXT run.
+  const landed =
+    position === "after"
+      ? next.includes(`${anchor}\n${insert}`)
+      : next.includes(`${insert}\n${anchor.trimStart()}`);
+  if (!landed) die(`the ${label} insert did not land on its own line in ${path}`);
   writeFileSync(path, next);
 }
 

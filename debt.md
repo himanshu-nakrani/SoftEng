@@ -13,7 +13,7 @@ Closed items stay listed, briefly, so the same ground is not rediscovered.
 an unlisted problem is an unnoticed one. Close an item by moving it to the bottom
 section with the evidence that closed it, not by deleting the row.
 
-Last reviewed: 2026-08-31, at 47 lessons / 534 unit tests / e2e green (sampled, and 139 on the full smoke+axe sweep).
+Last reviewed: 2026-08-31, at 49 lessons / 555 unit tests / e2e green (sampled, and 148 on the full smoke+axe+search sweep).
 
 ---
 

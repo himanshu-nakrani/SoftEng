@@ -10,13 +10,13 @@ An interactive system-design learning site. Not articles — every concept is a 
 
 ### Track 01 — System Design Fundamentals
 
-26 lessons across 5 modules, about 5h 56m end to end.
+27 lessons across 5 modules, about 6h 10m end to end.
 
 | Module | Lessons |
 |---|---|
 | **Scaling** | Client & Server · Vertical vs Horizontal Scaling · Load Balancing · Autoscaling · Realtime Delivery |
 | **Data at Scale** | Caching · Cache Stampede · CDN & Edge Caching · Database Replication · Sharding · Consistent Hashing |
-| **Resilience** | Tail Latency · Timeouts & Retries · Circuit Breakers |
+| **Resilience** | Tail Latency · Timeouts & Retries · Circuit Breakers · Load Shedding |
 | **Observability & Incident Response** | Metrics, Logs & Traces · SLOs & Error Budgets · Incident Triage |
 | **Distributed Systems** | Rate Limiting · Message Queues & Backpressure · Delivery Guarantees & Idempotency · Fan-out: Push vs Pull · The CAP Theorem · Leader Election · Gossip Protocols · Two-Phase Commit · Geo-Replication |
 
@@ -39,11 +39,11 @@ An interactive system-design learning site. Not articles — every concept is a 
 
 ### Track 04 — Testing & Verification
 
-2 lessons across 1 module, about 24 minutes end to end.
+3 lessons across 1 module, about 35 minutes end to end.
 
 | Module | Lessons |
 |---|---|
-| **What a Suite Actually Checks** | Coverage Is Not Correctness · Boundaries and Off-By-One |
+| **What a Suite Actually Checks** | Coverage Is Not Correctness · Boundaries and Off-By-One · Not Every Survivor Is a Bug |
 
 ### Track 05 — Version Control & Delivery
 

@@ -9,9 +9,9 @@ and invariants; this document is only *what is done, what is left, and what has
 already been decided*. Open debt lives in [`debt.md`](./debt.md).
 
 **State verified 2026-08-31**, by running the gate rather than recalling:
-47 lessons · 153 sections · **5 tracks** · 534 unit tests (18 files) · 110 e2e
-tests sampled (59 run, 51 in the opt-in visual suite) and 139 on the full
-smoke+axe sweep · clean static export, 109 routes. `npm run check` green.
+49 lessons · 161 sections · **5 tracks** · 555 unit tests (18 files) · 116 e2e
+tests sampled (63 run, 53 in the opt-in visual suite) and 148 on the full
+smoke+axe+search sweep · clean static export. `npm run check` green.
 
 ---
 
@@ -71,11 +71,11 @@ in order, every time:
 | Phase | Scope | Status |
 |---|---|---|
 | 0 | Thesis + repo/doc debt | **Done** |
-| 1 | Multi-track foundation | **Done** except the ⌘K search, now unblocked |
+| 1 | Multi-track foundation | **Done**, ⌘K search included |
 | 2 | Engine archetypes | A–E **done**; F and G remain, both conditional |
 | 3 | Authoring pipeline | **Done** |
 | 4 | CI + weight budget | **Done** (OG consolidation deferred with a measurement) |
-| 5 | Track rollout | 5 of 11 tracks; 47 lessons of ~120 |
+| 5 | Track rollout | 5 of 11 tracks; 49 lessons of ~120 |
 
 ### Foundations in place
 
@@ -106,17 +106,23 @@ If it is, it is a state contract + a step producer + a view + a test file.
 
 ## 3 · What remains
 
-### Phase 1 · ⌘K curriculum search
+### Phase 1 · ⌘K curriculum search — SHIPPED
 
-Does little at 40 lessons; essential at ~120. Registry-derived, no separate index,
-keyboard-first.
+`src/components/navigation/CommandPalette.tsx`, mounted in `Sidebar` (which wraps
+every learn-area page). Registry-derived from `allLessons`, no separate index. All
+four acceptance criteria met: reachable everywhere in the learn area,
+keyboard-only (⌘K/Ctrl+K, arrows, Enter, Escape, focus trapped and restored),
+axe-clean with the dialog open, and `e2e/search.spec.ts` covers it.
 
-**Acceptance:** reachable from any learn-area page, navigable by keyboard alone,
-axe-clean, one interaction spec.
+Two things it got wrong on first render, both worth knowing:
 
-**Do it when** the per-track sidebar stops being sufficient — realistically when a
-fourth track opens. **That condition is now met: there are five tracks.** This is
-the top recommended item.
+- It rendered **in place inside `<aside>`**, so page chrome painted over the
+  results and the prose showed through the panel. Raising `z-index` cannot escape
+  an ancestor stacking context — it needed `createPortal` to `document.body`.
+- The haystack includes taglines, so "dead" matched Circuit Breakers ("the
+  downstream is dead") and unranked registry order put it ABOVE Deadlock. Results
+  are now scored by where the match landed: title prefix > title substring >
+  module/track > tagline.
 
 ### Phase 2 · F and G — both conditional
 
@@ -138,7 +144,7 @@ or the lesson does not ship.** A choice that only reveals text is a quiz, and
 
 ### Phase 5 · Track rollout
 
-Roughly **73 lessons remain**. Each track is independently shippable; the gate for
+Roughly **71 lessons remain**. Each track is independently shippable; the gate for
 each is the per-lesson loop in §1 plus a regenerated README.
 
 **A track's number is its POSITION IN THE REGISTRY ARRAY**, not an identity —
@@ -148,10 +154,10 @@ these numbers as the current display order.
 
 | # | Track (slug) | Archetypes | Est. | Status |
 |---|---|---|---|---|
-| 01 | System Design Fundamentals (`system-design-fundamentals`) | A | 26 | **complete** |
+| 01 | System Design Fundamentals (`system-design-fundamentals`) | A | 26 | 27 shipped — **open again** |
 | 02 | Concurrency (`concurrency`) | C on B | 9 | **complete** |
 | 03 | Databases & Transactions (`databases`) | B | ~10 | **open — 8 shipped** |
-| 04 | Testing & Verification (`testing`) | D | ~8 | **open — 2 shipped** |
+| 04 | Testing & Verification (`testing`) | D | ~8 | **open — 3 shipped** |
 | 05 | Version Control & Delivery (`version-control`) | E | ~8 | **open — 2 shipped** |
 | — | Networking & the Web | A + B | ~10 | not started |
 | — | Security Engineering | A + B + D | ~12 | not started |
@@ -266,6 +272,19 @@ Do not re-litigate these without new information.
 - **A control must dispatch the intent its label shows**, never ask the engine which
   way to flip: engine status changes without a re-render, so `toggle` could do the
   opposite of the button's label.
+- **A CODE PATH that has never been exercised is broken, not merely unverified.**
+  This has now happened three times. `AlgoFigure` reported a def's `size` twice —
+  invisible until the first lesson declared one. `RepoView` drew orphaned commits
+  at half opacity — invisible until a lesson rendered it. And the scaffolder's
+  FLOW template had rotted completely: it did not typecheck, its `--engine` flag
+  defaulted to `steps` (contradicting the registry, where omitted MEANS flow), it
+  inserted `simBySlug`/`SIM_BY_KEY` entries without the imports they need, and its
+  meter read a metric the step never wrote. Every archetype-B lesson since the
+  scaffolder was written had hidden it. Four fixes; it is now genuinely
+  check-clean untouched.
+- **Raising z-index cannot escape an ancestor stacking context.** The command
+  palette rendered inside the sidebar's `<aside>` and page chrome painted over it.
+  A portal to `document.body` is the fix.
 - **A view that has never been rendered is not merely unverified — it is wrong.**
   Rendering `MutationView` and `RepoView` for the first time cost three defects
   despite both having passing headless tests AND a compile-time view-contract
@@ -306,19 +325,15 @@ Do not re-litigate these without new information.
 
 ## 6 · Recommended order
 
-1. **⌘K curriculum search.** Its stated trigger has fired — five tracks, 47
-   lessons, and the sidebar only ever shows the active track, so there is now no
-   way to find a lesson whose track you are not already in. Acceptance criteria are
-   in §3.
-2. **Track 01 additions** — ~7–8 lessons on the existing packet engine, no new
+1. **Track 01 additions** — ~7–8 lessons on the existing packet engine, no new
    machinery at all. The cheapest content left anywhere.
 3. **Extend tracks 04 and 05** — both are open at two lessons on engines that can
    carry more, and both views are now screenshot-verified, so the expensive part is
    already paid.
-4. **Track 03's remaining topics** — MVCC and the storage/index lessons, each
+3. **Track 03's remaining topics** — MVCC and the storage/index lessons, each
    needing a new view. MVCC also changes a model five shipped lessons depend on, so
    it is the most expensive thing on this list.
-5. **F spike, then the G gate** — resolve whether the refactoring and practice
+4. **F spike, then the G gate** — resolve whether the refactoring and practice
    tracks are viable before committing to them.
 
 Debt to clear opportunistically: **D10** needs one run of the regen workflow;

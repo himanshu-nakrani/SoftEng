@@ -486,6 +486,20 @@ export const learningGuides: Record<string, LearningGuide> = {
     "Add or remove one commit on the trunk before merging and watch the merge commit appear and vanish.",
     [{ slug: "merge-vs-rebase", relation: "builds on" }],
   ),
+  "load-shedding": guide(
+    "When a server is overloaded, is it better to queue every request or to refuse some?",
+    "Accepting everything into a growing queue pushed the wait past the deadline, so the server ran at 100% while useful answers froze at 21; admission control settled the queue near 17, held the wait around 1400ms, and let useful answers climb past 160.",
+    "High utilisation is not throughput. A queue only adds waiting, and past the deadline it drives useful work to zero — so shedding trades refused requests for fast answers to the ones you keep. Note the vocabulary: a policy refusal is a REJECT, a capacity loss is a DROP, and they mean different things to whoever is paged.",
+    "Kill api-1 and watch the counter move to dropped rather than rejected — a dead box has lost capacity, it is not applying a policy.",
+    [{ slug: "tail-latency", relation: "builds on" }],
+  ),
+  "equivalent-mutants": guide(
+    "If a mutant survives every test, is it always a bug you can fix?",
+    "One suite now holds both kinds of survivor: real holes, and equivalent mutants that compute the identical answer for every input and so can never be killed.",
+    "A mutation score has a floor set by its unkillable mutants, so 100% is the wrong target. The useful output is not the percentage but the survivor list, split into work you can do and equivalents you should leave alone — and deciding which is which is undecidable in general, so it stays a judgement.",
+    "Complete the suite and watch the score plateau at 60%: the two survivors left are exactly the equivalent mutants.",
+    [{ slug: "coverage-vs-correctness", relation: "builds on" }],
+  ),
 };
 
 export function getLearningGuide(slug: string): LearningGuide {

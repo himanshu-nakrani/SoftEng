@@ -46,6 +46,7 @@ import { clientServerSim } from "@/lessons/scaling/client-server";
 import { loadBalancingSim } from "@/lessons/scaling/load-balancing";
 import { realtimeDeliverySim } from "@/lessons/scaling/realtime-delivery";
 import { scalingStrategiesSim } from "@/lessons/scaling/scaling-strategies";
+import { loadSheddingSim } from "@/lessons/resilience/load-shedding";
 
 /* ------------------------------------------------------------------ *
  * Registry → sim resolution
@@ -100,6 +101,7 @@ const SIM_BY_KEY: Record<string, LessonSim<unknown>> = {
   "distributed/gossip": widen(gossipSim),
   "distributed/geo-replication": widen(geoReplicationSim),
   "distributed/two-phase-commit": widen(twoPhaseCommitSim),
+  "resilience/load-shedding": widen(loadSheddingSim),
 };
 
 export interface LessonUnderTest {

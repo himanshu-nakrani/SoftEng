@@ -1,0 +1,41 @@
+{
+  "lesson": "resilience/load-shedding",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:load-shedding-overload@13",
+      "t": 13.033333,
+      "metrics": {
+        "dropped": 0,
+        "goodput": 21,
+        "queue": 149,
+        "rejected": 0,
+        "wait": 11889.723563
+      },
+      "packets": 75,
+      "nextPacketId": 465,
+      "nodes": {
+        "client": "healthy",
+        "server": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "dropped": 0,
+        "goodput": 164,
+        "queue": 16.8,
+        "rejected": 334.2,
+        "wait": 1396.108745
+      },
+      "packets": 38,
+      "nextPacketId": 1244,
+      "nodes": {
+        "client": "healthy",
+        "server": "healthy"
+      }
+    }
+  ]
+}
