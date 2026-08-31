@@ -21,6 +21,7 @@ import {
   lessonPath,
   trackPath,
   tracks,
+  migratedLessons,
 } from "@/lib/curriculum";
 
 const baseUrl = (
@@ -37,11 +38,16 @@ const routes = [
   ...STATIC_ROUTES,
   ...tracks.map(trackPath),
   ...available.map(lessonPath),
-  // The pre-migration URLs are a promise to anyone holding an old link, so they
-  // are monitored too — a redirect stub that 404s is a broken promise.
-  ...available
-    .filter((lesson) => lesson.moduleSlug !== "shared-state" && lesson.moduleSlug !== "transactions")
-    .map(legacyLessonPath),
+  /*
+   * The pre-migration URLs are a promise to anyone holding an old link, so they
+   * are monitored too — a redirect stub that 404s is a broken promise.
+   *
+   * Derived from `migratedLessons()`, the ONE definition of which URLs ever
+   * existed. This used to keep its own hand-maintained module exclusion, which
+   * drifted as new modules landed and left the monitor probing 15 URLs that never
+   * existed — so it reported failures against reality instead of regressions.
+   */
+  ...migratedLessons().map(legacyLessonPath),
 ];
 
 /**

@@ -11,7 +11,12 @@ already been decided*. Open debt lives in [`debt.md`](./debt.md).
 **State verified 2026-08-31**, by running the gate rather than recalling:
 55 lessons · 185 sections · **5 tracks** · 597 unit tests (18 files) · 124 e2e
 tests sampled (65 run, 59 in the opt-in visual suite) and 164 on the full
-smoke+axe+search sweep · clean static export. `npm run check` green.
+smoke+axe+search sweep · clean static export, 26 legacy redirect stubs.
+`npm run check` green.
+
+**Every number in this document was re-checked against the repository on the date
+above.** If you change the curriculum, the honest way to update them is to run the
+gate and read them off, not to adjust them by hand.
 
 ---
 
@@ -37,19 +42,20 @@ in order, every time:
 2. **Model, then measure.** Write the def, then drive it with `npx tsx` over ~200
    seeds and *read the numbers*. Never write a quantitative sentence you have not
    measured.
-3. **Write the prose against those numbers.** Twice this session a measurement
-   changed the lesson: serializable turned out not to "fix" lost update, and
-   read-committed's non-repeatable read needed different final balances than I had
-   assumed.
+3. **Write the prose against those numbers**, not the other way round. Measuring
+   has repeatedly changed the lesson rather than confirming it: serializable turned
+   out not to "fix" lost update, and a checkpoint's "records applied" was 3 rather
+   than the 2 the draft claimed, because the meter counts redo AND undo.
 4. **Pin the numbers as claim tests** — see `src/lessons/__tests__/*-claims.test.ts`.
    If a page quotes a figure, a test owns it. Then **break the mechanism and watch
    the test fail**; a claim test that has never failed is decoration.
 5. **`npx tsx scripts/check-curriculum.mts --write-readme`, then `npm run check`.**
-6. **Screenshot the figure and look at it.** Non-negotiable. This step has caught a
-   defect in five separate lessons that a fully green headless suite did not: a
-   counter reading 0 beside two waiting lanes, clipped pseudocode, a size meter
-   labelled "N" next to a "buffer capacity" slider, prose contradicting the run,
-   and a transaction name colliding with its status text.
+6. **Screenshot the figure and look at it.** Non-negotiable, and it has never once
+   been wasted: EVERY first render of a view has produced at least one defect a
+   fully green headless suite did not see. A sample: a counter reading 0 beside two
+   waiting lanes, clipped pseudocode, a size readout printed twice, orphaned commits
+   drawn invisibly, a stage banner claiming something vacuously true, a node
+   rendered below the stage edge, and a toggle contradicting its own meter.
 
 ### Non-negotiables
 
@@ -97,6 +103,15 @@ in order, every time:
 - `check-curriculum.mts` enforces route parity both ways, track integrity, globally
   unique module slugs, `AlgoDef` shape, code-panel width, prerequisite ordering,
   quiz-id uniqueness, and the README table.
+- **⌘K search** (`components/navigation/CommandPalette.tsx`), mounted in `Sidebar`
+  so it reaches every learn-area page. Registry-derived from `allLessons`, no
+  separate index; keyboard-only, axe-clean with the dialog open, covered by
+  `e2e/search.spec.ts`. Two inherited gotchas: it is PORTALED to `document.body`
+  because rendering inside the sidebar's `<aside>` let page chrome paint over it
+  (z-index cannot escape an ancestor stacking context), and results are RANKED by
+  where the match landed (title prefix > title substring > module/track > tagline)
+  because the haystack includes taglines — unranked, "dead" put Circuit Breakers
+  above Deadlock.
 
 **The rule that collapsed three archetypes into one, and should be applied before
 building any new engine:** ask whether the subject is a finite sequence of states.
@@ -105,24 +120,6 @@ If it is, it is a state contract + a step producer + a view + a test file.
 ---
 
 ## 3 · What remains
-
-### Phase 1 · ⌘K curriculum search — SHIPPED
-
-`src/components/navigation/CommandPalette.tsx`, mounted in `Sidebar` (which wraps
-every learn-area page). Registry-derived from `allLessons`, no separate index. All
-four acceptance criteria met: reachable everywhere in the learn area,
-keyboard-only (⌘K/Ctrl+K, arrows, Enter, Escape, focus trapped and restored),
-axe-clean with the dialog open, and `e2e/search.spec.ts` covers it.
-
-Two things it got wrong on first render, both worth knowing:
-
-- It rendered **in place inside `<aside>`**, so page chrome painted over the
-  results and the prose showed through the panel. Raising `z-index` cannot escape
-  an ancestor stacking context — it needed `createPortal` to `document.body`.
-- The haystack includes taglines, so "dead" matched Circuit Breakers ("the
-  downstream is dead") and unranked registry order put it ABOVE Deadlock. Results
-  are now scored by where the match landed: title prefix > title substring >
-  module/track > tagline.
 
 ### Phase 2 · F and G — both conditional
 
@@ -154,7 +151,7 @@ these numbers as the current display order.
 
 | # | Track (slug) | Archetypes | Est. | Status |
 |---|---|---|---|---|
-| 01 | System Design Fundamentals (`system-design-fundamentals`) | A | 26 | 31 shipped — **open again** |
+| 01 | System Design Fundamentals (`system-design-fundamentals`) | A | 26 | 31 shipped — **effectively finished** (see §6) |
 | 02 | Concurrency (`concurrency`) | C on B | 9 | **complete** |
 | 03 | Databases & Transactions (`databases`) | B | ~10 | **open — 8 shipped** |
 | 04 | Testing & Verification (`testing`) | D | ~8 | **open — 3 shipped** |
@@ -215,27 +212,34 @@ accordingly:
 
 #### Tracks 04 and 05, specifically
 
-Both are OPEN at two lessons each, and both rendered their view for the first time
-— which closed D1 and cost three real defects (see the closed section of
-`debt.md`). The engines carry more than two lessons each:
+Both rendered their view for the first time — which closed D1 and cost three real
+defects (see the closed section of `debt.md`). Both engines carry more:
 
-- **04 Testing** (`runMutationSuite`): shipped Coverage Is Not Correctness ·
-  Boundaries and Off-By-One. The harness also supports test-suite smells that
-  coverage cannot express — a test asserting nothing, a mutant no input reaches, a
-  suite whose whole score rests on one test. Judge honestly whether each is a
+- **04 Testing**, 3 lessons on `runMutationSuite`: Coverage Is Not Correctness ·
+  Boundaries and Off-By-One · Not Every Survivor Is a Bug. The third is the
+  deliberate correction to the first — an equivalent mutant can never be killed, so
+  the score has a floor and 100% is the wrong target. The harness also supports
+  test-suite smells coverage cannot express (a test asserting nothing, a mutant no
+  input reaches, a suite resting on one test). Judge honestly whether each is a
   distinct lesson or the same point twice; the module is already a complete
-  argument at two.
-- **05 Version Control** (`runRepoScript`): shipped Merge vs Rebase ·
-  Fast-Forward. `RepoOp` covers commit/branch/checkout/merge/rebase and nothing
-  else, so cherry-pick, revert, reset and conflict handling would each need a new
-  op. Adding an op is cheap; adding a CONFLICT is not, because the model has no
+  argument at three.
+- **05 Version Control & Delivery**, 4 lessons across TWO modules and TWO
+  archetypes: `history` on the repo DAG (Merge vs Rebase · Fast-Forward) and
+  `delivery` on the PACKET engine (Canary Releases · Blue-Green Deploys). Proof
+  that a track is not tied to one engine. `RepoOp` covers
+  commit/branch/checkout/merge/rebase and nothing else, so cherry-pick, revert and
+  reset would each need a new op — cheap. A CONFLICT is not cheap: the model has no
   file contents at all.
 
-#### Also available, needing no new engine work
+#### Track 01's addition list is spent
 
-Track 01 additions: consistency models and quorums, saga/outbox, load shedding and
-admission control, bulkheads, distributed locks and clock skew, API design, canary
-and blue-green (~7–8 lessons).
+Shipped from it: **Load Shedding · Quorums · Bulkheads · The Outbox Pattern ·
+Distributed Locks & Clock Skew**, plus **Canary Releases** and **Blue-Green
+Deploys** which went to track 05's new `delivery` module instead. Track 01's
+`distributed` module now holds 12 lessons and the track holds 31.
+
+Only API design and sagas-with-compensation are left unclaimed, for the reasons in
+§6. There is no longer a pool of cheap packet-engine content waiting.
 
 ---
 
@@ -272,54 +276,64 @@ Do not re-litigate these without new information.
 - **A control must dispatch the intent its label shows**, never ask the engine which
   way to flip: engine status changes without a re-render, so `toggle` could do the
   opposite of the button's label.
-- **A CODE PATH that has never been exercised is broken, not merely unverified.**
-  This has now happened three times. `AlgoFigure` reported a def's `size` twice —
-  invisible until the first lesson declared one. `RepoView` drew orphaned commits
-  at half opacity — invisible until a lesson rendered it. And the scaffolder's
-  FLOW template had rotted completely: it did not typecheck, its `--engine` flag
-  defaulted to `steps` (contradicting the registry, where omitted MEANS flow), it
-  inserted `simBySlug`/`SIM_BY_KEY` entries without the imports they need, and its
-  meter read a metric the step never wrote. Every archetype-B lesson since the
-  scaffolder was written had hidden it. Four fixes; it is now genuinely
-  check-clean untouched.
-- **A control the timeline cannot write will drift from the state it controls.**
+- **A CODE PATH THAT HAS NEVER BEEN EXERCISED IS BROKEN, not merely unverified.**
+  The single most reliable prediction in this repo. Four confirmed instances:
+  `AlgoFigure` reported a def's `size` twice, latent until the first lesson declared
+  one; `MutationView`'s rotated headers reached into the figure's `PlateLabel`, and
+  `RepoView` drew orphaned commits at half opacity so the rebase lesson's whole
+  point was invisible — both latent until a lesson rendered them, and both despite
+  passing headless tests AND a compile-time view-contract assertion; and the
+  scaffolder's FLOW template had rotted entirely (did not typecheck, `--engine`
+  defaulted to `steps` contradicting the registry where omitted MEANS flow,
+  inserted `simBySlug`/`SIM_BY_KEY` entries without their imports, and its meter
+  read a metric the step never wrote) because every lesson since it was written had
+  been archetype B. Budget a screenshot pass AND fixes as part of shipping any
+  first render or first use of a config path. Nothing was wrong with the new lesson
+  in any of these cases.
+- **A control the timeline cannot write WILL drift from the state it controls.**
   `TimelineEvent.apply` receives only `state`, never `params`, so a scripted beat
-  cannot move a slider or flip a toggle. Both delivery lessons hit this: the
-  scripted value lived on lesson state and the control kept showing its own,
-  so a toggle read OFF while 100% of traffic was on green, and a caption invited
-  the reader to do something already done. Two rules follow: the scripted value
-  must YIELD the moment the reader touches the control, and it must RELEASE before
-  any caption invites them to try it themselves.
-- **Two readouts with one label showing two numbers reads as a bug.** The canary
-  figure had a `canary share` METER (the effective routing share, opened by a
-  scripted beat) beside a `canary share` SLIDER at 0% — and dragging the slider
-  down could not lower the meter, because routing took `max(slider, scripted)`.
-  The scripted value must YIELD once the reader touches the control, and the two
-  readouts must not share a name. Same family as `AlgoFigure` printing a def's
-  `size` twice.
+  physically cannot move a slider or flip a toggle. Both `delivery` lessons hit
+  this and it surfaced two different ways: canary had a `canary share` METER beside
+  a `canary share` SLIDER holding different numbers (routing took
+  `max(slider, scripted)`, so dragging the slider down could not lower the meter),
+  and blue-green's toggle read OFF while 100% of traffic was on green with a
+  caption inviting the reader to do what had already happened. Three rules follow:
+  the scripted value must YIELD the moment the reader touches the control; it must
+  RELEASE before any caption invites them to try it; and a meter must never share a
+  label with a control. Same family as `AlgoFigure` printing a def's `size` twice —
+  two readouts, one name, two numbers.
 - **Check that every node is inside the frame.** One of the quorums lesson's five
   replicas sat at y=390, under the stage edge where the caption sits, so the
   figure showed four replicas while the prose discussed five.
 - **Raising z-index cannot escape an ancestor stacking context.** The command
   palette rendered inside the sidebar's `<aside>` and page chrome painted over it.
   A portal to `document.body` is the fix.
-- **A view that has never been rendered is not merely unverified — it is wrong.**
-  Rendering `MutationView` and `RepoView` for the first time cost three defects
-  despite both having passing headless tests AND a compile-time view-contract
-  assertion. Worst of them: `RepoView` drew orphaned commits at border-grey and
-  half opacity, so the rebase lesson's entire point was invisible. Budget a
-  screenshot pass and fixes as part of shipping any first render.
-- **Trust a measurement over your own eyes on a downscaled screenshot.** Twice
-  this session I misread a figure — a chip colour once, a digit (`0` as `5`) once —
-  and both times driving the def with `npx tsx` settled it in seconds. Screenshot
-  to find layout defects; verify the values in code.
-- **A hand-maintained exclusion list will drift, and the sampling can hide it.**
-  `selectedLegacyRoutes` excluded one module by name to skip lessons with no
-  pre-track URL. That was right when track 02 was the only later track and wrong
-  the moment track 03 added modules — it asserted redirects for URLs that never
-  existed. It could not fail on a pull request, because the sampled run takes the
-  first three, which are all track 01. Only `E2E_FULL=1` found it. Both sides now
-  derive from `migratedLessons()`.
+- **Trust a measurement over your own eyes on a downscaled screenshot.** Two
+  misreadings so far — a chip colour, and a `0` read as a `5` — both settled in
+  seconds by driving the def with `npx tsx`. Screenshot to find LAYOUT defects;
+  verify VALUES in code.
+- **A FACT ABOUT HISTORY cannot be derived from current data — write it down.**
+  The best trap in this file, because the obvious fix was also wrong. "Which URLs
+  existed before the route migration" was first a hand-maintained module exclusion
+  (`!== "shared-state"`), which went stale the moment track 03 added modules and
+  asserted redirects for URLs that never existed. It was then "derived, not listed"
+  from the migrated TRACK — which broke differently as soon as track 01 GREW:
+  five lessons added afterwards got phantom redirect stubs, and the e2e suite
+  dutifully asserted those phantoms resolved. Both versions were green. The set is
+  now a frozen `PRE_MIGRATION_SLUGS` list of 26 that must never grow, because a
+  lesson added today did not exist yesterday. Derive from data; never derive from
+  the past.
+- **Fix a duplicated rule in EVERY copy, then prove there are no more.** The
+  exclusion above lived in three places — the stub generator, the e2e suite, and
+  `scripts/check-live-routes.mts`. Two were fixed and the docs then described the
+  problem as solved, while the monitor quietly kept probing 15 URLs that never
+  existed and 404 on the deployed site, reporting failures against reality rather
+  than regressions. An independent audit found it, not the gate: nothing in
+  `npm run check` exercises the monitor. When you consolidate a rule, grep for the
+  old shape afterwards.
+- **The sampled run can hide a drift like that.** The first version could not fail
+  on a pull request, because the sampled legacy check takes the first three
+  lessons and those are all track 01. Only `E2E_FULL=1` found it.
 - **Run `E2E_FULL=1` before believing the suite is green.** The sampled run takes
   one lesson per module, so a brand-new lesson that is a module's SECOND is not
   covered by it at all.
@@ -327,15 +341,18 @@ Do not re-litigate these without new information.
   checkpoint prose, "records applied" was stated as 2; the meter reads 3, because
   it counts redo AND undo. The claim test failed on the first run and the sentence
   was wrong, not the code.
-- **The first time a config path is actually RENDERED, expect a latent bug.**
-  `write-ahead-logging` was the first shipped lesson def to declare a `size`, and
-  rendering it exposed an `AlgoFigure` defect that had been there all along: the
-  size was reported twice, as a counter and on its own slider. Nothing was wrong
-  with the new lesson. This is D1's thesis arriving on a path nobody had listed.
 - **A view must not infer semantics from an empty collection.** `WalView` read an
   empty log as "this policy keeps no log", which is also true of the first frame
   of every logged run — so the write-ahead figure opened by announcing it had no
   log. The producer now states it explicitly.
+- **An un-asserted string replace will rot this document silently.** §6 of this
+  plan drifted for two sessions because edits used a plain `replace()` with no
+  assertion: the anchor stopped matching after an earlier edit, the replace became
+  a no-op, the script still reported success, and the section kept claiming track 01
+  had 7–8 cheap lessons left after five of them had shipped. It also ended up
+  numbered 1, 3, 3, 4. **Assert that every anchor exists and is unique, then read
+  the file back.** The same applies to shell heredocs: use `<<'PY'`, not `<<PY`, or
+  bash will expand backticks inside the script and eat the identifiers.
 - **This machine's load skews test timing.** Failures at load average >30 were
   environmental every time; re-run in isolation before investigating.
 
@@ -343,16 +360,24 @@ Do not re-litigate these without new information.
 
 ## 6 · Recommended order
 
-1. **Track 01 additions** — ~7–8 lessons on the existing packet engine, no new
-   machinery at all. The cheapest content left anywhere.
-3. **Extend tracks 04 and 05** — both are open at two lessons on engines that can
-   carry more, and both views are now screenshot-verified, so the expensive part is
-   already paid.
+1. **Extend tracks 04 and 05** — the cheapest work left. Both are open on engines
+   and views that are built, tested and now screenshot-verified, so the expensive
+   part is already paid; they need content and a screenshot pass.
+2. **Open one of the four unstarted tracks** — Networking & the Web, Security
+   Engineering, Languages & Runtimes, Operating Systems (~46 lessons between them).
+   Mid-priced: they reuse existing archetypes but each subject needs its own state
+   shape and view. Networking is the closest fit to what already exists (A + B).
 3. **Track 03's remaining topics** — MVCC and the storage/index lessons, each
    needing a new view. MVCC also changes a model five shipped lessons depend on, so
    it is the most expensive thing on this list.
-4. **F spike, then the G gate** — resolve whether the refactoring and practice
-   tracks are viable before committing to them.
+4. **F spike, then the G gate** — two small experiments that decide roughly 24
+   lessons. Resolve them before committing to either track.
+
+**Track 01 is effectively finished** at 31 lessons against an estimate of 26. Of
+its original addition list only **API design** and **sagas with compensation**
+remain, and neither is a natural packet-engine subject — API design is about
+contracts rather than flows, and a saga needs compensating actions the engine has
+no vocabulary for. Decide whether to force them or leave the track as it stands.
 
 Debt to clear opportunistically: **D10** needs one run of the regen workflow;
 **D5** needs owner approval for a history rewrite; **D2** needs two devDependencies

@@ -148,11 +148,59 @@ export function lessonPath(lesson: LessonMeta): string {
  */
 export const MIGRATED_TRACK = "system-design-fundamentals";
 
-/** Lessons that actually have a pre-migration URL, and therefore a stub. */
+/**
+ * The lessons whose URLs existed BEFORE the route migration — a FROZEN historical
+ * list, and deliberately not derived from anything.
+ *
+ * This has now been wrong twice, in opposite directions. First the e2e suite kept
+ * a hand-maintained module EXCLUSION (`!== "shared-state"`), which went stale the
+ * moment track 03 added modules. The fix was to derive the set from the migrated
+ * TRACK instead — and that was wrong too, because track 01 kept growing: five
+ * lessons added after the migration got phantom redirect stubs for URLs that had
+ * never existed, and the e2e suite dutifully asserted those phantoms resolved.
+ *
+ * The lesson is that "which URLs existed at a past moment" is a FACT ABOUT
+ * HISTORY. It is not a property of current registry data and no filter over the
+ * registry can recover it. So it is written down once and never grows: a lesson
+ * added today did not exist yesterday, and adding it here would be a lie.
+ */
+const PRE_MIGRATION_SLUGS: ReadonlySet<string> = new Set([
+  "client-server",
+  "scaling-strategies",
+  "load-balancing",
+  "autoscaling",
+  "realtime-delivery",
+  "caching",
+  "cache-stampede",
+  "cdn-edge",
+  "replication",
+  "sharding",
+  "consistent-hashing",
+  "tail-latency",
+  "retries-timeouts",
+  "circuit-breaker",
+  "metrics-logs-traces",
+  "slos-error-budgets",
+  "incident-triage",
+  "rate-limiting",
+  "message-queues",
+  "delivery-guarantees",
+  "fanout",
+  "cap-theorem",
+  "leader-election",
+  "gossip",
+  "two-phase-commit",
+  "geo-replication",
+]);
+
+/**
+ * Lessons that actually have a pre-migration URL, and therefore a redirect stub.
+ * Both the stub generator and the e2e suite derive from this, so they cannot
+ * disagree.
+ */
 export function migratedLessons(): LessonMeta[] {
   return allLessons.filter(
-    (lesson) =>
-      lesson.status === "available" && trackOfLesson(lesson).slug === MIGRATED_TRACK,
+    (lesson) => lesson.status === "available" && PRE_MIGRATION_SLUGS.has(lesson.slug),
   );
 }
 

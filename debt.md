@@ -15,6 +15,9 @@ section with the evidence that closed it, not by deleting the row.
 
 Last reviewed: 2026-08-31, at 55 lessons / 597 unit tests / e2e green (sampled, and 164 on the full smoke+axe+search sweep).
 
+Nothing in the Open list below blocks shipping a lesson. **D5 is the only item
+that needs the owner rather than an engineer.**
+
 ---
 
 ## Open
@@ -60,7 +63,7 @@ lesson can measure.
 increments) — worth doing only when a lesson actually needs it.
 
 ### D5 · `.mimosa/` and a 14.7 MB PNG remain in git history
-Both are untracked and gitignored now (527 → 322 tracked files), but the blobs are
+Both are untracked and gitignored now (they were 205 of 527 tracked files at the time; the tree is 470 files today), but the blobs are
 still in history, so clone size is unchanged.
 
 **Closes when:** a history rewrite is run. **Destructive and shared-history
@@ -99,7 +102,7 @@ leaving it half-enabled is not.
 | Section completion untested on track 02 (D3) | An interaction spec now drives a step-engine figure and asserts the completion persists across a reload. Verified it can fail by removing the `onEngage` wiring and watching it break. |
 | `Math.random()` unguarded in the playground (D7) | Lint widened to `src/components/playground/**`; the one legitimate use (picking a fresh seed) carries an inline exemption stating why. An exemption you can see beats a gap in the glob. |
 | `RELEASE_D_REPORT.md` reading as current (D9) | Marked HISTORICAL at the top, naming what it predates and pointing at the current documents. |
-| Monitoring documented but not running (D6) | `.github/workflows/monitor.yml` now runs it 4×/day against the deployed origin, and the route list is derived from the registry rather than hand-maintained — 74 routes instead of a stale 30 that had fallen 14 lessons behind. Doc rewritten to describe what exists. |
+| Monitoring documented but not running (D6) | `.github/workflows/monitor.yml` now runs it 4×/day against the deployed origin, and the route list is derived from the registry rather than hand-maintained. **Amended 2026-08-31:** the derivation was only half done — the script kept its own hand-maintained module exclusion for legacy URLs, which drifted into probing 15 URLs that never existed and 404 on the deployed site. It now uses `migratedLessons()`, the same single definition the e2e suite and the stub generator use, and probes 91 routes. Doc rewritten to describe what exists. |
 | Playwright browser pin mismatch (D8) | `@playwright/test` resolves to 1.62.0, which wants chromium 1234; only 1237 was cached. `npx playwright install chromium` fetched the expected build — e2e now runs with no `PW_CHROMIUM_PATH` override. |
 | 5 high-severity dependency advisories | Found by adding `npm audit --audit-level=high` to CI. `npm audit fix` cleared them to zero, lockfile-only (16 packages, incl. Next 16.2.11 → 16.3.3), verified by the full gate, build and e2e. |
 | Code panel clipping (three consecutive lessons) | ≤27 characters derived from the component and enforced by the `algo integrity` check, which names the offending line and its length. |

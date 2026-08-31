@@ -24,7 +24,9 @@ extends the monitor for free. It previously listed thirty paths by hand, and had
 gone stale by fourteen lessons plus `/playground` — reporting green while checking
 a third less than it claimed.
 
-Each run currently probes **74 routes**:
+Each run probes **91 routes** at the time of writing — but that number grows with
+the curriculum, so do not trust it. The script derives the list; read the count off
+a run rather than from this sentence:
 
 - the non-curriculum surfaces: `/`, `/about`, `/learn`, `/review`, `/playground`;
 - every track landing (`/learn/<track>`);
