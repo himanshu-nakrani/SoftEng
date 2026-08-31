@@ -224,3 +224,97 @@ describe("archetype E rides on archetype B", () => {
     expect(view).toBe(RepoView);
   });
 });
+
+// ---------------------------------------------------------------------------
+// cherry-pick and revert — single-commit operations (appended)
+// ---------------------------------------------------------------------------
+
+const cherry = (commit: string): RepoCommand => ({
+  label: `git cherry-pick ${commit}`,
+  op: { kind: "cherryPick", commit },
+});
+const revert = (commit: string): RepoCommand => ({
+  label: `git revert ${commit}`,
+  op: { kind: "revert", commit },
+});
+
+describe("runRepoScript · cherry-pick", () => {
+  it("copies a commit onto the current branch with a NEW id", () => {
+    const steps = runRepoScript({
+      commands: [
+        commit("init"),
+        branch("feature"),
+        checkout("feature"),
+        commit("fix"),
+        checkout("main"),
+        cherry("c2"),
+      ],
+    });
+    const state = last(steps);
+    const copy = state.commits.find((c) => c.copyOf !== undefined)!;
+    // Same change, new id, parented on main's tip (c1).
+    expect(copy.id).not.toBe("c2");
+    expect(copy.message).toBe("fix");
+    expect(copy.copyOf).toBe("c2");
+    expect(copy.parents).toEqual(["c1"]);
+    expect(state.branches.main).toBe(copy.id);
+    // A cherry-pick is not a rebase copy.
+    expect(copy.rewriteOf).toBeUndefined();
+  });
+
+  it("leaves the original reachable — nothing is orphaned", () => {
+    const steps = runRepoScript({
+      commands: [
+        commit("init"),
+        branch("feature"),
+        checkout("feature"),
+        commit("fix"),
+        checkout("main"),
+        cherry("c2"),
+      ],
+    });
+    const state = last(steps);
+    // feature still points at the original; the work now exists twice.
+    expect(state.branches.feature).toBe("c2");
+    expect(state.unreachable).toEqual([]);
+    expect(state.commits.filter((c) => c.message === "fix")).toHaveLength(2);
+    expect(steps[steps.length - 1].counters[REPO_COUNTERS.copies]).toBe(1);
+  });
+
+  it("refuses an unknown commit without corrupting the DAG", () => {
+    const steps = runRepoScript({
+      commands: [commit("init"), cherry("c9")],
+    });
+    expect(last(steps).note).toBe("no such commit: c9");
+    expect(last(steps).commits).toHaveLength(1);
+  });
+});
+
+describe("runRepoScript · revert", () => {
+  it("adds a new commit that undoes an earlier one, in place", () => {
+    const steps = runRepoScript({
+      commands: [commit("init"), commit("bad"), revert("c2")],
+    });
+    const state = last(steps);
+    const undo = state.commits.find((c) => c.revertOf !== undefined)!;
+    expect(undo.revertOf).toBe("c2");
+    expect(undo.message).toBe("revert bad");
+    expect(undo.parents).toEqual(["c2"]);
+    expect(state.branches.main).toBe(undo.id);
+    // The original is untouched and still reachable.
+    expect(state.commits.find((c) => c.id === "c2")!.message).toBe("bad");
+    expect(state.unreachable).toEqual([]);
+    expect(steps[steps.length - 1].counters[REPO_COUNTERS.reverts]).toBe(1);
+    // A revert is neither a rebase copy nor a cherry-pick copy.
+    expect(undo.copyOf).toBeUndefined();
+    expect(undo.rewriteOf).toBeUndefined();
+  });
+
+  it("refuses an unknown commit without corrupting the DAG", () => {
+    const steps = runRepoScript({
+      commands: [commit("init"), revert("c9")],
+    });
+    expect(last(steps).note).toBe("no such commit: c9");
+    expect(last(steps).commits).toHaveLength(1);
+  });
+});

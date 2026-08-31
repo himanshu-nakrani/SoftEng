@@ -69,6 +69,33 @@ export function RepoView({ state }: { state: RepoState }) {
         }),
       )}
 
+      {/* Relationship links: a cherry-pick copy or a revert points back at the
+          commit it came from. Drawn as a faint dotted arc, distinct from the
+          solid parent edges, and never red — the source is alive, not
+          orphaned. This is what says "the same change now lives twice". */}
+      {commits.map((commit) => {
+        const sourceId = commit.copyOf ?? commit.revertOf;
+        if (!sourceId) return null;
+        const source = byId.get(sourceId);
+        if (!source) return null;
+        const isRevert = commit.revertOf !== undefined;
+        return (
+          <path
+            key={`link-${commit.id}`}
+            d={edge(xOf(source), yOf(source), xOf(commit), yOf(commit))}
+            fill="none"
+            stroke={
+              isRevert
+                ? "var(--color-glow-orange)"
+                : "var(--color-glow-violet)"
+            }
+            strokeWidth={1.25}
+            strokeDasharray="1 4"
+            opacity={0.75}
+          />
+        );
+      })}
+
       {commits.map((commit) => {
         const isDead = dead.has(commit.id);
         const isHot = hot.has(commit.id);

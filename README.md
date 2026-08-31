@@ -39,20 +39,21 @@ An interactive system-design learning site. Not articles — every concept is a 
 
 ### Track 04 — Testing & Verification
 
-3 lessons across 1 module, about 35 minutes end to end.
+4 lessons across 2 modules, about 48 minutes end to end.
 
 | Module | Lessons |
 |---|---|
 | **What a Suite Actually Checks** | Coverage Is Not Correctness · Boundaries and Off-By-One · Not Every Survivor Is a Bug |
+| **Tests That Lie** | Why Suites Go Flaky |
 
 ### Track 05 — Version Control & Delivery
 
-4 lessons across 2 modules, about 47 minutes end to end.
+6 lessons across 2 modules, about 1h 11m end to end.
 
 | Module | Lessons |
 |---|---|
-| **Shaping History** | Merge vs Rebase · Fast-Forward |
-| **Shipping It** | Canary Releases · Blue-Green Deploys |
+| **Shaping History** | Merge vs Rebase · Fast-Forward · Cherry-Pick and Revert |
+| **Shipping It** | Canary Releases · Blue-Green Deploys · Feature Flags |
 
 <!-- CURRICULUM:END -->
 

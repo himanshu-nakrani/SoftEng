@@ -557,6 +557,15 @@ for (const { lesson } of available.filter((e) => e.lesson.engine === "steps")) {
         fail("algo integrity", `${defPath}: ${exportName}.code[${i}] is not a string`);
         continue;
       }
+      if (line.trim().length === 0) {
+        fail(
+          "algo integrity",
+          `${defPath}: ${exportName}.code[${i}] is blank — the panel renders an empty numbered line.\n` +
+            `        this usually means the array was PADDED so a command's codeLine would line up;\n` +
+            `        shorten the array and give the command the right index instead`,
+        );
+        continue;
+      }
       if (line.length > CODE_MAX_CHARS) {
         fail(
           "algo integrity",

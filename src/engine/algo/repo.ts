@@ -21,7 +21,9 @@ export type RepoOp =
   | { kind: "branch"; name: string }
   | { kind: "checkout"; name: string }
   | { kind: "merge"; from: string }
-  | { kind: "rebase"; onto: string };
+  | { kind: "rebase"; onto: string }
+  | { kind: "cherryPick"; commit: string }
+  | { kind: "revert"; commit: string };
 
 export interface RepoCommand {
   /** As the learner would type it ("git merge feature"). */
@@ -42,6 +44,10 @@ export const REPO_COUNTERS = {
   merges: "merges",
   /** Commits copied by a rebase — the "history was rewritten" number. */
   replayed: "replayed",
+  /** Commits copied by a cherry-pick — the "same work, second commit" number. */
+  copies: "copies",
+  /** Undo commits created by a revert. */
+  reverts: "reverts",
 } as const;
 
 /**
@@ -106,7 +112,7 @@ export function runRepoScript(script: RepoScript): AlgoStep<RepoState>[] {
     message: string,
     parents: string[],
     lane: number,
-    rewriteOf?: string,
+    extra?: { rewriteOf?: string; copyOf?: string; revertOf?: string },
   ): CommitFrame => {
     seq += 1;
     const commit: CommitFrame = {
@@ -115,7 +121,9 @@ export function runRepoScript(script: RepoScript): AlgoStep<RepoState>[] {
       parents,
       lane,
       seq,
-      rewriteOf,
+      rewriteOf: extra?.rewriteOf,
+      copyOf: extra?.copyOf,
+      revertOf: extra?.revertOf,
     };
     commits.push(commit);
     byId.set(commit.id, commit);
@@ -234,7 +242,7 @@ export function runRepoScript(script: RepoScript): AlgoStep<RepoState>[] {
             original.message,
             [base],
             laneOf(head),
-            original.id,
+            { rewriteOf: original.id },
           );
           base = copy.id;
           copies.push(copy.id);
@@ -244,6 +252,57 @@ export function runRepoScript(script: RepoScript): AlgoStep<RepoState>[] {
         branches[head] = base;
         touched = copies;
         note = `replayed ${copies.length} commit${copies.length === 1 ? "" : "s"} — new ids`;
+        break;
+      }
+
+      case "cherryPick": {
+        const source = byId.get(command.op.commit);
+        const tip = branches[head];
+        if (!source) {
+          note = `no such commit: ${command.op.commit}`;
+          break;
+        }
+        if (!tip) {
+          note = "nothing to cherry-pick onto";
+          break;
+        }
+        // A COPY, not a move: a new id, the same change, parented on the
+        // current tip. The source stays reachable on its own branch, which is
+        // why the work now exists in TWO places. `copyOf` (not `rewriteOf`)
+        // records the link precisely because the original is NOT orphaned.
+        const copy = addCommit(source.message, [tip], laneOf(head), {
+          copyOf: source.id,
+        });
+        branches[head] = copy.id;
+        touched = [copy.id];
+        note = `copied ${source.id} — new id ${copy.id}`;
+        rec.bump(REPO_COUNTERS.commits);
+        rec.bump(REPO_COUNTERS.copies);
+        break;
+      }
+
+      case "revert": {
+        const target = byId.get(command.op.commit);
+        const tip = branches[head];
+        if (!target) {
+          note = `no such commit: ${command.op.commit}`;
+          break;
+        }
+        if (!tip) {
+          note = "nothing to revert onto";
+          break;
+        }
+        // The inverse of a change, as a NEW commit on top. The target stays
+        // exactly where it was — history records both the change and its undo.
+        // That additive shape is what makes revert safe on published history.
+        const undo = addCommit(`revert ${target.message}`, [tip], laneOf(head), {
+          revertOf: target.id,
+        });
+        branches[head] = undo.id;
+        touched = [undo.id];
+        note = `undid ${target.id} in a new commit`;
+        rec.bump(REPO_COUNTERS.commits);
+        rec.bump(REPO_COUNTERS.reverts);
         break;
       }
     }

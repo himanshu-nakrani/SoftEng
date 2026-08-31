@@ -10,6 +10,10 @@ import {
   fastForwardAlgo,
   fastForwardDivergedAlgo,
 } from "@/lessons/history/fast-forward";
+import {
+  cherryPickAlgo,
+  revertAlgo,
+} from "@/lessons/history/cherry-pick-revert";
 import { describe, expect, it } from "vitest";
 
 /**
@@ -249,3 +253,107 @@ describe("fast-forward · divergence decides, not the command", () => {
 function runRepoStepsCmd<I>(def: AlgoDef<RepoState, I>) {
   return buildAlgoSteps(def, 0, 42);
 }
+
+// ---------------------------------------------------------------------------
+// cherry-pick-revert
+// ---------------------------------------------------------------------------
+
+/** The frame just before the merge — the cherry-pick figure's key moment. */
+function afterCherryPick() {
+  const steps = buildAlgoSteps(cherryPickAlgo, 0, 42);
+  // Last command is the merge; the one before it is the cherry-pick.
+  return steps[steps.length - 2].state;
+}
+
+describe("cherry-pick-revert · cherry-pick copies one commit", () => {
+  it("creates c4, a new commit carrying c2's change onto main's tip", () => {
+    // "The cherry-pick creates c4 — a new commit with a new id carrying the
+    // same change as c2, parented on main's tip."
+    const state = afterCherryPick();
+    const copy = state.commits.find((c) => c.copyOf !== undefined)!;
+    expect(copy.id).toBe("c4");
+    expect(copy.message).toBe("urgent fix");
+    expect(copy.copyOf).toBe("c2");
+    expect(copy.parents).toEqual(["c1"]);
+  });
+
+  it("reads 1 cherry-pick and 4 commits at that point", () => {
+    // "The cherry-picks meter reads 1 and the commit count is 4 at that point."
+    const steps = buildAlgoSteps(cherryPickAlgo, 0, 42);
+    const frame = steps[steps.length - 2];
+    expect(frame.counters[C.copies]).toBe(1);
+    expect(frame.state.commits).toHaveLength(4);
+  });
+
+  it("leaves c2 on feature — the fix now exists as two commits", () => {
+    // "feature still contains it, so the fix now exists as two commits."
+    const state = afterCherryPick();
+    // feature's tip is c3, and c2 is its parent — still reachable, not orphaned.
+    expect(state.branches.feature).toBe("c3");
+    expect(state.commits.find((c) => c.id === "c3")!.parents).toEqual(["c2"]);
+    expect(state.commits.filter((c) => c.message === "urgent fix")).toHaveLength(
+      2,
+    );
+  });
+
+  it("orphans nothing — the unreachable count stays at zero", () => {
+    // "Nothing goes unreachable — the unreachable count stays at zero, unlike
+    // a rebase."
+    const state = afterCherryPick();
+    expect(state.unreachable).toEqual([]);
+  });
+});
+
+describe("cherry-pick-revert · revert inverts in place", () => {
+  it("adds c4 whose change reverses c3, parented on it", () => {
+    // "Revert adds c4, a new commit whose change reverses c3, parented directly
+    // on it."
+    const state = run(revertAlgo).state;
+    const undo = state.commits.find((c) => c.revertOf !== undefined)!;
+    expect(undo.id).toBe("c4");
+    expect(undo.revertOf).toBe("c3");
+    expect(undo.parents).toEqual(["c3"]);
+  });
+
+  it("goes to 4 commits with the reverts meter at 1", () => {
+    // "The commit count goes to 4 and the reverts meter reads 1."
+    const { state, counters } = run(revertAlgo);
+    expect(state.commits).toHaveLength(4);
+    expect(counters[C.reverts]).toBe(1);
+  });
+
+  it("leaves c3 in place and orphans nothing", () => {
+    // "c3 stays exactly where it was — nothing is rewritten, nothing goes
+    // unreachable."
+    const { state } = run(revertAlgo);
+    expect(state.commits.find((c) => c.id === "c3")!.message).toBe("bad change");
+    expect(state.unreachable).toEqual([]);
+    expect(state.commits.every((c) => c.rewriteOf === undefined)).toBe(true);
+  });
+});
+
+describe("cherry-pick-revert · the duplicate comes back on merge", () => {
+  it("ends at five commits after the merge", () => {
+    // "The final history has five commits."
+    const { state } = run(cherryPickAlgo);
+    expect(state.commits).toHaveLength(5);
+  });
+
+  it("makes urgent fix appear on two commits — one change, two commits", () => {
+    // "the message urgent fix appears on two of them." / "the change you
+    // already copied as c4 arrives a second time as c2."
+    const { state } = run(cherryPickAlgo);
+    const dupes = state.commits.filter((c) => c.message === "urgent fix");
+    expect(dupes).toHaveLength(2);
+    expect(dupes.map((c) => c.id).sort()).toEqual(["c2", "c4"]);
+  });
+
+  it("pulls c2 and c3 in through the merge commit", () => {
+    // "The branch feature ... is merged into main. The merge pulls c2 and c3
+    // in."
+    const { state, counters } = run(cherryPickAlgo);
+    const merge = state.commits.find((c) => c.parents.length === 2)!;
+    expect(merge.parents).toEqual(["c4", "c3"]);
+    expect(counters[C.merges]).toBe(1);
+  });
+});

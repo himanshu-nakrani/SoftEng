@@ -542,6 +542,27 @@ export const learningGuides: Record<string, LearningGuide> = {
     "Cut over, watch the error rate hit green's own failure rate for everybody, then revert and note the tail of in-flight requests — then ask why a schema migration makes that revert dangerous.",
     [{ slug: "canary-releases", relation: "builds on" }],
   ),
+  "flaky-tests": guide(
+    "If the code never changed, why does the suite pass sometimes and fail others?",
+    "The flake is reframed as an order-dependence on shared state, replayable from a seed rather than attributable to randomness.",
+    "A test that fails half the time trains everyone to ignore it, which hides a bug that is present on every run. Re-running is not a fix, and “retry on failure” in CI is the same non-fix automated. The order was always the variable; nobody had written it down.",
+    "Reseed the shared figure until the verdict flips, then give each test its own slot and confirm no order can fail.",
+    [{ slug: "coverage-vs-correctness", relation: "builds on" }],
+  ),
+  "cherry-pick-revert": guide(
+    "How do you move or undo a single commit without rewriting a branch everyone else has?",
+    "Cherry-pick copies one commit under a new id; revert adds a new commit that inverts an earlier one. Both leave the original in place, which is what separates them from a rebase.",
+    "A cherry-picked commit is a DUPLICATE, so the same change arrives a second time when its branch is later merged — one logical change, two commits, often a conflict. Revert is purely additive and therefore safe on published history; the price is that history records both the mistake and its undoing.",
+    "Step the cherry-pick figure past the merge and watch the same change land twice, then compare with a rebase, which orphans instead of duplicating.",
+    [{ slug: "merge-vs-rebase", relation: "builds on" }],
+  ),
+  "feature-flags": guide(
+    "If the new code is already on every server, what is left to do to release it — and to undo the release?",
+    "Releasing became flipping a runtime value rather than deploying a build, so both the release and its undo happen with no deployment at all.",
+    "Decoupling deploy from release makes rollback instant and lets you target a chosen cohort by attribute rather than a random share — but every live flag is a permanent branch that must be tested both ways, so N flags mean 2^N configurations of which a suite exercises a handful. A flag that outlives its rollout is debt.",
+    "Flip the flag on, kill it and watch the error counter freeze mid-tail, then set it to the beta cohort and compare that blast radius with a canary's random share.",
+    [{ slug: "canary-releases", relation: "builds on" }],
+  ),
 };
 
 export function getLearningGuide(slug: string): LearningGuide {

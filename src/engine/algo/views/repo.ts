@@ -21,6 +21,23 @@ export interface CommitFrame {
    * new objects rather than moving old ones.
    */
   rewriteOf?: string;
+  /**
+   * The commit this one is a CHERRY-PICK copy of. Deliberately NOT `rewriteOf`:
+   * a rebase copy replaces its original (which goes unreachable), whereas a
+   * cherry-pick copy leaves the original reachable on its own branch. Sharing
+   * one field would force the view to treat both the same, and the whole point
+   * of the cherry-pick lesson is that the work now exists in TWO live places.
+   * A distinct field lets the view draw the copy→original link without
+   * implying the original is dead.
+   */
+  copyOf?: string;
+  /**
+   * The commit this one UNDOES, when it is a revert. A revert is a genuinely
+   * new commit that reverses an earlier change; both stay reachable, which is
+   * why revert is safe on published history. Distinct from `copyOf` because the
+   * relationship is inverse (undo), not duplicate (copy).
+   */
+  revertOf?: string;
 }
 
 export interface RepoState {

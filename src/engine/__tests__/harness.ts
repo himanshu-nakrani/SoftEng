@@ -46,6 +46,7 @@ import { clientServerSim } from "@/lessons/scaling/client-server";
 import { loadBalancingSim } from "@/lessons/scaling/load-balancing";
 import { realtimeDeliverySim } from "@/lessons/scaling/realtime-delivery";
 import { scalingStrategiesSim } from "@/lessons/scaling/scaling-strategies";
+import { featureFlagsSim } from "@/lessons/delivery/feature-flags";
 import { blueGreenSim } from "@/lessons/delivery/blue-green";
 import { distributedLocksSim } from "@/lessons/distributed/distributed-locks";
 import { outboxPatternSim } from "@/lessons/distributed/outbox-pattern";
@@ -114,6 +115,7 @@ const SIM_BY_KEY: Record<string, LessonSim<unknown>> = {
   "distributed/outbox-pattern": widen(outboxPatternSim),
   "distributed/distributed-locks": widen(distributedLocksSim),
   "delivery/blue-green": widen(blueGreenSim),
+  "delivery/feature-flags": widen(featureFlagsSim),
 };
 
 export interface LessonUnderTest {

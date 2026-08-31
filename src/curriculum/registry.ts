@@ -984,6 +984,32 @@ export const curriculum: Curriculum = {
             },
           ],
         },
+        {
+          slug: "flakiness",
+          title: "Tests That Lie",
+          description:
+            "A test that passes sometimes is worse than one that fails, because it teaches you to ignore it.",
+          lessons: [
+            {
+              slug: "flaky-tests",
+              moduleSlug: "flakiness",
+              title: "Why Suites Go Flaky",
+              tagline:
+                "The same two tests come out green or red depending on an order nobody wrote down.",
+              difficulty: "intermediate",
+              estimatedMinutes: 13,
+              prerequisites: ["coverage-vs-correctness"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "shared-state", title: "Anything two tests share", kind: "concept" },
+                { id: "passing-order", title: "The order that passes", kind: "interactive" },
+                { id: "failing-order", title: "The order that fails", kind: "interactive" },
+                { id: "isolation", title: "What isolation costs", kind: "concept" },
+              ],
+            },
+          ],
+        },
       ],
     },
     {
@@ -1035,6 +1061,24 @@ export const curriculum: Curriculum = {
                 { id: "divergence", title: "Divergence is the condition", kind: "concept" },
               ],
             },
+                      {
+              slug: "cherry-pick-revert",
+              moduleSlug: "history",
+              title: "Cherry-Pick and Revert",
+              tagline:
+                "Cherry-pick copies a commit and the copy returns at the next merge. Revert only adds, so it is safe on history others already have.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["merge-vs-rebase"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "one-commit", title: "You want one commit not the branch", kind: "concept" },
+                { id: "cherry-pick", title: "Copying a commit across", kind: "interactive" },
+                { id: "revert", title: "Inverting a commit in place", kind: "interactive" },
+                { id: "duplicates", title: "Why the copy comes back", kind: "concept" },
+              ],
+            },
           ],
         },
         {
@@ -1075,6 +1119,23 @@ export const curriculum: Curriculum = {
                 { id: "cutover", title: "Flipping every request at once", kind: "interactive" },
                 { id: "revert", title: "Flipping back", kind: "interactive" },
                 { id: "versus-canary", title: "What each one actually buys", kind: "concept" },
+              ],
+            },
+                      {
+              slug: "feature-flags",
+              moduleSlug: "delivery",
+              title: "Feature Flags",
+              tagline:
+                "Deploy puts the code on every server. Release is one runtime value — and every value you leave behind is a branch someone still has to test.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["canary-releases"],
+              status: "available",
+              sections: [
+                { id: "deploy-vs-release", title: "Deploy and release are not the same", kind: "concept" },
+                { id: "dark", title: "Shipped but dark", kind: "interactive" },
+                { id: "releasing", title: "Releasing without deploying", kind: "interactive" },
+                { id: "flag-debt", title: "What a flag costs to keep", kind: "concept" },
               ],
             },
           ],

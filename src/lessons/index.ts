@@ -51,6 +51,7 @@ import { clientServerSim } from "@/lessons/scaling/client-server";
 import { loadBalancingSim } from "@/lessons/scaling/load-balancing";
 import { realtimeDeliverySim } from "@/lessons/scaling/realtime-delivery";
 import { scalingStrategiesSim } from "@/lessons/scaling/scaling-strategies";
+import { featureFlagsSim } from "@/lessons/delivery/feature-flags";
 import { blueGreenSim } from "@/lessons/delivery/blue-green";
 import { distributedLocksSim } from "@/lessons/distributed/distributed-locks";
 import { outboxPatternSim } from "@/lessons/distributed/outbox-pattern";
@@ -110,6 +111,7 @@ export const simBySlug: Record<string, LessonSim<unknown>> = {
   "outbox-pattern": widen(outboxPatternSim),
   "distributed-locks": widen(distributedLocksSim),
   "blue-green": widen(blueGreenSim),
+  "feature-flags": widen(featureFlagsSim),
 };
 
 /** Slugs already reported by `getSim`, so dev warns once per slug, not per render. */
