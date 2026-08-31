@@ -283,7 +283,7 @@ Do not re-litigate these without new information.
   scaffolder was written had hidden it. Four fixes; it is now genuinely
   check-clean untouched.
 - **A control the timeline cannot write will drift from the state it controls.**
-   receives only , never , so a scripted beat
+  `TimelineEvent.apply` receives only `state`, never `params`, so a scripted beat
   cannot move a slider or flip a toggle. Both delivery lessons hit this: the
   scripted value lived on lesson state and the control kept showing its own,
   so a toggle read OFF while 100% of traffic was on green, and a caption invited
