@@ -570,6 +570,13 @@ export const learningGuides: Record<string, LearningGuide> = {
     "Reseed the polluted figure until the dependent test's assertion falls before the seeding insert, then give it its own setup and confirm no order can fail.",
     [{ slug: "flaky-tests", relation: "builds on" }],
   ),
+  "reset": guide(
+    "You want a bad commit gone — do you undo it or discard it, and what is the difference?",
+    "Reset moves the branch pointer to an earlier commit and creates nothing; the commits ahead of the new tip lose their last reference and go unreachable, unless another branch still holds them.",
+    "Reset does not undo the work in the record, it discards the work from the record — no new commit, no id preserved. That makes it the cleanest tool for local cleanup and the same hazard as a rebase on shared history: you take a teammate's base out from under them. Revert is additive and safe to share; reset is destructive and belongs on commits that never left your machine.",
+    "Reset back with no safety net and watch two commits turn red and dashed, then set a backup branch first and watch the same reset orphan nothing.",
+    [{ slug: "cherry-pick-revert", relation: "builds on" }],
+  ),
 };
 
 export function getLearningGuide(slug: string): LearningGuide {

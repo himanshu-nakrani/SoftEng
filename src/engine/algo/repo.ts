@@ -23,7 +23,8 @@ export type RepoOp =
   | { kind: "merge"; from: string }
   | { kind: "rebase"; onto: string }
   | { kind: "cherryPick"; commit: string }
-  | { kind: "revert"; commit: string };
+  | { kind: "revert"; commit: string }
+  | { kind: "reset"; commit: string };
 
 export interface RepoCommand {
   /** As the learner would type it ("git merge feature"). */
@@ -48,6 +49,8 @@ export const REPO_COUNTERS = {
   copies: "copies",
   /** Undo commits created by a revert. */
   reverts: "reverts",
+  /** Branch tips MOVED by a reset — the "history was discarded" number. */
+  resets: "resets",
 } as const;
 
 /**
@@ -303,6 +306,36 @@ export function runRepoScript(script: RepoScript): AlgoStep<RepoState>[] {
         note = `undid ${target.id} in a new commit`;
         rec.bump(REPO_COUNTERS.commits);
         rec.bump(REPO_COUNTERS.reverts);
+        break;
+      }
+
+      case "reset": {
+        const target = byId.get(command.op.commit);
+        const tip = branches[head];
+        if (!target) {
+          note = `no such commit: ${command.op.commit}`;
+          break;
+        }
+        // A reset MOVES the branch pointer to an existing commit — it creates
+        // no commit and copies nothing (contrast revert, which adds). Moving
+        // BACK is the destructive case: the commits ahead of the new tip lose
+        // their last reference and go unreachable, computed by `reachable()`
+        // from the branch tips just like a rebase orphan. That is the whole
+        // hazard the lesson shows: the work is not undone in the record, it is
+        // discarded from it, so a reset on shared history takes commits out
+        // from under anyone who had them. No `copyOf`/`revertOf`/`rewriteOf`:
+        // nothing new was made, only a pointer moved.
+        const before = tip;
+        branches[head] = target.id;
+        touched = [target.id];
+        const abandoned = commits.filter((c) => !reachable().has(c.id)).length;
+        note =
+          before === target.id
+            ? `already at ${target.id}`
+            : abandoned > 0
+              ? `moved ${head} to ${target.id} — ${abandoned} discarded`
+              : `moved ${head} to ${target.id}`;
+        rec.bump(REPO_COUNTERS.resets);
         break;
       }
     }

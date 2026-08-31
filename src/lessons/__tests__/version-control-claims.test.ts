@@ -14,6 +14,7 @@ import {
   cherryPickAlgo,
   revertAlgo,
 } from "@/lessons/history/cherry-pick-revert";
+import { resetAlgo, resetSurviveAlgo } from "@/lessons/history/reset";
 import { describe, expect, it } from "vitest";
 
 /**
@@ -355,5 +356,82 @@ describe("cherry-pick-revert · the duplicate comes back on merge", () => {
     const merge = state.commits.find((c) => c.parents.length === 2)!;
     expect(merge.parents).toEqual(["c4", "c3"]);
     expect(counters[C.merges]).toBe(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// reset — moves a branch pointer and discards the commits ahead of it
+// ---------------------------------------------------------------------------
+
+describe("reset · discarding without a safety net", () => {
+  it("makes no commit — the count stays at 3 and resets reads 1", () => {
+    // "The commit count stays at 3 — reset made no commit, so commits made
+    // never moves past 3 and resets reads 1."
+    const { state, counters } = run(resetAlgo);
+    expect(state.commits).toHaveLength(3);
+    expect(counters[C.commits]).toBe(3);
+    expect(counters[C.resets]).toBe(1);
+  });
+
+  it("moves main back to c1", () => {
+    // "main now points at c1."
+    const { state } = run(resetAlgo);
+    expect(state.branches.main).toBe("c1");
+    expect(state.head).toBe("main");
+  });
+
+  it("orphans exactly the two commits ahead of the new tip", () => {
+    // "the footer reads 2 commits now unreachable ... c2 and c3."
+    const { state } = run(resetAlgo);
+    expect(state.unreachable.slice().sort()).toEqual(["c2", "c3"]);
+  });
+
+  it("copies, reverts and rewrites nothing — only a pointer moved", () => {
+    // "it creates no commit, copies nothing, and inverts nothing."
+    const { state } = run(resetAlgo);
+    expect(
+      state.commits.every(
+        (c) =>
+          c.copyOf === undefined &&
+          c.revertOf === undefined &&
+          c.rewriteOf === undefined,
+      ),
+    ).toBe(true);
+    expect(state.commits.filter((c) => c.parents.length === 2)).toHaveLength(0);
+  });
+});
+
+describe("reset · the same reset with a backup branch", () => {
+  it("orphans nothing — the unreachable count stays at zero", () => {
+    // "the unreachable count stays at zero ... backup still holds c2 and c3."
+    const { state, counters } = run(resetSurviveAlgo);
+    expect(state.unreachable).toEqual([]);
+    expect(state.branches.main).toBe("c1");
+    expect(state.branches.backup).toBe("c3");
+    // Identical mechanics: still no commit, still one reset.
+    expect(state.commits).toHaveLength(3);
+    expect(counters[C.commits]).toBe(3);
+    expect(counters[C.resets]).toBe(1);
+  });
+});
+
+describe("reset · reset versus revert", () => {
+  it("revert adds a commit and keeps the target; reset removes both ahead", () => {
+    // "Revert would have left c3 in place and added a fourth commit ... Reset
+    // removed c2 and c3 as if they had never existed."
+    const reverted = run(revertAlgo);
+    const wasReset = run(resetAlgo);
+    // revert: 4 commits, nothing unreachable, an inverting commit exists.
+    expect(reverted.state.commits).toHaveLength(4);
+    expect(reverted.state.unreachable).toEqual([]);
+    expect(
+      reverted.state.commits.some((c) => c.revertOf !== undefined),
+    ).toBe(true);
+    // reset: no new commit, two orphaned, nothing inverting.
+    expect(wasReset.state.commits).toHaveLength(3);
+    expect(wasReset.state.unreachable).toHaveLength(2);
+    expect(
+      wasReset.state.commits.every((c) => c.revertOf === undefined),
+    ).toBe(true);
   });
 });

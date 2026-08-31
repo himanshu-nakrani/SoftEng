@@ -1097,6 +1097,24 @@ export const curriculum: Curriculum = {
                 { id: "duplicates", title: "Why the copy comes back", kind: "concept" },
               ],
             },
+                      {
+              slug: "reset",
+              moduleSlug: "history",
+              title: "Reset",
+              tagline:
+                "Revert undoes a commit and keeps it; reset moves the branch and discards whatever was ahead. One is safe to share, one takes a teammate's base out from under them.",
+              difficulty: "intermediate",
+              estimatedMinutes: 11,
+              prerequisites: ["cherry-pick-revert"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "move-a-pointer", title: "Moving a branch pointer", kind: "concept" },
+                { id: "discarding", title: "Discarding commits", kind: "interactive" },
+                { id: "recovering", title: "When the work survives", kind: "interactive" },
+                { id: "reset-vs-revert", title: "Reset versus revert", kind: "concept" },
+              ],
+            },
           ],
         },
         {

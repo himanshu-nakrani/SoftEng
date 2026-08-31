@@ -318,3 +318,97 @@ describe("runRepoScript · revert", () => {
     expect(last(steps).commits).toHaveLength(1);
   });
 });
+
+// ---------------------------------------------------------------------------
+// reset — MOVES a branch tip, discarding (not undoing) the commits ahead of it
+// ---------------------------------------------------------------------------
+
+const reset = (commit: string): RepoCommand => ({
+  label: `git reset --hard ${commit}`,
+  op: { kind: "reset", commit },
+});
+
+describe("runRepoScript · reset", () => {
+  it("moves the branch tip back and orphans the commits ahead of it", () => {
+    const steps = runRepoScript({
+      commands: [commit("init"), commit("good"), commit("oops"), reset("c1")],
+    });
+    const state = last(steps);
+    // No commit was created — reset only moves a pointer.
+    expect(state.commits).toHaveLength(3);
+    expect(state.branches.main).toBe("c1");
+    // The two commits ahead of the new tip lose their only reference.
+    expect(state.unreachable.sort()).toEqual(["c2", "c3"]);
+    // Nothing was copied, reverted or rewritten: a reset makes no new object.
+    expect(
+      state.commits.every(
+        (c) =>
+          c.copyOf === undefined &&
+          c.revertOf === undefined &&
+          c.rewriteOf === undefined,
+      ),
+    ).toBe(true);
+    expect(steps[steps.length - 1].counters[REPO_COUNTERS.resets]).toBe(1);
+    expect(steps[steps.length - 1].counters[REPO_COUNTERS.commits] ?? 0).toBe(3);
+  });
+
+  it("does not create an undo commit, unlike revert", () => {
+    const reverted = last(
+      runRepoScript({ commands: [commit("init"), commit("bad"), revert("c2")] }),
+    );
+    const wasReset = last(
+      runRepoScript({ commands: [commit("init"), commit("bad"), reset("c1")] }),
+    );
+    // Revert ADDS a commit and leaves the target reachable.
+    expect(reverted.commits).toHaveLength(3);
+    expect(reverted.unreachable).toEqual([]);
+    // Reset MOVES the tip: no new commit, and the abandoned work is discarded.
+    expect(wasReset.commits).toHaveLength(2);
+    expect(wasReset.unreachable).toEqual(["c2"]);
+  });
+
+  it("can move a tip FORWARD without orphaning anything", () => {
+    // main and feature share history; feature is ahead. Resetting main onto
+    // feature's tip is a fast-forward-shaped move: nothing is abandoned.
+    const steps = runRepoScript({
+      commands: [
+        commit("base"),
+        branch("feature"),
+        checkout("feature"),
+        commit("ahead"),
+        checkout("main"),
+        reset("c2"),
+      ],
+    });
+    const state = last(steps);
+    expect(state.branches.main).toBe("c2");
+    expect(state.branches.main).toBe(state.branches.feature);
+    expect(state.unreachable).toEqual([]);
+  });
+
+  it("keeps a commit reachable when another branch still points past it", () => {
+    // A second branch holds the commits, so moving main back orphans nothing:
+    // reset discards a REFERENCE, and unreachability is about ALL references.
+    const steps = runRepoScript({
+      commands: [
+        commit("base"),
+        commit("work"),
+        branch("keep"),
+        reset("c1"),
+      ],
+    });
+    const state = last(steps);
+    expect(state.branches.main).toBe("c1");
+    expect(state.branches.keep).toBe("c2");
+    expect(state.unreachable).toEqual([]);
+  });
+
+  it("refuses an unknown commit without corrupting the DAG", () => {
+    const steps = runRepoScript({
+      commands: [commit("init"), reset("c9")],
+    });
+    expect(last(steps).note).toBe("no such commit: c9");
+    expect(last(steps).commits).toHaveLength(1);
+    expect(last(steps).branches.main).toBe("c1");
+  });
+});
