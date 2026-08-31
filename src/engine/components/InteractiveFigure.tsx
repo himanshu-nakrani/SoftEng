@@ -18,6 +18,7 @@ import {
   useSimSnapshot,
   type SimEvent,
   type Simulation,
+  type SimControls,
 } from "../useSimulation";
 import { CaptionOverlay } from "./CaptionOverlay";
 import { ControlPanel } from "./ControlPanel";
@@ -299,10 +300,13 @@ function MetersRow({
 function Clock({
   sim,
   simulation,
+  controls,
 }: {
   /** Structural: LessonSimView omits timeline/quiz, and LessonSim is invariant. */
   sim: { timeline?: readonly ScrubEvent[]; quiz?: readonly ScrubCheckpoint[] };
   simulation: Simulation;
+  /** User-facing controls — see `uiControls`; pausing here cancels scroll-resume. */
+  controls: SimControls;
 }) {
   const snapshot = useSimSnapshot(simulation);
   return (
@@ -310,7 +314,7 @@ function Clock({
       status={simulation.status}
       speed={simulation.speed}
       t={snapshot.t}
-      controls={simulation.controls}
+      controls={controls}
       furthestT={simulation.furthestT}
       timeline={sim.timeline}
       quiz={sim.quiz}
@@ -400,15 +404,36 @@ function FigureBody<L>({
   const selectFocus = (focus: WorkbenchFocus, seek = true) => {
     setActiveFocusId(focus.id);
     if (focus.nodes?.[0]) setSelectedNodeId(focus.nodes[0]);
-    if (seek && focus.at !== undefined) simulation.controls.seekTo(focus.at);
+    // uiControls: a focus seek is the learner taking control, so it must also
+    // cancel a still-pending autoplay (see the `mark` note).
+    if (seek && focus.at !== undefined) uiControls.seekTo(focus.at);
   };
 
   const dismissQuizAndReturnToFigure = () => {
     simulation.dismissQuiz();
-    // The quiz exits through AnimatePresence. The figure survives that exit and
-    // is the stable, labelled keyboard surface where a learner can inspect the
-    // paused system or invoke its documented shortcuts.
-    requestAnimationFrame(() => containerRef.current?.focus());
+    /**
+     * The quiz exits through AnimatePresence. The figure survives that exit and
+     * is the stable, labelled keyboard surface where a learner can inspect the
+     * paused system or invoke its documented shortcuts.
+     *
+     * Focus is RETRIED rather than set once. A single `requestAnimationFrame`
+     * lands while the dialog is still mounted and still trapping focus, so the
+     * figure was handed focus and immediately lost it again — leaving the
+     * keyboard user on `<body>` with the figure's shortcuts unreachable. Each
+     * attempt checks whether it actually took, and stops as soon as it did.
+     */
+    let attempts = 0;
+    const focusFigure = () => {
+      const el = containerRef.current;
+      if (!el) return;
+      el.focus();
+      // ~10 frames is longer than the exit transition and short enough that a
+      // genuinely un-focusable figure does not spin.
+      if (document.activeElement !== el && attempts++ < 10) {
+        requestAnimationFrame(focusFigure);
+      }
+    };
+    requestAnimationFrame(focusFigure);
   };
 
   const startExperiment = () => {
@@ -418,10 +443,10 @@ function FigureBody<L>({
     if (focus) selectFocus(focus, false);
     switch (experiment.action.kind) {
       case "play":
-        simulation.controls.play();
+        uiControls.play();
         break;
       case "seek":
-        simulation.controls.seekTo(experiment.action.at);
+        uiControls.seekTo(experiment.action.at);
         break;
       case "button":
         simulation.controls.pressButton(experiment.action.id);
@@ -480,34 +505,143 @@ function FigureBody<L>({
     controlsRef.current.seekTo(initialSeekT!);
   }, [initialSeekT, seekRequested]);
 
+  /**
+   * Whether scroll-autoplay has already fired for this figure.
+   *
+   * A ref, NOT a closure variable inside the effect below. `useReducedMotion()`
+   * returns null on the first render and settles to a boolean after mount, so
+   * the effect's `[autoplay, reduced]` deps change once and it re-runs — which
+   * resubscribes the observer, whose callback fires again with the figure still
+   * on screen. With a per-effect `everPlayed` that second callback autoplayed a
+   * second time, overriding a pause the learner had already pressed. Surviving
+   * the re-run is the whole point: autoplay is once per figure, not once per
+   * effect.
+   */
+  const everPlayedRef = useRef(false);
+
+  /**
+   * True when the observer paused the sim because the figure left the viewport,
+   * so scrolling back can resume what the learner was watching.
+   *
+   * Also a ref, so an EXPLICIT pause can clear it (see `uiControls`) — otherwise
+   * a small scroll during a manual pause could re-cross the 0.35 threshold and
+   * resume against the learner's intent.
+   */
+  const pausedByScrollRef = useRef(false);
+
+  /** Pending scroll decision — see the observer below. */
+  const settleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /**
+   * The controls handed to every USER-facing surface (transport, keyboard).
+   *
+   * An explicit play/pause is intent, so it cancels any pending scroll decision
+   * and disarms any armed scroll-resume: the learner outranks the viewport. It
+   * also updates `statusRef` EAGERLY, which is otherwise assigned during render,
+   * so an observer callback landing before React re-renders cannot read a stale
+   * status.
+   *
+   * Wrapping `toggle` matters as much as `pause`: the Space shortcut dispatches
+   * `toggle`, so wrapping `pause` alone would cover nothing.
+   */
+  const uiControls: SimControls = (() => {
+    /**
+     * Record that the learner has taken the wheel.
+     *
+     * `everPlayedRef` is set here too, which is the important part: the settled
+     * observer decision can still be pending when a learner seeks or presses
+     * play, and a pending autoplay firing afterwards would stomp the state they
+     * just chose. Same hazard the `seekRequested` guard covers for deep links —
+     * this covers it for in-page interaction.
+     */
+    const mark = (next: "playing" | "paused") => {
+      if (settleRef.current) clearTimeout(settleRef.current);
+      settleRef.current = null;
+      pausedByScrollRef.current = false;
+      everPlayedRef.current = true;
+      statusRef.current = next;
+    };
+    return {
+      ...simulation.controls,
+      play: (opts) => {
+        mark("playing");
+        simulation.controls.play(opts);
+      },
+      pause: () => {
+        mark("paused");
+        simulation.controls.pause();
+      },
+      toggle: () => {
+        mark(statusRef.current === "playing" ? "paused" : "playing");
+        simulation.controls.toggle();
+      },
+      // Seeking pauses in the engine; mirroring that here keeps a pending
+      // autoplay from resuming a moment the learner deliberately scrubbed to.
+      seekTo: (t) => {
+        mark("paused");
+        simulation.controls.seekTo(t);
+      },
+    };
+    // Not memoized: the React Compiler declines to optimize a component whose
+    // manual memoization it cannot preserve, and this object is cheap — it is
+    // consumed by the transport, which re-renders on every status change anyway.
+  })();
+
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    let everPlayed = false;
-    let pausedByScroll = false;
+
+    /**
+     * Act only on a SETTLED intersection.
+     *
+     * A scroll is not one event. `scrollIntoView`, an anchor jump, or simply
+     * clicking a control near the bottom of a tall figure (they run to ~1150px,
+     * taller than a laptop viewport) drags the visible ratio across the 0.35
+     * threshold several times within a few frames. Reacting to each crossing
+     * made the engine pause and resume ~17ms apart — measured, not guessed —
+     * which fought the learner and made the "play advances the sim clock" smoke
+     * test fail 9 runs in 10.
+     *
+     * 180ms outlasts a scroll animation while still stopping a figure promptly
+     * once it is genuinely scrolled away.
+     */
+    const SETTLE_MS = 180;
+
+    const apply = (isIntersecting: boolean) => {
+      settleRef.current = null;
+      if (isIntersecting) {
+        // `pausedByScroll` is exempt from the seek suppression on purpose: it
+        // only becomes true after a *user* pressed play, so resuming what
+        // they started is not the engine overwriting a deep link.
+        const shouldAutoplay =
+          autoplay && !reduced && !everPlayedRef.current && !seekRequestedRef.current;
+        if (shouldAutoplay || pausedByScrollRef.current) {
+          everPlayedRef.current = true;
+          pausedByScrollRef.current = false;
+          controlsRef.current.play({ system: true });
+        }
+      } else if (statusRef.current === "playing") {
+        pausedByScrollRef.current = true;
+        controlsRef.current.pause();
+      }
+    };
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          // `pausedByScroll` is exempt from the seek suppression on purpose: it
-          // only becomes true after a *user* pressed play, so resuming what
-          // they started is not the engine overwriting a deep link.
-          const shouldAutoplay =
-            autoplay && !reduced && !everPlayed && !seekRequestedRef.current;
-          if (shouldAutoplay || pausedByScroll) {
-            everPlayed = true;
-            pausedByScroll = false;
-            controlsRef.current.play({ system: true });
-          }
-        } else if (statusRef.current === "playing") {
-          pausedByScroll = true;
-          controlsRef.current.pause();
-        }
+        if (settleRef.current) clearTimeout(settleRef.current);
+        settleRef.current = setTimeout(
+          () => apply(entry.isIntersecting),
+          SETTLE_MS,
+        );
       },
       { threshold: 0.35 },
     );
     observer.observe(el);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      if (settleRef.current) clearTimeout(settleRef.current);
+      settleRef.current = null;
+    };
   }, [autoplay, reduced]);
 
   /**
@@ -533,7 +667,9 @@ function FigureBody<L>({
       return;
     }
 
-    const { controls } = simulation;
+    // uiControls, not simulation.controls: Space must honour a pause the same
+    // way the transport button does (see the uiControls note above).
+    const controls = uiControls;
     switch (e.key) {
       case " ":
       case "k":
@@ -571,6 +707,13 @@ function FigureBody<L>({
     <figure
       ref={containerRef}
       data-calibration={calibrationMode ? "true" : undefined}
+      /**
+       * The transport's state, as a stable contract for e2e and for debugging.
+       * Tests previously inferred it from a button's aria-label, which conflates
+       * two different questions ("has this hydrated?" and "is it running?") and
+       * breaks whenever a label is reworded.
+       */
+      data-sim-status={simulation.status}
       // ONE element, ONE class list — expanding swaps `className` on the very
       // same node in the very same position, so React reconciles in place and
       // the running sim (runner, RNG cursor, quiz progress) is untouched.
@@ -682,7 +825,7 @@ function FigureBody<L>({
           onChange={applyParam}
           onPress={pressScenario}
         />
-        <Clock sim={sim} simulation={simulation} />
+        <Clock sim={sim} simulation={simulation} controls={uiControls} />
       </div>
     </figure>
   );

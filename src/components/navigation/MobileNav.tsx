@@ -7,7 +7,15 @@ import { Wordmark } from "@/components/navigation/SiteChrome";
 import type { LessonMeta } from "@/curriculum/types";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { useLessonProgress } from "@/hooks/use-lesson-progress";
-import { allLessons, lessonPath, moduleOf } from "@/lib/curriculum";
+import {
+  accentOf,
+  allLessons,
+  firstTrack,
+  lessonPath,
+  moduleOf,
+  trackFromPathname,
+  trackPath,
+} from "@/lib/curriculum";
 import { Menu, X } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { Transition } from "motion/react";
@@ -227,10 +235,12 @@ export function MobileCurrentLesson() {
   const lesson = allLessons.find((item) => lessonPath(item) === pathname);
 
   if (!lesson) {
+    const track = trackFromPathname(pathname) ?? firstTrack;
+    const href = trackPath(track);
     return (
       <Link
-        href="/learn"
-        aria-current={pathname === "/learn" ? "page" : undefined}
+        href={href}
+        aria-current={pathname === href ? "page" : undefined}
         className="ml-auto shrink-0 text-sm text-fg-muted transition-colors hover:text-fg"
       >
         Learning path
@@ -253,7 +263,7 @@ function CurrentLessonLabel({ lesson }: { lesson: LessonMeta }) {
         size={14}
         fraction={progress.fraction}
         state={progress.state}
-        accent={moduleOf(lesson).accent}
+        accent={accentOf(moduleOf(lesson))}
       />
       <span className="truncate text-sm text-fg">{lesson.title}</span>
     </span>

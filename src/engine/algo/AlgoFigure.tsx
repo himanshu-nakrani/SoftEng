@@ -4,52 +4,78 @@ import { CornerTicks } from "@/components/ui/CornerTicks";
 import { Meter } from "@/components/ui/Meter";
 import { PlateLabel } from "@/components/ui/PlateLabel";
 import { Dices } from "lucide-react";
+import type { ComponentType } from "react";
 import { useState } from "react";
 import { AlgoTransportBar } from "./AlgoTransportBar";
-import { ArrayView } from "./ArrayView";
 import { CodePanel } from "./CodePanel";
+import { defaultAlgoSize } from "./build";
 import type { AlgoDef } from "./types";
 import { useAlgoPlayer } from "./useAlgoPlayer";
 
-interface AlgoFigureProps {
-  def: AlgoDef;
+interface AlgoFigureProps<S, I> {
+  def: AlgoDef<S, I>;
+  /**
+   * How to draw one frame. The seam that makes this engine reusable: swap the
+   * view and the same transport, code panel, counters, and seeding work for a
+   * B-tree, a run queue, or a WAL replay.
+   */
+  view: ComponentType<{ state: S }>;
   description: string;
-  defaultN?: number;
+  /** Overrides `def.size.default`. */
+  defaultSize?: number;
   /** First meaningful interaction (drives section completion). */
   onEngage?: () => void;
 }
 
 /**
- * The AlgoFigure: bar stage + live pseudocode + op counters + a transport
- * that can scrub and step BACKWARD. Composition mirror of InteractiveFigure
- * for the discrete-step world.
+ * The AlgoFigure: a view stage + live pseudocode + counters + a transport that
+ * can scrub and step BACKWARD. Composition mirror of `InteractiveFigure` for
+ * the discrete-step world.
+ *
+ * Everything variable comes from the def, so adding an algorithm never edits
+ * this file: counters are declared (`def.counters`), the size control is
+ * declared (`def.size`, omitted for fixed-input algorithms), and the stage is
+ * injected (`view`).
  */
-export function AlgoFigure({
+export function AlgoFigure<S, I>({
   def,
+  view: View,
   description,
-  defaultN = 12,
+  defaultSize,
   onEngage,
-}: AlgoFigureProps) {
-  const [n, setN] = useState(defaultN);
+}: AlgoFigureProps<S, I>) {
+  const [size, setSize] = useState(() => defaultAlgoSize(def, defaultSize));
   const [seed, setSeed] = useState(42);
-  const player = useAlgoPlayer(def, n, seed, onEngage);
+  const player = useAlgoPlayer(def, size, seed, onEngage);
   const { current } = player;
 
   return (
     <figure className="my-6 overflow-hidden rounded-lg border border-border bg-surface">
       <div className="relative grid bg-bg/40 lg:grid-cols-[1fr_240px]">
-        <div className="relative">
+        <div className="relative flex flex-col">
           <CornerTicks />
           <PlateLabel className="absolute top-2.5 right-5">
             fig · {def.id} · seed {seed}
           </PlateLabel>
-          <ArrayView step={current} />
-          {current.note && (
-            <p className="pointer-events-none absolute bottom-2 left-3 flex items-center gap-2 rounded-md border border-border bg-bg/85 px-2.5 py-1.5 font-mono text-[11px] text-fg backdrop-blur-sm">
-              <span className="h-3 w-0.5 shrink-0 rounded-full bg-accent" />
-              {current.note}
-            </p>
-          )}
+          <View state={current.state} />
+          {/*
+            The caption sits BELOW the stage, not over it. It used to be
+            absolutely positioned at the bottom-left, which works only while the
+            stage has dead space down there — a view with content near its floor
+            (the threads lanes, the mutation grid) had its last row covered. It
+            cannot be solved by padding the viewBox either: the caption is fixed
+            px while the SVG scales with the container, so the overlap comes and
+            goes with viewport width. `min-h` keeps the layout still on steps
+            that carry no note.
+          */}
+          <div className="mt-auto flex min-h-9 items-center px-3 pb-2">
+            {current.note && (
+              <p className="flex items-center gap-2 rounded-md border border-border bg-bg/85 px-2.5 py-1.5 font-mono text-[11px] text-fg">
+                <span className="h-3 w-0.5 shrink-0 rounded-full bg-accent" />
+                {current.note}
+              </p>
+            )}
+          </div>
         </div>
         <div className="border-t border-border lg:border-t-0 lg:border-l">
           <p className="tech-label px-3 pt-2.5 pb-1">{def.title}</p>
@@ -57,45 +83,56 @@ export function AlgoFigure({
         </div>
       </div>
 
-      {/* op counters */}
-      <div className="grid grid-cols-3 border-t border-border px-4 py-3 sm:flex sm:items-stretch">
-        <div className="sm:pr-6">
-          <Meter
-            spec={{ metricKey: "cmp", label: "comparisons", kind: "counter" }}
-            value={current.comparisons}
-          />
+      {/* counters — declared by the def, so a new algorithm adds its own
+          (splits, disk reads, retries) without touching the figure */}
+      {def.counters.length > 0 && (
+        <div className="flex flex-wrap items-stretch border-t border-border px-4 py-3">
+          {def.counters.map((counter, i) => (
+            <div
+              key={counter.key}
+              className={
+                i === 0
+                  ? "pr-6"
+                  : "border-l border-border px-6"
+              }
+            >
+              <Meter
+                spec={{
+                  metricKey: counter.key,
+                  label: counter.label,
+                  kind: "counter",
+                }}
+                value={current.counters[counter.key] ?? 0}
+              />
+            </div>
+          ))}
         </div>
-        <div className="px-4 sm:border-l sm:border-border sm:px-6">
-          <Meter
-            spec={{ metricKey: "swp", label: "swaps / writes", kind: "counter" }}
-            value={current.swaps}
-          />
-        </div>
-        <div className="px-4 sm:border-l sm:border-border sm:px-6">
-          <Meter
-            spec={{ metricKey: "n", label: "n", kind: "counter" }}
-            value={n}
-          />
-        </div>
-      </div>
+      )}
+      {/* The size is deliberately NOT reported here. It is an INPUT, not a
+          running total, and its own slider already prints the same label beside
+          the same value — rendering both put "operations before the crash 4"
+          on the screen twice, three lines apart. Invisible until the first
+          lesson def with a `size` was actually rendered. */}
 
       {/* input controls */}
       <div className="flex flex-wrap items-end gap-x-6 gap-y-3 border-t border-border px-4 py-3">
-        <label className="flex min-w-36 flex-col gap-1.5">
-          <span className="tech-label flex items-baseline justify-between gap-3">
-            array size
-            <span className="tech-num text-accent normal-case">{n}</span>
-          </span>
-          <input
-            type="range"
-            min={5}
-            max={30}
-            step={1}
-            value={n}
-            onChange={(e) => setN(Number(e.target.value))}
-            className="h-1 w-full cursor-pointer appearance-none rounded-full bg-border accent-accent"
-          />
-        </label>
+        {def.size && (
+          <label className="flex min-w-36 flex-col gap-1.5">
+            <span className="tech-label flex items-baseline justify-between gap-3">
+              {def.size.label}
+              <span className="tech-num text-accent normal-case">{size}</span>
+            </span>
+            <input
+              type="range"
+              min={def.size.min}
+              max={def.size.max}
+              step={1}
+              value={size}
+              onChange={(e) => setSize(Number(e.target.value))}
+              className="sim-slider h-1 w-full cursor-pointer appearance-none rounded-full bg-border accent-accent"
+            />
+          </label>
+        )}
         <button
           onClick={() => setSeed((s) => (s * 48271) % 2147483647)}
           title="New random input (deterministic per seed)"

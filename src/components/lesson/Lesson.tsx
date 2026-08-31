@@ -6,7 +6,7 @@ import { useLessonKeyboardNav } from "@/hooks/use-lesson-keyboard-nav";
 import { useLessonProgress } from "@/hooks/use-lesson-progress";
 import { cn } from "@/lib/cn";
 import { difficultyClass } from "@/lib/accent";
-import { getLesson, moduleOf } from "@/lib/curriculum";
+import { getLesson, moduleOf, prerequisiteLabels } from "@/lib/curriculum";
 import { useProgress } from "@/stores/progress";
 import { SectionRule } from "@/components/ui/SectionRule";
 import { BookOpen, Focus, Sparkles } from "lucide-react";
@@ -217,9 +217,7 @@ export function Lesson({ slug, children }: LessonProps) {
                   <span>
                     after{" "}
                     <span className="text-fg-muted normal-case">
-                      {meta.prerequisites
-                        .map((p) => getLesson(p)?.title ?? p)
-                        .join(", ")}
+                      {prerequisiteLabels(meta).join(", ")}
                     </span>
                   </span>
                 )}

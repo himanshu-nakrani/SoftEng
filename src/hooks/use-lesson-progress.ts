@@ -2,7 +2,7 @@
 
 import type { LessonMeta, Module } from "@/curriculum/types";
 import { useHydrated } from "@/hooks/use-hydrated";
-import { modules } from "@/lib/curriculum";
+import { getTrack } from "@/lib/curriculum";
 import { useProgress, type QuizResult } from "@/stores/progress";
 import { useMemo } from "react";
 
@@ -38,14 +38,25 @@ const EMPTY_QUIZZES: Record<string, QuizResult> = {};
    exactly one definition of "done" and "mastered".
 --------------------------------------------------------------------------- */
 
-/** Completed sections for a lesson, ignoring ids the registry dropped. */
+/**
+ * Completed sections for a lesson, ignoring ids the registry dropped.
+ *
+ * Counts DISTINCT ids. `completeSection` refuses to add a duplicate, but nothing
+ * downstream of `localStorage` can rely on that: the store is user-writable, an
+ * older build may have written another shape, and `sanitizeProgress` deliberately
+ * validates types without deduplicating. A repeated id used to count twice, so a
+ * payload holding `["a", "a", "b"]` reported 3 of 3 sections done from two real
+ * completions — and `lessonFraction` clamps at 1, so it showed 100% rather than
+ * anything obviously wrong.
+ */
 export function sectionsDone(
   lesson: LessonMeta,
   completedSections: Record<string, string[]>,
 ): number {
   const valid = new Set(lesson.sections.map((sec) => sec.id));
   const completed = completedSections[lesson.slug] ?? [];
-  return completed.filter((id) => valid.has(id)).length;
+  const distinct = new Set(completed.filter((id) => valid.has(id)));
+  return distinct.size;
 }
 
 export function lessonFraction(
@@ -186,14 +197,20 @@ export interface TrackProgress {
 }
 
 /**
- * Track-wide progress, weighted by registry SECTIONS rather than by lesson
- * (a 5-section lesson is more of the track than a 3-section one), so the
- * headline % and the "N sections still open" copy always agree.
+ * Progress across ONE track, weighted by registry SECTIONS rather than by
+ * lesson (a 5-section lesson is more of the track than a 3-section one), so
+ * the headline % and the "N sections still open" copy always agree.
+ *
+ * Scoped by slug, not by flattening every track: a global denominator would
+ * turn "68% of system design" into "6% of software engineering" the moment a
+ * second track lands, which is a number no learner asked for. An unknown slug
+ * yields a zeroed readout rather than throwing — a stale bookmark must not
+ * take the page down.
  *
  * `coming-soon` lessons are excluded from both numerator and denominator —
  * they have no route, so counting them would make 100% unreachable.
  */
-export function useTrackProgress(): TrackProgress {
+export function useTrackProgress(trackSlug: string): TrackProgress {
   const hydrated = useHydrated();
   const completedSections = useProgress((s) => s.completedSections);
   const quizAnswers = useProgress((s) => s.quizAnswers);
@@ -203,7 +220,8 @@ export function useTrackProgress(): TrackProgress {
   const quizzes = hydrated ? quizAnswers : EMPTY_QUIZZES;
 
   return useMemo(() => {
-    const segments: SegmentProgress[] = modules.map((module) => {
+    const trackModules = getTrack(trackSlug)?.modules ?? [];
+    const segments: SegmentProgress[] = trackModules.map((module) => {
       const live = module.lessons.filter((l) => l.status === "available");
       let done = 0;
       let total = 0;
@@ -231,7 +249,7 @@ export function useTrackProgress(): TrackProgress {
 
     const done = segments.reduce((acc, seg) => acc + seg.done, 0);
     const total = segments.reduce((acc, seg) => acc + seg.total, 0);
-    const lessonsMastered = modules
+    const lessonsMastered = trackModules
       .flatMap((m) => m.lessons)
       .filter(
         (lesson) =>
@@ -259,5 +277,5 @@ export function useTrackProgress(): TrackProgress {
       lessonsMastered,
       segments,
     };
-  }, [sections, quizzes]);
+  }, [trackSlug, sections, quizzes]);
 }

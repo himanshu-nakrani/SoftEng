@@ -28,6 +28,12 @@ jobs:
 
       - run: npm ci
 
+      # Fails the build on a HIGH or CRITICAL advisory only. Moderate findings in
+      # dev-only tooling would otherwise block every PR on something nobody can
+      # act on, which trains people to ignore the step.
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+
       # tsc --noEmit, eslint, the curriculum registry check, unit tests.
       - name: Check
         run: npm run check
@@ -41,7 +47,12 @@ jobs:
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: E2E smoke tests
+      # SAMPLED: one lesson per module, plus every hub route. An axe scan costs
+      # ~5s per lesson, so scanning all of them would grow this job without
+      # bound as the curriculum does — see e2e/_selection.ts. The full sweep runs
+      # nightly in e2e-full.yml; a regression in an unsampled lesson is caught
+      # there, which is the trade being made.
+      - name: E2E (sampled)
         run: npm run test:e2e
 
       - name: Upload static export

@@ -6,7 +6,14 @@ import type { LessonMeta } from "@/curriculum/types";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { useLessonProgress } from "@/hooks/use-lesson-progress";
 import { cn } from "@/lib/cn";
-import { getLesson, lessonPath, moduleOf } from "@/lib/curriculum";
+import {
+  accentOf,
+  firstTrack,
+  getLesson,
+  lessonPath,
+  moduleOf,
+  trackPath,
+} from "@/lib/curriculum";
 import { useProgress } from "@/stores/progress";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
@@ -21,7 +28,7 @@ const CTA = buttonClasses("primary", "md");
  */
 function StartCta() {
   return (
-    <Link href="/learn" className={CTA}>
+    <Link href={trackPath(firstTrack)} className={CTA}>
       Start the track
       <ArrowRight className="size-4" />
     </Link>
@@ -64,7 +71,7 @@ function ContinueButton({
           fraction={progress.fraction}
           state={progress.state}
           mastered={progress.mastered}
-          accent={moduleOf(lesson).accent}
+          accent={accentOf(moduleOf(lesson))}
         />
       </span>
       <span className="min-w-0 truncate">Continue · {lesson.title}</span>

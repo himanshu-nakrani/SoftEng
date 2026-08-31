@@ -7,7 +7,14 @@ import { buttonClasses } from "@/components/ui/Button";
 import { PlateLabel } from "@/components/ui/PlateLabel";
 import { SectionRule } from "@/components/ui/SectionRule";
 import { accentCssVar } from "@/lib/accent";
-import { allLessons, modules, track } from "@/lib/curriculum";
+import {
+  accentOf,
+  allLessons,
+  firstTrack,
+  modules,
+  trackLabel,
+  trackPath,
+} from "@/lib/curriculum";
 import { absoluteUrl, siteDescription, siteName } from "@/lib/site";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
@@ -42,7 +49,10 @@ function LedgerRule({ n, label }: { n: string; label: string }) {
 
 export default function Home() {
   // Every count on this page is derived — the registry is the only source of
-  // truth, so shipping a lesson updates the copy for free.
+  // truth, so shipping a lesson updates the copy for free. Site-wide counts
+  // (lessons, modules) stay cross-track on purpose; the manifest section below
+  // is scoped to the track the landing page actually sells.
+  const featured = firstTrack;
   const availableCount = allLessons.filter(
     (l) => l.status === "available",
   ).length;
@@ -69,16 +79,16 @@ export default function Home() {
       },
       {
         "@type": "Course",
-        "@id": `${absoluteUrl("/learn")}#course`,
-        name: track.title,
+        "@id": `${absoluteUrl(trackPath(featured))}#course`,
+        name: featured.title,
         description:
           "A self-paced interactive course in system design, distributed systems, data infrastructure, resilience, and observability.",
-        url: absoluteUrl("/learn"),
+        url: absoluteUrl(trackPath(featured)),
         inLanguage: "en-US",
         educationalLevel: "Beginner to advanced",
         timeRequired: `PT${totalMinutes}M`,
         provider: { "@id": `${absoluteUrl("/")}#organization` },
-        hasPart: modules.map((module, index) => ({
+        hasPart: featured.modules.map((module, index) => ({
           "@type": "Course",
           position: index + 1,
           name: module.title,
@@ -167,10 +177,10 @@ export default function Home() {
 
         {/* ---- the track: a manifest, not a card grid ---- */}
         <section className="mx-auto max-w-6xl px-6 pb-28">
-          <LedgerRule n="02" label="track 01" />
+          <LedgerRule n="02" label={trackLabel(featured)} />
           <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
             <h2 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
-              {track.title}
+              {featured.title}
             </h2>
             <p className="tech-num text-xs text-fg-faint">
               {allLive
@@ -180,26 +190,26 @@ export default function Home() {
           </div>
 
           <div>
-            {modules.map((mod, i) => {
+            {featured.modules.map((mod, i) => {
               const live = mod.lessons.filter(
                 (l) => l.status === "available",
               ).length;
               return (
                 <Link
                   key={mod.slug}
-                  href={`/learn#${mod.slug}`}
+                  href={`${trackPath(featured)}#${mod.slug}`}
                   className="module-row group relative grid items-baseline gap-x-8 gap-y-2 py-6 md:grid-cols-[110px_240px_1fr_auto]"
                 >
                   <span
                     className="absolute top-0 bottom-0 left-0 w-0.5 opacity-0 transition-opacity group-hover:opacity-100"
-                    style={{ background: accentCssVar[mod.accent] }}
+                    style={{ background: accentCssVar[accentOf(mod)] }}
                   />
                   <span className="tech-num pl-4 text-xs text-fg-faint md:pl-0">
                     <span
                       className="mr-2 inline-block size-1.5 rounded-full align-middle"
                       style={{
-                        background: accentCssVar[mod.accent],
-                        boxShadow: `0 0 6px ${accentCssVar[mod.accent]}`,
+                        background: accentCssVar[accentOf(mod)],
+                        boxShadow: `0 0 6px ${accentCssVar[accentOf(mod)]}`,
                       }}
                     />
                     mod.{String(i + 1).padStart(2, "0")}

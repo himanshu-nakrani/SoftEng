@@ -32,7 +32,11 @@ export function AlgoTransportBar({
     <div className="flex flex-wrap items-center gap-1 border-t border-border px-3 py-2">
       <button
         onClick={controls.toggle}
-        aria-label={playing ? "Pause" : "Play"}
+        // Deliberately the SAME accessible names as the packet engine's
+        // TransportBar. A screen-reader user must not get "Play" on one figure
+        // and "Play simulation" on the next, and the e2e helpers locate the
+        // transport by these names across both archetypes.
+        aria-label={playing ? "Pause simulation" : "Play simulation"}
         className="flex size-8 cursor-pointer items-center justify-center rounded-lg bg-accent text-bg transition-all hover:brightness-110"
       >
         {playing ? (

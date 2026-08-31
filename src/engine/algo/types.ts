@@ -1,59 +1,92 @@
 /**
- * Algo engine — the step-through visualizer for array algorithms.
+ * Algo engine — the step-through player for discrete algorithms.
  *
  * Where the packet sim is continuous and forward-only (sim time), an
  * algorithm is a finite list of discrete steps computed up front. That
- * difference buys the interactions sorting wants: step BACK, scrub,
- * and exact operation counts. Determinism is trivial — the step list
- * IS the truth, and inputs come from the same seeded mulberry32.
+ * difference buys the interactions stepping wants: step BACK, scrub, and
+ * exact operation counts. Determinism is trivial — the step list IS the
+ * truth, and inputs come from the same seeded mulberry32.
+ *
+ * The engine is deliberately ignorant of WHAT it is stepping through. A step
+ * carries an opaque `state`, and a view component knows how to draw it. That
+ * is the whole seam: sorting bars, a B-tree, a WAL replay, a scheduler's run
+ * queue, and a parser's stack are all "a list of states with counters".
+ *
+ * Layering, same as archetype A: an `AlgoDef` is PURE DATA (no JSX, no React)
+ * and lives with the lesson; the view component and the figure live here and
+ * are wired together by the lesson's `-figure.tsx` client wrapper.
  */
 
-export interface AlgoHighlight {
-  /** Indices being compared this step (cyan). */
-  compare?: number[];
-  /** Indices being swapped / written (accent). */
-  swap?: number[];
-  /** Indices settled in their final position (green). */
-  sorted?: number[];
-  /** Pivot index (violet). */
-  pivot?: number;
-  /** Active subrange [lo, hi] inclusive — divide & conquer band. */
-  range?: [number, number];
+/** A named running total, shown as a meter under the stage. */
+export interface AlgoCounter {
+  /** Key into `AlgoStep.counters`. */
+  key: string;
+  /** Meter label, lower case ("comparisons", "disk reads"). */
+  label: string;
 }
 
-export interface AlgoStep {
-  /** Full array snapshot AFTER this step (n is small; snapshots are cheap). */
-  array: number[];
-  highlight: AlgoHighlight;
-  /** Active pseudocode line (index into AlgoDef.code). */
+/** The input-size control. Omit to hide it (fixed-input algorithms). */
+export interface AlgoSizeControl {
+  /** Slider label ("array size", "keys inserted"). */
+  label: string;
+  min: number;
+  max: number;
+  /** Starting value; the figure's `defaultSize` prop overrides it. */
+  default: number;
+}
+
+/**
+ * One frame of the run.
+ *
+ * `state` is whatever the view needs — the engine never inspects it, so it
+ * may be as large as it likes, but note the whole list is held in memory:
+ * snapshot cheaply (structural sharing) for long runs.
+ */
+export interface AlgoStep<S> {
+  state: S;
+  /** Active pseudocode line (index into `AlgoDef.code`). */
   codeLine?: number;
-  /** Optional caption for this step. */
+  /** Caption for this step. */
   note?: string;
-  /** Running operation counts. */
-  comparisons: number;
-  swaps: number;
+  /**
+   * Running totals as of this step, keyed by `AlgoDef.counters[].key`.
+   * Monotonic non-decreasing by convention — they are cumulative counts, and
+   * a counter that goes down while stepping forward reads as a bug.
+   */
+  counters: Record<string, number>;
 }
 
-export interface AlgoDef {
+/**
+ * An algorithm, as data.
+ *
+ * @typeParam S - the per-step state its view draws.
+ * @typeParam I - the generated input `run` consumes.
+ */
+export interface AlgoDef<S, I = unknown> {
+  /** Stable id; also the figure's plate stamp. */
   id: string;
   title: string;
-  /** Pseudocode shown in the CodePanel. */
+  /** Pseudocode shown in the CodePanel, one entry per line. */
   code: string[];
-  /** Seeded input generation (values in 5..100 render well as bars). */
-  generateInput: (rng: () => number, n: number) => number[];
-  /** Precompute every step. First step should be the untouched input. */
-  run: (input: number[]) => AlgoStep[];
+  /** Which running totals to surface, in display order. */
+  counters: AlgoCounter[];
+  size?: AlgoSizeControl;
+  /** Seeded input generation — the ONLY randomness allowed. */
+  generateInput: (rng: () => number, size: number) => I;
+  /**
+   * Precompute every step. The first step must be the untouched input, so
+   * scrubbing to 0 always shows where the run started.
+   *
+   * `rng` is the SAME seeded stream `generateInput` drew from, continued — so
+   * a run may make its own choices (which thread the scheduler picks, a
+   * randomized pivot, a probe sequence) and still be perfectly reproducible
+   * from `(def, size, seed)`. Pure algorithms simply ignore it.
+   */
+  run: (input: I, rng: () => number) => AlgoStep<S>[];
 }
 
-/** Shared input generator: shuffled distinct values, bar-friendly. */
-export function shuffledInput(rng: () => number, n: number): number[] {
-  const values = Array.from(
-    { length: n },
-    (_, i) => 8 + Math.round((i * 92) / Math.max(n - 1, 1)),
-  );
-  for (let i = values.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [values[i], values[j]] = [values[j], values[i]];
-  }
-  return values;
-}
+/**
+ * An `AlgoDef` with its state type erased — for components that hold a def
+ * without drawing it (the transport, the code panel, a registry).
+ */
+export type AlgoDefView = AlgoDef<unknown, unknown>;

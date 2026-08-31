@@ -51,6 +51,7 @@ import { clientServerSim } from "@/lessons/scaling/client-server";
 import { loadBalancingSim } from "@/lessons/scaling/load-balancing";
 import { realtimeDeliverySim } from "@/lessons/scaling/realtime-delivery";
 import { scalingStrategiesSim } from "@/lessons/scaling/scaling-strategies";
+import { getLesson } from "@/lib/curriculum";
 
 /**
  * `LessonSim<L>` is invariant in `L` (covariant `init`, contravariant `step`),
@@ -109,7 +110,16 @@ const warned = new Set<string>();
  */
 export function getSim(slug: string): LessonSim<unknown> | undefined {
   const sim = simBySlug[slug];
-  if (!sim && process.env.NODE_ENV !== "production" && !warned.has(slug)) {
+  // `engine: "steps"` lessons (archetype B) have an AlgoDef, not a LessonSim,
+  // and carry no packet-sim checkpoints — so a missing entry is correct for
+  // them, not an oversight worth warning about.
+  const isStepsLesson = getLesson(slug)?.engine === "steps";
+  if (
+    !sim &&
+    !isStepsLesson &&
+    process.env.NODE_ENV !== "production" &&
+    !warned.has(slug)
+  ) {
     warned.add(slug);
     console.warn(
       `[lessons] no sim registered for lesson "${slug}" — add a line to simBySlug in src/lessons/index.ts. Its checkpoints are missing from /review.`,

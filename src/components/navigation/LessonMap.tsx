@@ -15,7 +15,15 @@ import {
 } from "@/hooks/use-lesson-progress";
 import { cn } from "@/lib/cn";
 import { accentCssVar, difficultyClass } from "@/lib/accent";
-import { allLessons, getLesson, lessonPath, modules } from "@/lib/curriculum";
+import {
+  accentOf,
+  getLesson,
+  getTrack,
+  lessonPath,
+  lessonsOfTrack,
+  prerequisiteLabels,
+  trackOfLesson,
+} from "@/lib/curriculum";
 import { useProgress } from "@/stores/progress";
 import { ArrowRight, Sparkles } from "lucide-react";
 import Link from "next/link";
@@ -32,13 +40,17 @@ const activityLabel: Record<LearningActivity, string> = {
 /**
  * Track-level readout: one headline % plus a section-weighted segmented bar,
  * one segment per module in its accent. The lesson map below answers "where
- * am I in this lesson"; only this answers "how far through the track am I".
+ * am I in this lesson"; only this answers "how far through THIS track am I".
+ *
+ * Takes a slug rather than a `Track` object so a server page can render it
+ * without serialising the whole registry subtree into the RSC payload — the
+ * client already has the registry in its module graph.
  */
-export function TrackProgress() {
+export function TrackProgress({ trackSlug }: { trackSlug: string }) {
   // useTrackProgress is hydration-gated internally: pre-mount it reports the
   // logged-out snapshot (0 done / every section open), which is exactly the
   // markup the static HTML carries.
-  const track = useTrackProgress();
+  const track = useTrackProgress(trackSlug);
   const pct = Math.round(track.fraction * 100);
 
   return (
@@ -68,8 +80,8 @@ export function TrackProgress() {
               style={
                 i < filled
                   ? {
-                      background: accentCssVar[seg.module.accent],
-                      boxShadow: `0 0 6px -1px ${accentCssVar[seg.module.accent]}`,
+                      background: accentCssVar[accentOf(seg.module)],
+                      boxShadow: `0 0 6px -1px ${accentCssVar[accentOf(seg.module)]}`,
                     }
                   : undefined
               }
@@ -88,7 +100,7 @@ export function TrackProgress() {
             <span
               className="size-1.5 shrink-0 rounded-full"
               style={{
-                background: accentCssVar[seg.module.accent],
+                background: accentCssVar[accentOf(seg.module)],
                 opacity: seg.fraction > 0 ? 1 : 0.35,
               }}
             />
@@ -120,49 +132,63 @@ export function TrackProgress() {
 /**
  * "Continue where you left off", from persisted lastVisited — deep-linked to
  * the exact section the reader left (lesson sections carry ids + scroll-mt).
- * Degrades in two steps: a finished lesson retargets to the next unfinished
- * one, and a finished track celebrates instead of pretending there's more.
+ * Degrades in three steps: a lesson from ANOTHER track is ignored here (its
+ * own track page owns that prompt), a finished lesson retargets to the next
+ * unfinished one in this track, and a finished track celebrates instead of
+ * pretending there's more.
  */
-function ContinueCard() {
+function ContinueCard({ trackSlug }: { trackSlug: string }) {
   const hydrated = useHydrated();
   const lastVisited = useProgress((s) => s.lastVisited);
   const completedSections = useProgress((s) => s.completedSections);
 
-  if (!hydrated || !lastVisited) return null;
+  const track = getTrack(trackSlug);
+  if (!hydrated || !track) return null;
 
-  const lesson = getLesson(lastVisited.lessonSlug);
-  if (!lesson || lesson.status !== "available") return null;
-
-  const done = sectionsDone(lesson, completedSections);
-  const total = lesson.sections.length;
-
-  if (done < total) {
-    // Only deep-link to a section the registry still has; a renamed or
-    // dropped id would scroll nowhere, so fall back to the lesson top.
-    const section = lesson.sections.find(
-      (sec) => sec.id === lastVisited.sectionId,
-    );
-    const href = section
-      ? `${lessonPath(lesson)}#${section.id}`
-      : lessonPath(lesson);
-
-    return (
-      <ResumeCard
-        href={href}
-        label="Continue where you left off"
-        title={lesson.title}
-        detail={section?.title}
-        count={`${done}/${total}`}
-      />
-    );
-  }
-
-  // Finished the lesson they were last in — point at the next open one.
-  const upNext = allLessons.find(
+  const trackLessons = lessonsOfTrack(track);
+  const openInTrack = trackLessons.find(
     (l) => l.status === "available" && lessonFraction(l, completedSections) < 1,
   );
 
-  if (!upNext) {
+  const lesson = lastVisited ? getLesson(lastVisited.lessonSlug) : undefined;
+  const resumable =
+    lesson &&
+    lesson.status === "available" &&
+    trackOfLesson(lesson).slug === trackSlug
+      ? lesson
+      : undefined;
+
+  if (resumable) {
+    const done = sectionsDone(resumable, completedSections);
+    const total = resumable.sections.length;
+
+    if (done < total) {
+      // Only deep-link to a section the registry still has; a renamed or
+      // dropped id would scroll nowhere, so fall back to the lesson top.
+      const section = resumable.sections.find(
+        (sec) => sec.id === lastVisited?.sectionId,
+      );
+      const href = section
+        ? `${lessonPath(resumable)}#${section.id}`
+        : lessonPath(resumable);
+
+      return (
+        <ResumeCard
+          href={href}
+          label="Continue where you left off"
+          title={resumable.title}
+          detail={section?.title}
+          count={`${done}/${total}`}
+        />
+      );
+    }
+  }
+
+  // Nothing resumable in this track: either every section is done, or the
+  // reader has not started it yet. Say nothing in the untouched case — an
+  // empty track already reads as "start at the top".
+  if (!openInTrack) {
+    if (!resumable) return null;
     return (
       <GlowCard accent="green" active className="mb-12 flex items-center gap-3 px-5 py-4">
         <Sparkles className="size-5 shrink-0 text-glow-green" strokeWidth={1.75} />
@@ -176,13 +202,15 @@ function ContinueCard() {
     );
   }
 
+  if (!resumable) return null;
+
   return (
     <ResumeCard
-      href={lessonPath(upNext)}
+      href={lessonPath(openInTrack)}
       label="Up next"
-      title={upNext.title}
-      detail={upNext.tagline}
-      count={`${sectionsDone(upNext, completedSections)}/${upNext.sections.length}`}
+      title={openInTrack.title}
+      detail={openInTrack.tagline}
+      count={`${sectionsDone(openInTrack, completedSections)}/${openInTrack.sections.length}`}
     />
   );
 }
@@ -278,9 +306,7 @@ function MapNode({
         {lesson.prerequisites.length > 0 && (
           <span>
             {" · after "}
-            {lesson.prerequisites
-              .map((p) => getLesson(p)?.title ?? p)
-              .join(", ")}
+            {prerequisiteLabels(lesson).join(", ")}
           </span>
         )}
       </p>
@@ -296,7 +322,7 @@ function MapNode({
           fraction={progress.fraction}
           state={progress.state}
           mastered={progress.mastered}
-          accent={mod.accent}
+          accent={accentOf(mod)}
         />
         <div className="mt-2 w-px flex-1 bg-border" />
       </div>
@@ -311,16 +337,19 @@ function MapNode({
   );
 }
 
-/** The learning-path map: module clusters on a progress spine. */
-export function LessonMap() {
+/** The learning-path map for one track: module clusters on a progress spine. */
+export function LessonMap({ trackSlug }: { trackSlug: string }) {
+  const track = getTrack(trackSlug);
+  if (!track) return null;
+
   return (
     <div className="relative">
       <div className="dot-grid dot-grid-fade pointer-events-none absolute inset-0 -z-10" />
-      <ContinueCard />
+      <ContinueCard trackSlug={trackSlug} />
 
-      {modules.map((mod, i) => (
+      {track.modules.map((mod, i) => (
         // id + scroll-mt is a contract with the landing page, which links
-        // straight to /learn#<module-slug>.
+        // straight to /learn/<track>#<module-slug>.
         <section key={mod.slug} id={mod.slug} className="mb-12 scroll-mt-24">
           <SectionRule
             className="mb-5"
@@ -333,8 +362,8 @@ export function LessonMap() {
             <span
               className="size-1.5 shrink-0 self-center rounded-full"
               style={{
-                background: accentCssVar[mod.accent],
-                boxShadow: `0 0 8px ${accentCssVar[mod.accent]}`,
+                background: accentCssVar[accentOf(mod)],
+                boxShadow: `0 0 8px ${accentCssVar[accentOf(mod)]}`,
               }}
             />
             <span className="tech-num shrink-0 text-xs text-fg-faint">

@@ -1,4 +1,4 @@
-import { allLessons, lessonPath } from "@/lib/curriculum";
+import { allLessons, lessonPath, trackPath, tracks } from "@/lib/curriculum";
 import { absoluteUrl } from "@/lib/site";
 import type { MetadataRoute } from "next";
 
@@ -25,6 +25,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 0.9,
     },
+    // One entry per track landing, between the curriculum index and the
+    // lessons in both priority and hierarchy.
+    ...tracks.map((track) => ({
+      url: absoluteUrl(trackPath(track)),
+      lastModified,
+      changeFrequency: "weekly" as const,
+      priority: 0.85,
+    })),
     {
       url: absoluteUrl("/review"),
       lastModified,

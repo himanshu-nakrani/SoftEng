@@ -5,6 +5,7 @@ import { GlowCard } from "@/components/ui/GlowCard";
 import { SectionRule } from "@/components/ui/SectionRule";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { accentCssVar } from "@/lib/accent";
+import { accentOf, firstTrack, trackPath } from "@/lib/curriculum";
 import { useProgress, type QuizResult } from "@/stores/progress";
 import { useJournal } from "@/stores/journal";
 import { ArrowRight, Compass } from "lucide-react";
@@ -154,7 +155,7 @@ function StatsPanel({ stats }: { stats: DeckStats }) {
             <span
               className="size-1.5 shrink-0 rounded-full"
               style={{
-                background: accentCssVar[stat.module.accent],
+                background: accentCssVar[accentOf(stat.module)],
                 opacity: stat.firstTry > 0 ? 1 : 0.35,
               }}
             />
@@ -200,7 +201,7 @@ function ColdStart({ total }: { total: number }) {
             on this page is recorded.
           </p>
           <Link
-            href="/learn"
+            href={trackPath(firstTrack)}
             className={buttonClasses("primary", "md", "mt-4")}
           >
             Start the track

@@ -110,7 +110,9 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1a1712",
+  // --color-bg oklch(13.5% 0.01 70) as sRGB. One value across the manifest,
+  // the favicon and here, so browser chrome, PWA splash and the app agree.
+  themeColor: "#0b0805",
   colorScheme: "dark",
 };
 

@@ -1,4 +1,4 @@
-import { allLessons } from "@/lib/curriculum";
+import { allLessons, firstTrack, trackLabel, tracks } from "@/lib/curriculum";
 import { ImageResponse } from "next/og";
 
 /**
@@ -19,10 +19,20 @@ export const dynamic = "force-static";
 
 const size = { width: 1200, height: 630 };
 
-const BG = "#2e3440";
-const FROST = "#88c0d0";
-const FG = "#eceff4";
-const FAINT = "#8a93a6";
+/**
+ * Inlined tokens — Satori has no CSS custom properties. Derived by converting
+ * the `@theme` oklch values in globals.css to sRGB, not eyeballed:
+ *   --color-raised oklch(20% 0.014 70) → #1a150f  (lifted, so faint text reads)
+ *   --color-accent oklch(80% 0.15 80)  → #f0b135
+ *   --color-fg     oklch(93% 0.008 80) → #ebe7e2
+ *   --color-fg-faint oklch(60% 0.014 75) → #857f77
+ *
+ * Keep in sync with src/lib/og.tsx, src/app/icon.svg and manifest.webmanifest.
+ */
+const BG = "#1a150f";
+const ACCENT = "#f0b135";
+const FG = "#ebe7e2";
+const FAINT = "#857f77";
 
 export function GET() {
   const live = allLessons.filter((l) => l.status === "available").length;
@@ -39,7 +49,7 @@ export function GET() {
           background: BG,
           padding: "68px 76px",
           color: FG,
-          borderTop: `6px solid ${FROST}`,
+          borderTop: `6px solid ${ACCENT}`,
         }}
       >
         {/* wordmark row */}
@@ -60,13 +70,15 @@ export function GET() {
               width: 10,
               height: 10,
               borderRadius: 10,
-              background: FROST,
+              background: ACCENT,
               marginLeft: 10,
               marginTop: 10,
             }}
           />
           <span style={{ marginLeft: "auto", fontSize: 22 }}>
-            track 01 · {live} live simulations
+            {tracks.length === 1
+              ? `${trackLabel(firstTrack)} · ${live} live simulations`
+              : `${tracks.length} tracks · ${live} live simulations`}
           </span>
         </div>
 
@@ -80,7 +92,7 @@ export function GET() {
               display: "flex",
               fontSize: 92,
               lineHeight: 1.05,
-              color: FROST,
+              color: ACCENT,
             }}
           >
             breaking them.
@@ -89,7 +101,7 @@ export function GET() {
             style={{
               width: 190,
               height: 5,
-              background: FROST,
+              background: ACCENT,
               marginTop: 38,
             }}
           />

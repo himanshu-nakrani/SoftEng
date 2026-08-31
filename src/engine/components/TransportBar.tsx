@@ -267,7 +267,17 @@ export function TransportBar({
     <>
       <div className="flex flex-wrap items-center gap-1 border-t border-border px-3 py-2">
         <IconButton
-          onClick={controls.toggle}
+          /**
+           * Explicit intent, NOT `controls.toggle`.
+           *
+           * `toggle` asks the engine which way to flip, and the engine's status
+           * can change without a re-render — the scroll observer pauses a figure
+           * that leaves the viewport. That left a window where this button read
+           * "Pause simulation" while the sim was already paused, so clicking it
+           * PLAYED. Deriving the action from the same `playing` value that
+           * renders the label makes the control honest by construction.
+           */
+          onClick={() => (playing ? controls.pause() : controls.play())}
           disabled={quizzing}
           label={playing ? "Pause simulation" : "Play simulation"}
           aria-pressed={playing}

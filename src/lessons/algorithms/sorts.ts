@@ -1,52 +1,94 @@
-import type { AlgoDef, AlgoHighlight, AlgoStep } from "@/engine/algo/types";
-import { shuffledInput } from "@/engine/algo/types";
+import { StepRecorder } from "@/engine/algo/recorder";
+import type { AlgoCounter, AlgoDef, AlgoSizeControl, AlgoStep } from "@/engine/algo/types";
+import type { AlgoHighlight, ArrayAlgoState } from "@/engine/algo/views/array";
+import { shuffledInput } from "@/engine/algo/views/array";
 
 /**
- * Track 2 sorting definitions. Each `run` precomputes every step; the
- * step recorder keeps snapshots + running op counts consistent.
+ * Sorting definitions — the reference consumers of archetype B, and the
+ * fixtures its engine tests run against.
+ *
+ * Not registered as lessons: the DSA track is deferred. They stay because they
+ * are what proves `AlgoDef`/`StepRecorder`/`ArrayView` actually compose, and
+ * because deleting a working reference implementation costs more than keeping
+ * one (see the algo notes in CLAUDE.md).
  */
 
+/** Every sort reports the same two totals; only the write verb differs. */
+function counters(writeLabel: string): AlgoCounter[] {
+  return [
+    { key: "comparisons", label: "comparisons" },
+    { key: "writes", label: writeLabel },
+  ];
+}
+
+const ARRAY_SIZE: AlgoSizeControl = {
+  label: "array size",
+  min: 5,
+  max: 30,
+  default: 12,
+};
+
+type SortDef = AlgoDef<ArrayAlgoState, number[]>;
+
+/**
+ * Array-flavoured wrapper over the engine's `StepRecorder`.
+ *
+ * Adds the vocabulary sorting wants (compare / swap / write) on top of the
+ * generic bump-and-snapshot core, and owns the array copy so no recorded frame
+ * aliases live state.
+ */
 class Recorder {
-  steps: AlgoStep[] = [];
-  comparisons = 0;
-  swaps = 0;
+  private readonly rec: StepRecorder<ArrayAlgoState>;
+  private highlight: AlgoHighlight = {};
+
   constructor(private a: number[]) {
+    this.rec = new StepRecorder<ArrayAlgoState>(() => ({
+      array: [...this.a],
+      highlight: this.highlight,
+    }));
     this.record({}, undefined, "the unsorted input");
+  }
+
+  get steps(): AlgoStep<ArrayAlgoState>[] {
+    return this.rec.steps;
   }
   get array() {
     return this.a;
   }
+  get comparisons() {
+    return this.rec.count("comparisons");
+  }
+  get swaps() {
+    return this.rec.count("writes");
+  }
+
   record(highlight: AlgoHighlight, codeLine?: number, note?: string) {
-    this.steps.push({
-      array: [...this.a],
-      highlight,
-      codeLine,
-      note,
-      comparisons: this.comparisons,
-      swaps: this.swaps,
-    });
+    this.highlight = highlight;
+    this.rec.record({ codeLine, note });
   }
   compare(highlight: AlgoHighlight, codeLine?: number, note?: string) {
-    this.comparisons += 1;
+    this.rec.bump("comparisons");
     this.record(highlight, codeLine, note);
   }
   swap(i: number, j: number, extra: AlgoHighlight = {}, codeLine?: number) {
     [this.a[i], this.a[j]] = [this.a[j], this.a[i]];
-    this.swaps += 1;
+    this.rec.bump("writes");
     this.record({ ...extra, swap: [i, j] }, codeLine);
   }
   write(i: number, value: number, extra: AlgoHighlight = {}, codeLine?: number) {
     this.a[i] = value;
-    this.swaps += 1;
+    this.rec.bump("writes");
     this.record({ ...extra, swap: [i] }, codeLine);
   }
 }
 
 /* ---------------- bubble sort ---------------- */
 
-export const bubbleSort: AlgoDef = {
+export const bubbleSort: SortDef = {
   id: "bubble-sort",
   title: "bubble sort",
+  counters: counters("swaps"),
+  size: ARRAY_SIZE,
   code: [
     "for pass in 0 .. n-1:",
     "  for i in 0 .. n-pass-2:",
@@ -83,9 +125,11 @@ export const bubbleSort: AlgoDef = {
 
 /* ---------------- insertion sort ---------------- */
 
-export const insertionSort: AlgoDef = {
+export const insertionSort: SortDef = {
   id: "insertion-sort",
   title: "insertion sort",
+  counters: counters("writes"),
+  size: ARRAY_SIZE,
   code: [
     "for i in 1 .. n-1:",
     "  key = a[i]",
@@ -122,9 +166,11 @@ export const insertionSort: AlgoDef = {
 
 /* ---------------- merge sort ---------------- */
 
-export const mergeSort: AlgoDef = {
+export const mergeSort: SortDef = {
   id: "merge-sort",
   title: "merge sort",
+  counters: counters("writes"),
+  size: ARRAY_SIZE,
   code: [
     "sort(lo, hi):",
     "  if hi <= lo: return",
@@ -174,9 +220,11 @@ export const mergeSort: AlgoDef = {
 
 /* ---------------- quicksort ---------------- */
 
-export const quickSort: AlgoDef = {
+export const quickSort: SortDef = {
   id: "quicksort",
   title: "quicksort",
+  counters: counters("swaps"),
+  size: ARRAY_SIZE,
   code: [
     "quicksort(lo, hi):",
     "  pivot = a[hi]",

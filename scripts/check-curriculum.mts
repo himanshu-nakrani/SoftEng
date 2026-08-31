@@ -8,8 +8,9 @@
  * were reordered; a real import cannot.
  *
  * Checks
- *   1. route parity      — available ⇒ page.tsx; every route folder registered;
- *                          coming-soon ⇒ no route folder
+ *   1. route parity      — available ⇒ page.tsx under its OWN track; every route
+ *                          folder registered; coming-soon ⇒ no route folder;
+ *                          every track has a landing page
  *   2. section parity    — registry sections ↔ <LessonSection id> in page.tsx
  *   3. companion files   — <slug>-figure.tsx and <slug>.ts exist
  *   4. slug integrity    — slugs unique, moduleSlug matches nesting
@@ -17,16 +18,21 @@
  *   6. quiz integrity    — ids unique (per lesson + globally), at > 0,
  *                          correctChoiceId ∈ choices, sim.id === slug
  *   7. meter sanity      — metricKey non-empty, kind valid, keys unique
+ *   8. algo integrity    — engine:"steps" lessons export a valid AlgoDef
+ *                          (id prefixed by slug, code + counters present,
+ *                          unique counter keys, coherent size range)
+ *   9. readme sync       — README's generated curriculum table matches the
+ *                          registry (module rows + headline lesson count)
  *
  * Run: npx tsx scripts/check-curriculum.mts
  */
 
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { curriculum } from "@/curriculum/registry";
-import type { LessonMeta, Module } from "@/curriculum/types";
+import type { LessonMeta, Module, Track } from "@/curriculum/types";
 import { allLessons } from "@/lib/curriculum";
 import type { LessonSim, MeterSpec, QuizCheckpoint } from "@/engine/types";
 
@@ -43,7 +49,9 @@ type Category =
   | "slug integrity"
   | "prerequisites"
   | "quiz integrity"
-  | "meter sanity";
+  | "meter sanity"
+  | "algo integrity"
+  | "readme sync";
 
 const failures: { category: Category; message: string }[] = [];
 
@@ -67,18 +75,19 @@ function isDir(path: string): boolean {
 interface Entry {
   lesson: LessonMeta;
   mod: Module;
+  track: Track;
   /** Position in flattened curriculum order. */
   order: number;
 }
 
 const entries: Entry[] = [];
-const allModules: { mod: Module }[] = [];
+const allModules: { mod: Module; track: Track }[] = [];
 
 for (const track of curriculum.tracks) {
   for (const mod of track.modules) {
-    allModules.push({ mod });
+    allModules.push({ mod, track });
     for (const lesson of mod.lessons) {
-      entries.push({ lesson, mod, order: entries.length });
+      entries.push({ lesson, mod, track, order: entries.length });
     }
   }
 }
@@ -101,6 +110,34 @@ const available = entries.filter((e) => e.lesson.status === "available");
  * ------------------------------------------------------------------ */
 
 {
+  const KEBAB = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+  // Track slugs: kebab-case and unique — they are the first path segment.
+  const seenTrack = new Set<string>();
+  for (const track of curriculum.tracks) {
+    if (!track.slug || !KEBAB.test(track.slug)) {
+      fail(
+        "slug integrity",
+        `track slug ${JSON.stringify(track.slug)} is not a non-empty kebab-case slug`,
+      );
+    }
+    if (seenTrack.has(track.slug)) {
+      fail("slug integrity", `track slug "${track.slug}" is used more than once`);
+    }
+    seenTrack.add(track.slug);
+    if (track.modules.length === 0) {
+      fail("slug integrity", `track "${track.slug}" has no modules`);
+    }
+  }
+
+  /*
+   * Module slugs must be unique ACROSS tracks, not just within one. Routes
+   * would tolerate duplicates (the track segment disambiguates), but
+   * `getModule()` in src/lib/curriculum.ts is a flat slug → module map, and
+   * the landing page + review deck read modules through it. A duplicate would
+   * silently resolve to whichever track was registered first.
+   */
+
   const seenLesson = new Map<string, string[]>(); // slug -> owning module slugs
   for (const { lesson, mod } of entries) {
     if (!lesson.slug || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(lesson.slug)) {
@@ -128,25 +165,33 @@ const available = entries.filter((e) => e.lesson.status === "available");
     }
   }
 
-  const seenModule = new Map<string, number>();
-  for (const { mod } of allModules) {
-    if (!mod.slug) {
-      fail("slug integrity", `module "${mod.title}" has an empty slug`);
+  const seenModule = new Map<string, string[]>(); // module slug -> owning tracks
+  for (const { mod, track } of allModules) {
+    if (!mod.slug || !KEBAB.test(mod.slug)) {
+      fail(
+        "slug integrity",
+        `module slug ${JSON.stringify(mod.slug)} (track "${track.slug}", "${mod.title}") is not a non-empty kebab-case slug`,
+      );
     }
-    seenModule.set(mod.slug, (seenModule.get(mod.slug) ?? 0) + 1);
+    const owners = seenModule.get(mod.slug) ?? [];
+    owners.push(track.slug);
+    seenModule.set(mod.slug, owners);
   }
-  for (const [slug, count] of seenModule) {
-    if (count > 1) {
-      fail("slug integrity", `module slug "${slug}" is used ${count}× — module slugs must be unique`);
+  for (const [slug, owners] of seenModule) {
+    if (owners.length > 1) {
+      fail(
+        "slug integrity",
+        `module slug "${slug}" is used ${owners.length}× (tracks: ${owners.join(", ")}) — module slugs must be globally unique across tracks, because getModule() in src/lib/curriculum.ts is a flat slug → module map`,
+      );
     }
   }
 
-  // The app's helpers (src/lib/curriculum.ts) flatten track[0] only; if the
-  // registry grows a second track they would silently ignore it.
+  // `allLessons` is a cross-track flattening; this pins it to the registry's
+  // own order so a selector refactor can't silently drop or reorder a track.
   if (allLessons.length !== entries.length) {
     fail(
       "slug integrity",
-      `src/lib/curriculum.ts exposes ${allLessons.length} lessons but the registry defines ${entries.length} — allLessons assumes a single track, so lessons outside tracks[0] are invisible to the app`,
+      `src/lib/curriculum.ts exposes ${allLessons.length} lessons but the registry defines ${entries.length} — allLessons must flatten EVERY track, or lessons outside tracks[0] become invisible to the app`,
     );
   } else {
     for (let i = 0; i < entries.length; i++) {
@@ -163,6 +208,16 @@ const available = entries.filter((e) => e.lesson.status === "available");
 
 /* ------------------------------------------------------------------ *
  * 5. Prerequisite integrity
+ *
+ * POLICY. Cross-track prerequisites are ALLOWED — a databases lesson may
+ * legitimately build on track 01's replication — and the "strictly earlier in
+ * curriculum order" rule below is what makes them safe: a cross-track
+ * prerequisite can only point at an earlier track, so no cycle is expressible.
+ *
+ * They remain a SOFT gate (a suggestion and a visual hint, never a lock), and
+ * `prerequisiteLabels` in src/lib/curriculum.ts annotates one from another track
+ * with that track's title, so "after Database Replication" is not a dead end for
+ * a reader who does not know where it lives.
  * ------------------------------------------------------------------ */
 
 for (const { lesson, order } of entries) {
@@ -190,14 +245,21 @@ for (const { lesson, order } of entries) {
 
 /* ------------------------------------------------------------------ *
  * 1. Route parity (registry → filesystem)
+ *
+ * Routes are `/learn/<track>/<module>/<slug>`. The track segment is part of
+ * the contract: a lesson's folder must sit under its OWN track, so two tracks
+ * can reuse a module name without colliding on disk.
  * ------------------------------------------------------------------ */
 
 const learnDir = join(root, "src/app/learn");
 
-for (const { lesson } of entries) {
-  const routeDir = join(learnDir, lesson.moduleSlug, lesson.slug);
+/** Catch-all that renders redirect stubs for the pre-track URLs. */
+const LEGACY_ROUTE_DIR = "[...legacy]";
+
+for (const { lesson, track } of entries) {
+  const routeDir = join(learnDir, track.slug, lesson.moduleSlug, lesson.slug);
   const page = join(routeDir, "page.tsx");
-  const routePath = rel("src/app/learn", lesson.moduleSlug, lesson.slug);
+  const routePath = rel("src/app/learn", track.slug, lesson.moduleSlug, lesson.slug);
 
   if (lesson.status === "available") {
     if (!existsSync(page)) {
@@ -215,33 +277,66 @@ for (const { lesson } of entries) {
   }
 }
 
+/* Every track needs its own landing page. */
+for (const track of curriculum.tracks) {
+  const landing = join(learnDir, track.slug, "page.tsx");
+  if (!existsSync(landing)) {
+    fail(
+      "route parity",
+      `track "${track.slug}" has no landing page at ${rel("src/app/learn", track.slug, "page.tsx")}`,
+    );
+  }
+}
+
 /* ------------------------------------------------------------------ *
  * 1b. Route parity (filesystem → registry)
  * ------------------------------------------------------------------ */
 
-const moduleSlugs = new Set(allModules.map((m) => m.mod.slug));
-const lessonRouteKeys = new Set(entries.map((e) => `${e.lesson.moduleSlug}/${e.lesson.slug}`));
+const trackSlugs = new Set(curriculum.tracks.map((t) => t.slug));
+/** "<track>/<module>" for every registered module. */
+const moduleRouteKeys = new Set(allModules.map((m) => `${m.track.slug}/${m.mod.slug}`));
+/** "<track>/<module>/<lesson>" for every registered lesson. */
+const lessonRouteKeys = new Set(
+  entries.map((e) => `${e.track.slug}/${e.lesson.moduleSlug}/${e.lesson.slug}`),
+);
 
 if (isDir(learnDir)) {
-  for (const moduleName of readdirSync(learnDir)) {
-    const moduleDir = join(learnDir, moduleName);
-    if (!isDir(moduleDir)) continue; // layout.tsx / page.tsx at the learn root
+  for (const trackName of readdirSync(learnDir)) {
+    const trackDir = join(learnDir, trackName);
+    if (!isDir(trackDir)) continue; // layout.tsx / page.tsx at the learn root
+    if (trackName === LEGACY_ROUTE_DIR) continue;
 
-    if (!moduleSlugs.has(moduleName)) {
-      fail("route parity", `route folder src/app/learn/${moduleName}/ does not match any registered module slug`);
+    if (!trackSlugs.has(trackName)) {
+      fail(
+        "route parity",
+        `route folder src/app/learn/${trackName}/ does not match any registered track slug`,
+      );
       continue;
     }
 
-    for (const lessonName of readdirSync(moduleDir)) {
-      const lessonDir = join(moduleDir, lessonName);
-      if (!isDir(lessonDir)) continue;
+    for (const moduleName of readdirSync(trackDir)) {
+      const moduleDir = join(trackDir, moduleName);
+      if (!isDir(moduleDir)) continue; // the track's own page.tsx
 
-      const routePath = `src/app/learn/${moduleName}/${lessonName}`;
-      if (!lessonRouteKeys.has(`${moduleName}/${lessonName}`)) {
-        fail("route parity", `route folder ${routePath}/ is not in the curriculum registry`);
+      if (!moduleRouteKeys.has(`${trackName}/${moduleName}`)) {
+        fail(
+          "route parity",
+          `route folder src/app/learn/${trackName}/${moduleName}/ does not match any module registered under that track`,
+        );
+        continue;
       }
-      // A registered folder that is missing page.tsx is already reported by
-      // check 1 (available ⇒ page.tsx) or by the coming-soon rule above.
+
+      for (const lessonName of readdirSync(moduleDir)) {
+        const lessonDir = join(moduleDir, lessonName);
+        if (!isDir(lessonDir)) continue;
+
+        const routePath = `src/app/learn/${trackName}/${moduleName}/${lessonName}`;
+        if (!lessonRouteKeys.has(`${trackName}/${moduleName}/${lessonName}`)) {
+          fail("route parity", `route folder ${routePath}/ is not in the curriculum registry`);
+        }
+        // A registered folder that is missing page.tsx is already reported by
+        // check 1 (available ⇒ page.tsx) or by the coming-soon rule above.
+      }
     }
   }
 } else {
@@ -275,7 +370,7 @@ const VALID_SECTION_KINDS = new Set(["concept", "interactive", "quiz"]);
 
 let totalSections = 0;
 
-for (const { lesson } of entries) {
+for (const { lesson, track } of entries) {
   const sectionIds = lesson.sections.map((s) => s.id);
   totalSections += sectionIds.length;
 
@@ -320,7 +415,7 @@ for (const { lesson } of entries) {
   }
 
   // 2. Registry sections ↔ page <LessonSection> blocks.
-  const pagePath = rel("src/app/learn", lesson.moduleSlug, lesson.slug, "page.tsx");
+  const pagePath = rel("src/app/learn", track.slug, lesson.moduleSlug, lesson.slug, "page.tsx");
   const pageFile = join(root, pagePath);
   if (!existsSync(pageFile)) continue; // already reported by check 1
 
@@ -371,10 +466,144 @@ function isLessonSim(value: unknown): value is LessonSim<never> {
   );
 }
 
+/** Structural duck-type: an archetype-B `AlgoDef` (engine: "steps"). */
+function isAlgoDef(value: unknown): value is {
+  id: string;
+  title: string;
+  code: unknown;
+  counters: unknown;
+  size?: unknown;
+  generateInput: unknown;
+  run: unknown;
+} {
+  if (typeof value !== "object" || value === null) return false;
+  const v = value as Record<string, unknown>;
+  return (
+    typeof v.id === "string" &&
+    Array.isArray(v.code) &&
+    Array.isArray(v.counters) &&
+    typeof v.generateInput === "function" &&
+    typeof v.run === "function"
+  );
+}
+
+/**
+ * Archetype-B lessons: the analogue of the sim/quiz/meter checks below.
+ *
+ * A `steps` lesson exports one or more `AlgoDef`s rather than a single
+ * `LessonSim` — one per figure, because a lesson often contrasts two runs (the
+ * unguarded and the guarded version of the same program). So the rule is "at
+ * least one", and each is validated on its own.
+ */
+for (const { lesson } of available.filter((e) => e.lesson.engine === "steps")) {
+  const defPath = rel("src/lessons", lesson.moduleSlug, `${lesson.slug}.ts`);
+  if (!existsSync(join(root, defPath))) continue; // reported by check 3
+
+  let mod: Record<string, unknown>;
+  try {
+    mod = (await import(`@/lessons/${lesson.moduleSlug}/${lesson.slug}`)) as Record<string, unknown>;
+  } catch (err) {
+    fail("algo integrity", `${defPath}: failed to import — ${(err as Error).message}`);
+    continue;
+  }
+
+  const defs = Object.entries(mod).filter(([, v]) => isAlgoDef(v));
+  if (defs.length === 0) {
+    fail(
+      "algo integrity",
+      `${defPath}: lesson declares engine "steps" but exports no AlgoDef (looked for an exported object with id/code/counters/generateInput/run)`,
+    );
+    continue;
+  }
+
+  for (const [exportName, value] of defs) {
+    const def = value as {
+      id: string;
+      code: unknown[];
+      counters: { key?: unknown; label?: unknown }[];
+      size?: { min?: unknown; max?: unknown; default?: unknown };
+    };
+
+    // The lesson's PRIMARY def keys off the slug, exactly as archetype A's sim
+    // does; extra defs on the page are suffixed (`<slug>-guarded`).
+    if (!def.id.startsWith(lesson.slug)) {
+      fail(
+        "algo integrity",
+        `${defPath}: ${exportName}.id is "${def.id}" but must start with the lesson slug "${lesson.slug}" so a def can be traced back to its registry entry`,
+      );
+    }
+    if (def.code.length === 0) {
+      fail("algo integrity", `${defPath}: ${exportName} has empty \`code\` — the code panel would render blank`);
+    }
+
+    /*
+     * Code-panel width.
+     *
+     * Derived from the component, not guessed: the panel column is 240px
+     * (`lg:grid-cols-[1fr_240px]` in AlgoFigure, 237px of content), and each row
+     * in CodePanel spends 12px padding twice, a 16px line-number gutter and a
+     * 12px gap — leaving 185px. The mono face advances 6.62px per character at
+     * 11px, so 27 characters fit.
+     *
+     * This is a real check rather than a comment because the constraint was
+     * documented and then violated in three consecutive lessons: a longer line
+     * does not wrap, it slides under the panel edge where the author never sees
+     * it (the figure is authored in a .ts file, and the clipping only shows at
+     * lg and above).
+     */
+    const CODE_MAX_CHARS = 27;
+    for (const [i, line] of def.code.entries()) {
+      if (typeof line !== "string") {
+        fail("algo integrity", `${defPath}: ${exportName}.code[${i}] is not a string`);
+        continue;
+      }
+      if (line.length > CODE_MAX_CHARS) {
+        fail(
+          "algo integrity",
+          `${defPath}: ${exportName}.code[${i}] is ${line.length} chars — the code panel fits ${CODE_MAX_CHARS} and clips the rest.\n` +
+            `        ${JSON.stringify(line)}\n` +
+            `        shorten it or drop the trailing comment (the figure's lanes and captions carry that detail)`,
+        );
+      }
+    }
+    if (def.counters.length === 0) {
+      fail("algo integrity", `${defPath}: ${exportName} declares no counters`);
+    }
+
+    const seenKeys = new Set<string>();
+    for (const counter of def.counters) {
+      if (typeof counter.key !== "string" || counter.key.length === 0) {
+        fail("algo integrity", `${defPath}: ${exportName} has a counter with a non-empty key missing`);
+        continue;
+      }
+      if (seenKeys.has(counter.key)) {
+        fail("algo integrity", `${defPath}: ${exportName} declares counter key "${counter.key}" twice`);
+      }
+      seenKeys.add(counter.key);
+      if (typeof counter.label !== "string" || counter.label.length === 0) {
+        fail("algo integrity", `${defPath}: ${exportName} counter "${counter.key}" has no label`);
+      }
+    }
+
+    const size = def.size;
+    if (size) {
+      const { min, max, default: def_ } = size;
+      if (typeof min !== "number" || typeof max !== "number" || typeof def_ !== "number") {
+        fail("algo integrity", `${defPath}: ${exportName}.size needs numeric min/max/default`);
+      } else if (min >= max || def_ < min || def_ > max) {
+        fail(
+          "algo integrity",
+          `${defPath}: ${exportName}.size is inconsistent (min ${min}, max ${max}, default ${def_})`,
+        );
+      }
+    }
+  }
+}
+
 const quizOwner = new Map<string, string>(); // quiz id -> lesson slug
 let totalQuizzes = 0;
 
-for (const { lesson } of available) {
+for (const { lesson } of available.filter((e) => e.lesson.engine !== "steps")) {
   const simPath = rel("src/lessons", lesson.moduleSlug, `${lesson.slug}.ts`);
   const simFile = join(root, simPath);
   if (!existsSync(simFile)) continue; // already reported by check 3
@@ -505,6 +734,101 @@ for (const { lesson } of available) {
 }
 
 /* ------------------------------------------------------------------ *
+ * 9. README curriculum table
+ *
+ * The README claimed 10 lessons in 3 modules while the registry held 26 in 5.
+ * Prose drifts silently, so the table is GENERATED from the registry and pinned
+ * here: the fix for documentation rot is a failing check, not a promise to
+ * remember. Run with `--write-readme` to regenerate it.
+ * ------------------------------------------------------------------ */
+
+{
+  const START =
+    "<!-- CURRICULUM:START — generated by scripts/check-curriculum.mts --write-readme. Do not edit by hand. -->";
+  const END = "<!-- CURRICULUM:END -->";
+  const readmePath = "README.md";
+  const readmeFile = join(root, readmePath);
+
+  /** The block the registry implies, markers included. */
+  const render = (): string => {
+    const parts: string[] = [START];
+    for (const [i, track] of curriculum.tracks.entries()) {
+      const live = track.modules
+        .flatMap((m) => m.lessons)
+        .filter((l) => l.status === "available");
+      const minutes = live.reduce((sum, l) => sum + l.estimatedMinutes, 0);
+      const label = `Track ${String(i + 1).padStart(2, "0")}`;
+      // "0h 12m" reads like a bug; a young track is just minutes.
+      const duration =
+        minutes >= 60
+          ? `about ${Math.floor(minutes / 60)}h ${minutes % 60}m end to end`
+          : `about ${minutes} minutes end to end`;
+
+      parts.push(
+        "",
+        `### ${label} — ${track.title}`,
+        "",
+        `${live.length} lesson${live.length === 1 ? "" : "s"} across ` +
+          `${track.modules.length} module${track.modules.length === 1 ? "" : "s"}, ` +
+          `${duration}.`,
+        "",
+        "| Module | Lessons |",
+        "|---|---|",
+      );
+      for (const mod of track.modules) {
+        const titles = mod.lessons
+          .filter((l) => l.status === "available")
+          .map((l) => l.title)
+          .join(" · ");
+        parts.push(`| **${mod.title}** | ${titles} |`);
+      }
+    }
+    parts.push("", END);
+    return parts.join("\n");
+  };
+
+  const expected = render();
+
+  if (!existsSync(readmeFile)) {
+    fail("readme sync", `${readmePath} does not exist`);
+  } else {
+    const readme = readFileSync(readmeFile, "utf8");
+    const start = readme.indexOf(START);
+    const end = readme.indexOf(END);
+
+    if (start === -1 || end === -1 || end < start) {
+      fail(
+        "readme sync",
+        `${readmePath} is missing the CURRICULUM:START/END markers that fence the generated table — run \`npx tsx scripts/check-curriculum.mts --write-readme\``,
+      );
+    } else {
+      const found = readme.slice(start, end + END.length);
+      if (found !== expected) {
+        if (process.argv.includes("--write-readme")) {
+          writeFileSync(
+            readmeFile,
+            readme.slice(0, start) + expected + readme.slice(end + END.length),
+          );
+          console.log(`check-curriculum: regenerated the ${readmePath} curriculum block`);
+        } else {
+          // Point at the first differing line: a whole-block diff is noise.
+          const wantLines = expected.split("\n");
+          const gotLines = found.split("\n");
+          const at = wantLines.findIndex((line, i) => gotLines[i] !== line);
+          fail(
+            "readme sync",
+            `${readmePath}'s curriculum block is stale — run \`npx tsx scripts/check-curriculum.mts --write-readme\`.\n` +
+              `        first difference at block line ${at + 1}:\n` +
+              `        expected: ${wantLines[at] ?? "(end of block)"}\n` +
+              `        found:    ${gotLines[at] ?? "(end of block)"}`,
+          );
+        }
+      }
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ *
  * Report
  * ------------------------------------------------------------------ */
 
@@ -517,6 +841,8 @@ if (failures.length > 0) {
     "prerequisites",
     "quiz integrity",
     "meter sanity",
+    "algo integrity",
+    "readme sync",
   ];
   const lines: string[] = [];
   for (const category of order) {

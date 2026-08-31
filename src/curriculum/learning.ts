@@ -306,6 +306,186 @@ export const learningGuides: Record<string, LearningGuide> = {
       { slug: "cdn-edge", relation: "connects to" },
     ],
   ),
+
+  /* ---- track 02 · concurrency ---- */
+
+  "data-races": guide(
+    "Why can three threads each add one and the total still be two?",
+    "One increment split into read, add and write, with the scheduler free to cut between any two of them.",
+    "A data race is not a bug in the code you are reading — it is a bug in the order you did not choose, which is why it survives review and passes tests.",
+    "Reseed until an update is lost, then step backward to the frame where two threads held the same value.",
+    [{ slug: "deadlock", relation: "leads to" }],
+  ),
+  deadlock: guide(
+    "If every critical section is locked correctly, what is left to go wrong?",
+    "Two threads each hold one lock and wait for the other, so the run stops with both threads alive and neither progressing.",
+    "Deadlock is not missing synchronisation — it is a cycle in who waits for whom, which is why adding locks can cause it and a global acquisition order removes it.",
+    "Reseed until it hangs, then compare against the ordered-lock figure and watch the lock waits stay non-zero while the cycle disappears.",
+    [{ slug: "data-races", relation: "builds on" }],
+  ),
+  "atomic-operations": guide(
+    "Can a counter be correct without ever blocking a thread?",
+    "The write becomes conditional: a thread that lost the race is refused and loops, instead of overwriting silently.",
+    "Atomics move the cost from waiting to wasted work, and they are what locks are built from — which is why a spin lock is just test-and-set plus a retry.",
+    "Raise the thread count and watch failed attempts climb, then compare the same count against the spin-lock figure.",
+    [
+      { slug: "data-races", relation: "builds on" },
+      { slug: "deadlock", relation: "connects to" },
+    ],
+  ),
+  "producer-consumer": guide(
+    "How do two threads at different speeds hand work to each other?",
+    "A bounded buffer absorbs the difference, and each side parks on a condition — full for the producer, empty for the consumer.",
+    "Capacity buys independence rather than throughput, and a full queue is not a failure: it is the slow end setting the pace, which is what backpressure means.",
+    "Compare capacity 1 against 4, then make the consumer slow and watch which thread blocks more often.",
+    [
+      { slug: "message-queues", relation: "connects to" },
+      { slug: "data-races", relation: "builds on" },
+    ],
+  ),
+  "lock-granularity": guide(
+    "How much of the program should one lock speak for?",
+    "Threads that share no data still queue behind a single lock, and blocked turns grow with the square of the threads sharing it.",
+    "Granularity trades throughput against reasoning cost: one lock cannot deadlock, and every lock you add multiplies the orderings you must get right.",
+    "Compare blocked turns at 2, 4 and 6 threads under one lock, then split the lock and watch the same work block a quarter as often.",
+    [
+      { slug: "deadlock", relation: "builds on" },
+      { slug: "atomic-operations", relation: "connects to" },
+    ],
+  ),
+  "read-write-locks": guide(
+    "Why should two threads that only read ever wait for each other?",
+    "Shared mode lets every reader in at once while the writer waits for an empty room, so blocking stops growing with the reader count.",
+    "A read-write lock is a protocol over ordinary shared state, not a primitive — and its cost is more state to get right plus the risk of starving the writer.",
+    "Raise the reader count and watch blocked turns stay flat, then run the same threads under one exclusive lock and watch them grow.",
+    [{ slug: "lock-granularity", relation: "builds on" }],
+  ),
+  "memory-visibility": guide(
+    "Can two threads disagree about which write happened first?",
+    "A store sits in a buffer until it is flushed, so both threads can read zero and each conclude it went first.",
+    "This is a visibility bug, not a race: every variable has a single writer, so there is nothing to exclude — what is missing is an ordering both threads agree on.",
+    "Shuffle until both r1 and r2 read zero, then step backward to the frame where both reads preceded both flushes.",
+    [
+      { slug: "atomic-operations", relation: "builds on" },
+      { slug: "data-races", relation: "builds on" },
+    ],
+  ),
+  "false-sharing": guide(
+    "Why would two threads writing different variables slow each other down?",
+    "The cache line, not the variable, is the unit of ownership — so neighbouring variables force cores to hand the line back and forth.",
+    "It is a layout defect rather than a logic one: the results stay correct, so it survives review and appears only as a program that will not speed up.",
+    "Watch the line owner flip between cores, then compare transfer counts against the padded version.",
+    [{ slug: "memory-visibility", relation: "builds on" }],
+  ),
+  "thread-pools": guide(
+    "If two connections serve two queries at a time, what do six threads buy?",
+    "The same work and the same operation count, with four threads blocked waiting for a connection instead of a pool of two that never waits.",
+    "Capacity belongs to the resource, not the threads: extra threads move the queue somewhere nobody measures, which is why a pool is sized to what it protects.",
+    "Raise the request count and watch blocking grow, then run the identical work through a pool and watch it fall to zero.",
+    [
+      { slug: "producer-consumer", relation: "builds on" },
+      { slug: "message-queues", relation: "connects to" },
+    ],
+  ),
+  "dirty-reads": guide(
+    "Can a query return a number that no transaction ever committed?",
+    "A reader sees another transaction's half-finished writes, then that transaction rolls back and the value it read stops having ever existed.",
+    "Atomicity promises nobody observes the middle of a transaction; isolation level decides whether that promise is kept, and the weakest level does not keep it.",
+    "Shuffle until the report reads 150 or 250, then step to the rollback and watch the pending values vanish while the reported number does not.",
+    [],
+  ),
+  "non-repeatable-reads": guide(
+    "Can two correct reads of committed data still add up to a wrong answer?",
+    "A commit lands between the transaction's two reads, so it sees one row before and the other after.",
+    "Read committed promises each read sees committed data, not that two reads see the same moment — a consistent point of view is a separate guarantee, and it is what a snapshot buys.",
+    "Shuffle until the report reads 250, then step back to find the commit landing between the two reads.",
+    [{ slug: "dirty-reads", relation: "builds on" }],
+  ),
+  "write-skew": guide(
+    "Can two correct transactions break a rule neither of them broke?",
+    "Each reads the other's row from its own snapshot, decides it is safe to act, and writes only its own — so nothing overwrites anything and the invariant still fails.",
+    "The conflict is between one transaction's reads and another's writes, which a snapshot is designed to hide — so serializable is a different promise rather than a stricter snapshot, and it charges for it in refused commits.",
+    "Watch both commit and leave nobody on call, then run the same program at serializable and see one commit refused.",
+    [{ slug: "non-repeatable-reads", relation: "builds on" }],
+  ),
+  "lost-update": guide(
+    "Where does an update go when two transactions both read before either writes?",
+    "Both compute from the same starting value and the second write overwrites the first, so one update is gone and no error is reported.",
+    "Serializable does not fix it — it refuses one commit instead, turning a silently wrong number into a visible error the application must retry.",
+    "Shuffle until the balance lands on 150 or 70, then run the same program at serializable and watch a commit refused on exactly those runs.",
+    [
+      { slug: "write-skew", relation: "builds on" },
+      { slug: "data-races", relation: "connects to" },
+    ],
+  ),
+  "two-phase-locking": guide(
+    "If serializable refuses a commit, why not make the other transaction wait instead?",
+    "A lock taken at the read and held until commit makes the second transaction wait, so both succeed and nothing is discarded.",
+    "Serializable names a guarantee, not a mechanism: optimistic enforcement pays in wasted work and retries, pessimistic pays in blocking — and which is cheaper depends on whether your transactions actually conflict.",
+    "Compare how many runs commit both transactions under each mechanism, and watch a lane wait for the balance row instead of failing.",
+    [
+      { slug: "lost-update", relation: "builds on" },
+      { slug: "lock-granularity", relation: "connects to" },
+    ],
+  ),
+  "write-ahead-logging": guide(
+    "A commit returns, and the power fails a moment later. What made the promise true?",
+    "Appending a record before each change, and forcing only that log at commit, makes every crash point recoverable — where writing pages alone loses acknowledged work at five of eight.",
+    "Durability is not a property of the convenient moment; it is a claim about every moment. One sequential force can make any number of scattered pages recoverable, which is why the log exists — and the ordering rule is what makes the log trustworthy, because a record written after its change has already lost the before-image undo needs.",
+    "Drag the crash point across the whole range under both policies and compare the verdict, then watch the records-applied counter fall as pages reach disk on their own.",
+    [
+      { slug: "dirty-reads", relation: "builds on" },
+      { slug: "two-phase-locking", relation: "connects to" },
+    ],
+  ),
+  "checkpoints": guide(
+    "Recovery replays the log from the beginning. What stops that from growing without limit?",
+    "Forcing every dirty page and recording that you did lets redo start at the checkpoint instead of at the start of the log — 5 records considered instead of 8, bought with 3 page writes while nothing was wrong.",
+    "Checkpointing moves recovery work out of the crash and into normal running, which is why the interval is a tuning knob and not a setting with a right answer. It is also not a pure saving: a checkpoint forces uncommitted pages too, so it shortens redo while creating undo work — and undo cannot use the same floor, because a transaction running before the checkpoint is still running after it.",
+    "Compare the scan counter across crash points on both figures, then find the record undo reaches for and check its LSN against the checkpoint's.",
+    [
+      { slug: "write-ahead-logging", relation: "builds on" },
+      { slug: "two-phase-locking", relation: "connects to" },
+    ],
+  ),
+  "group-commit": guide(
+    "A commit costs one sequential force. At ten thousand commits a second, is it one force each?",
+    "Letting commit records accumulate and forcing them together answered three transactions with one fsync instead of three, for the same six log records.",
+    "Grouping is not a durability compromise, and that is the point most easily got wrong: a transaction whose commit record has been appended but not forced was never acknowledged, so a crash there breaks no promise. What is actually traded is latency — T1 is answered five crash points later than it would have been. The one thing that must never be batched is the answer itself.",
+    "Stop at crash 6 on the batched figure and read the transaction rows: three of them committing, and an empty durable prefix. Then compare the forces meter with the other figure.",
+    [
+      { slug: "write-ahead-logging", relation: "builds on" },
+      { slug: "checkpoints", relation: "connects to" },
+    ],
+  ),
+  "coverage-vs-correctness": guide(
+    "If a coverage report says 100%, does that mean the tests would catch a bug?",
+    "Two suites with identical line coverage disagree completely: weak assertions kill 0 of 6 mutants, exact assertions kill all 6.",
+    "Coverage measures whether a line ran, not whether any test asserts the right result. A surviving mutant names a specific change your suite sleeps through, which is a thing you can act on — a percentage is not.",
+    "Read the survivor list rather than the percentage, then move on to boundary-mutants, where the assertions are exact and the inputs still miss.",
+    [],
+  ),
+  "boundary-mutants": guide(
+    "If my tests assert the exact right answer, can an off-by-one still slip through?",
+    "Exact-assertion tests that sample the middle of a range let 4 of 5 boundary mutants survive; the same assertions moved onto the edge kill all 5.",
+    "A boundary bug is wrong at exactly one value, so a range of inputs is not a range of behaviours. The decisions live only at the edges, and a test that never visits one cannot see them however strictly it asserts.",
+    "Aim tests at the edge and the two values bracketing it rather than the comfortable middle.",
+    [{ slug: "coverage-vs-correctness", relation: "builds on" }],
+  ),
+  "merge-vs-rebase": guide(
+    "You integrate a feature branch — does git keep your commits, or replace them?",
+    "Merge added one two-parent commit over four preserved commits, five in total with nothing orphaned; rebase copied the two feature commits onto a new base, six in total, and left the originals unreachable.",
+    "A linear history is bought by rewriting. The commits you had are replaced by copies with new ids, which is exactly why rebasing history someone else has already pulled takes their work out from under them.",
+    "Watch the two originals turn red and dashed after the rebase, then ask what happens to a teammate who had based work on one of them.",
+    [],
+  ),
+  "fast-forward": guide(
+    "You run git merge and expect a merge commit — why do you sometimes get nothing new?",
+    "With the feature branch merely ahead of an unmoved trunk, merge fast-forwarded and created no commit at all; once the trunk gained a single commit of its own, the same command produced a two-parent merge commit.",
+    "git merge promises to integrate, not to make a commit. It slides a pointer when history is already linear and only records a merge when the branches have genuinely diverged — so the shape of your history is decided by what everyone else did, not by what you typed.",
+    "Add or remove one commit on the trunk before merging and watch the merge commit appear and vanish.",
+    [{ slug: "merge-vs-rebase", relation: "builds on" }],
+  ),
 };
 
 export function getLearningGuide(slug: string): LearningGuide {

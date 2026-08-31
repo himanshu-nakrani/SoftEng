@@ -2,30 +2,59 @@
 
 ## Purpose
 
-The repository now includes a deterministic post-deployment monitor for the GitHub Pages application. It checks every public syslab route and verifies the Release D journal and Review-deck markers that must remain present after a deployment.
+`ci.yml` proves the static export builds and behaves. It says nothing about what
+GitHub Pages is actually serving — a bad base path, a failed deploy, or a stale
+cache all pass CI and break the site. This monitor is the only thing that checks
+the deployed origin.
 
 ## Automated schedule
 
-The committed checker is executed by a low-frequency recurring monitoring schedule four times per day. Each run checks the live site and reports route failures in the task’s results. The schedule does not require credentials, a database, or a continuously running server.
+`.github/workflows/monitor.yml` runs it four times a day (`cron: "10 */6 * * *"`),
+and on demand via **workflow_dispatch** with an optional `base_url` input for
+checking a staging origin. No credentials, database, or long-running server.
+
+> Note for anyone reading git history: this document described a four-times-daily
+> schedule for some time before any workflow existed. It exists now, and the route
+> list is no longer hand-maintained — see below.
 
 ## Coverage
 
-The checker probes 30 public routes: the home, About, Learning path, Review deck, and all 26 lesson routes. Each route must return an HTTP 2xx response. It additionally checks the live scaling lesson for the `learning journal`, `Save reflection`, and `Can explain it` markers, and checks the Review route for the practice-deck heading plus `Import` and `Export` journal controls.
+The route list is **derived from the curriculum registry**, so shipping a lesson
+extends the monitor for free. It previously listed thirty paths by hand, and had
+gone stale by fourteen lessons plus `/playground` — reporting green while checking
+a third less than it claimed.
 
-The implementation is intentionally deterministic and does not require credentials, accounts, a database, or a third-party monitoring service. A non-2xx response, request failure, missing marker, or timeout exits the process with status 1, causing the scheduled check to report a failure for investigation.
+Each run currently probes **74 routes**:
+
+- the non-curriculum surfaces: `/`, `/about`, `/learn`, `/review`, `/playground`;
+- every track landing (`/learn/<track>`);
+- every `status: "available"` lesson route;
+- the pre-migration `/learn/<module>/<slug>` URLs for track 01, because those
+  redirect stubs are a promise to anyone holding an old link.
+
+Every route must return 2xx. Beyond status codes it checks **content markers** —
+strings that would disappear if the feature behind them broke, since a 200 only
+proves bytes were served:
+
+| Route | Markers |
+|---|---|
+| `scaling-strategies` | `learning journal`, `Save reflection`, `Can explain it` |
+| `/review` | `Every prediction, in one deck`, `Import`, `Export` |
+| `data-races` | `counter++`, `read counter` |
+
+The third exists so a break in the discrete-step engine's page rendering is caught
+as well as the packet engine's.
+
+A non-2xx response, request failure, missing marker, or timeout exits 1 and prints
+a summary of every failed check, so the workflow reports a failure to investigate.
 
 ## Local verification
 
-Run the same monitor locally with:
-
 ```bash
-node scripts/check-live-routes.mjs
+npm run monitor:routes                                   # the deployed site
+BASE_URL=http://localhost:4173 npm run monitor:routes    # a local static server
 ```
 
-The target can be overridden for staging or a local static server:
-
-```bash
-BASE_URL=http://localhost:4173 node scripts/check-live-routes.mjs
-```
-
-The monitor does not mutate the application or learner data. It performs read-only HTTP requests and checks response bodies for expected static markers.
+For a local run, build first (`npm run build`) and serve `out/`. The monitor is
+read-only: HTTP GETs and string checks against response bodies. It never mutates
+the application or learner data.

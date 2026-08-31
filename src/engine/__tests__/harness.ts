@@ -113,9 +113,19 @@ export interface LessonUnderTest {
 
 export const lessonKey = (l: LessonMeta) => `${l.moduleSlug}/${l.slug}`;
 
-/** Every `status: "available"` lesson in the registry, in curriculum order. */
+/**
+ * Every `status: "available"` lesson driven by the PACKET engine, in curriculum
+ * order.
+ *
+ * `engine: "steps"` lessons (archetype B — a precomputed step list, not a
+ * `LessonSim`) are excluded: they have no `topology`, no `step(state, dt)` and
+ * no tick loop, so none of the invariants below apply to them. Their engine is
+ * covered by `src/engine/algo/__tests__/`. Excluding by registry FIELD rather
+ * than by "whatever is missing from SIM_BY_KEY" keeps the matrix guard sharp —
+ * a flow lesson someone forgot to map still fails loudly.
+ */
 export const availableLessons: LessonMeta[] = allLessons.filter(
-  (l) => l.status === "available",
+  (l) => l.status === "available" && l.engine !== "steps",
 );
 
 /** Available lessons that have no entry in `SIM_BY_KEY` (asserted empty). */

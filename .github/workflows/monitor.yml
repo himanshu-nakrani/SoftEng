@@ -1,0 +1,46 @@
+name: Post-deployment monitor
+
+# Checks the DEPLOYED site, which no other workflow does: ci.yml tests a local
+# static export, and a successful build proves nothing about what Pages is
+# actually serving (a bad base path, a failed deploy, a stale cache).
+#
+# Four times a day, which is what docs/POST_DEPLOYMENT_MONITORING.md describes.
+# That document claimed this schedule for some time before it existed; it exists
+# now.
+on:
+  schedule:
+    - cron: "10 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Origin to check (defaults to the GitHub Pages site)"
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: monitor
+  cancel-in-progress: true
+
+jobs:
+  routes:
+    name: Every public route
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # The route list is derived from the curriculum registry, so this needs the
+      # repo's dependencies — not just a shell and curl.
+      - run: npm ci
+
+      - name: Check live routes
+        env:
+          BASE_URL: ${{ inputs.base_url }}
+        run: npm run monitor:routes

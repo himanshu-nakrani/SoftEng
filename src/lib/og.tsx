@@ -1,5 +1,6 @@
 import { getLesson, moduleOf } from "@/lib/curriculum";
 import { shareCardAlt, siteName } from "@/lib/site";
+import { accentOf } from "@/lib/curriculum";
 import type { Accent } from "@/curriculum/types";
 import { ImageResponse } from "next/og";
 
@@ -34,24 +35,33 @@ export const ogDynamic = "force-static";
 
 /**
  * Card palette. Satori has no CSS custom properties, so the design tokens are
- * inlined as hex — sRGB stand-ins for the `@theme` oklch Arctic tokens in
- * globals.css. The card sits on a slightly lifted Polar Night surface
- * (#2e3440) so faint text stays readable.
+ * inlined as hex — sRGB stand-ins for the `@theme` oklch tokens in globals.css.
+ * The card sits on `--color-raised` rather than `--color-bg` so faint text
+ * stays readable, which is the same reason the old Arctic card sat on a lifted
+ * surface.
  *
- * Keep in sync with src/app/opengraph-image/route.tsx.
+ * Derived values, not eyeballed: oklch → sRGB for each token. If the palette
+ * moves, recompute — do not nudge these by hand.
+ *   --color-raised   oklch(20% 0.014 70)  → #1a150f
+ *   --color-fg       oklch(93% 0.008 80)  → #ebe7e2
+ *   --color-fg-muted oklch(66% 0.014 75)  → #979189
+ *   --color-fg-faint oklch(60% 0.014 75)  → #857f77
+ *
+ * Keep in sync with src/app/opengraph-image/route.tsx, src/app/icon.svg and
+ * public/manifest.webmanifest.
  */
-const BG = "#2e3440";
-const FG = "#eceff4";
-const MUTED = "#d8dee9";
-const FAINT = "#8a93a6";
+const BG = "#1a150f";
+const FG = "#ebe7e2";
+const MUTED = "#979189";
+const FAINT = "#857f77";
 
 /** Module accent → the same hue `accentCssVar` resolves to, as hex. */
 const ACCENT_HEX: Record<Accent, string> = {
-  amber: "#88c0d0", // brand frost (legacy key = scaling module)
-  violet: "#b48ead",
-  cyan: "#81a1c1",
-  green: "#a3be8c",
-  red: "#bf616a",
+  amber: "#f0b135", // --color-accent / --color-glow-amber: the primary
+  violet: "#b995f6",
+  cyan: "#58d1e5",
+  green: "#6ed889",
+  red: "#f0584b",
 };
 
 /**
@@ -88,7 +98,7 @@ export function lessonOgImage(slug: string) {
   return async function LessonOpengraphImage() {
     const lesson = requireLesson(slug);
     const lessonModule = moduleOf(lesson);
-    const hue = ACCENT_HEX[lessonModule.accent];
+    const hue = ACCENT_HEX[accentOf(lessonModule)];
 
     return new ImageResponse(
       (

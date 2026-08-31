@@ -1,3 +1,9 @@
+> **HISTORICAL — do not read as current.** This records Release D as it shipped.
+> It predates the phosphor UI pass, the multi-track route migration
+> (`/learn/<track>/<module>/<slug>`), track 02, and the e2e sampling split, so its
+> route counts and test numbers no longer describe the repository. Kept as a
+> release record; see `implementation_plan.md` and `debt.md` for current state.
+
 # syslab Release D Report
 
 **Release:** v0.4.0

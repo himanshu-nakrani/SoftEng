@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { getLesson, lessonPath } from "@/lib/curriculum";
+import { firstTrack, getLesson, lessonPath } from "@/lib/curriculum";
 
 /**
  * Mobile-viewport coverage for the static export. The smoke suite drives a
@@ -183,7 +183,13 @@ test.describe("mobile nav drawer", () => {
     const targetLink = drawer.getByRole("link", { name: TARGET.title });
     await expect(targetLink).toBeVisible();
     await expect(targetLink).toHaveAttribute("href", TARGET.route);
-    await expect(drawer.getByRole("link", { name: "Learning path" })).toBeVisible();
+    // Two levels of escape from a lesson, both registry-derived: this track's
+    // map (named by the track, not a generic "Learning path"), and the
+    // curriculum index above it.
+    await expect(
+      drawer.getByRole("link", { name: firstTrack.title }),
+    ).toBeVisible();
+    await expect(drawer.getByRole("link", { name: "All tracks" })).toBeVisible();
 
     // The drawer footer carries the storage disclosure. (The appearance
     // panel that used to live here went out with the light-theme system;

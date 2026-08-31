@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { mulberry32 } from "../rng";
+import { buildAlgoSteps } from "./build";
 import type { AlgoDef, AlgoStep } from "./types";
 
 export interface AlgoControls {
@@ -15,10 +15,10 @@ export interface AlgoControls {
   setSpeed: (multiplier: number) => void;
 }
 
-export interface AlgoPlayer {
-  steps: AlgoStep[];
+export interface AlgoPlayer<S> {
+  steps: AlgoStep<S>[];
   index: number;
-  current: AlgoStep;
+  current: AlgoStep<S>;
   playing: boolean;
   speed: number;
   atEnd: boolean;
@@ -30,17 +30,20 @@ const BASE_STEPS_PER_SEC = 4;
 /**
  * Index-based playback over a precomputed step list. Stepping back is just
  * index-1 — the luxury the packet sim can never afford.
+ *
+ * Generic in the step state so the hook is as view-agnostic as the step list
+ * it walks; it never reads `step.state`.
  */
-export function useAlgoPlayer(
-  def: AlgoDef,
-  n: number,
+export function useAlgoPlayer<S, I>(
+  def: AlgoDef<S, I>,
+  size: number,
   seed: number,
   onEngage?: () => void,
-): AlgoPlayer {
-  const steps = useMemo(() => {
-    const input = def.generateInput(mulberry32(seed), n);
-    return def.run(input);
-  }, [def, n, seed]);
+): AlgoPlayer<S> {
+  const steps = useMemo(
+    () => buildAlgoSteps(def, size, seed),
+    [def, size, seed],
+  );
 
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -58,7 +61,7 @@ export function useAlgoPlayer(
     }
   };
 
-  // Reset playback when the step list changes (new n / seed / algorithm).
+  // Reset playback when the step list changes (new size / seed / algorithm).
   // Render-phase state adjustment (react.dev "Adjusting state when a prop
   // changes"): comparing against the stored previous list lets React discard
   // the render instead of cascading a second commit through an effect.

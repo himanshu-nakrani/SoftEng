@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "check": "tsc --noEmit && eslint . && npx tsx scripts/check-curriculum.mts && vitest run"
+    "check": "tsc --noEmit && eslint . && npx tsx scripts/check-curriculum.mts && vitest run",
+    "new:lesson": "tsx scripts/new-lesson.mts",
+    "monitor:routes": "tsx scripts/check-live-routes.mts"
   },
   "dependencies": {
     "clsx": "^2.1.1",

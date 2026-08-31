@@ -48,6 +48,8 @@ export function PredictionQuiz({
   const resumeRef = useRef<HTMLButtonElement | null>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
   const fallbackFocusRef = useRef<HTMLElement | null>(null);
+  /** Set when the learner closes to inspect — see `restoreFocus`. */
+  const dismissedRef = useRef(false);
   const quizId = quiz?.id ?? null;
 
   // A checkpoint fired: pull focus into the dialog. Keyed on the quiz id so a
@@ -121,6 +123,7 @@ export function PredictionQuiz({
     const onKeyDown = (event: globalThis.KeyboardEvent) => {
       if (event.key !== "Escape") return;
       event.preventDefault();
+      dismissedRef.current = true;
       onDismiss();
     };
     document.addEventListener("keydown", onKeyDown);
@@ -155,11 +158,25 @@ export function PredictionQuiz({
     choiceRefs.current[next]?.focus();
   };
 
+  /**
+   * Focus restoration after the dialog finishes exiting.
+   *
+   * Default is "back where the checkpoint took it from" — correct when the sim
+   * resumes, because the learner's attention returns to the control they were
+   * using. But an explicit dismiss ("Close and inspect") means the opposite: the
+   * learner wants the paused SYSTEM, and the figure is the element that owns the
+   * inspection shortcuts. Restoring the trigger there would silently override
+   * the focus the figure had just taken, stranding a keyboard user on a Play
+   * button when they asked to look at the stage.
+   */
   const restoreFocus = () => {
     const previous = returnFocusRef.current;
     const fallback = fallbackFocusRef.current;
+    const dismissed = dismissedRef.current;
     returnFocusRef.current = null;
     fallbackFocusRef.current = null;
+    dismissedRef.current = false;
+    if (dismissed) return; // the figure claimed focus; leave it there
     if (previous?.isConnected) previous.focus();
     else if (fallback?.isConnected) fallback.focus();
   };
@@ -272,7 +289,10 @@ export function PredictionQuiz({
                   <div className="mt-4 grid gap-2 sm:grid-cols-2">
                     <button
                       type="button"
-                      onClick={onDismiss}
+                      onClick={() => {
+                        dismissedRef.current = true;
+                        onDismiss();
+                      }}
                       className="cursor-pointer rounded-md border border-border bg-raised px-4 py-2.5 text-sm font-semibold text-fg transition-colors hover:border-border-bright hover:bg-surface"
                     >
                       Close and inspect

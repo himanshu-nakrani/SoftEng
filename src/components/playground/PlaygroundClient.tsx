@@ -5,7 +5,7 @@ import type { LessonSim } from "@/engine/types";
 import { simBySlug } from "@/lessons/index";
 import { SectionRule } from "@/components/ui/SectionRule";
 import { cn } from "@/lib/cn";
-import { allLessons, getLesson, moduleOf } from "@/lib/curriculum";
+import { accentOf, allLessons, getLesson, moduleOf } from "@/lib/curriculum";
 import type { Accent } from "@/curriculum/types";
 import { accentCssVar } from "@/lib/accent";
 import { Check, Dices, Share2 } from "lucide-react";
@@ -25,7 +25,7 @@ const playgroundSims: PlaygroundEntry[] = allLessons
   .map((l) => ({
     slug: l.slug,
     title: l.title,
-    accent: moduleOf(l).accent,
+    accent: accentOf(moduleOf(l)),
     sim: simBySlug[l.slug]!,
   }));
 
@@ -68,6 +68,12 @@ export function PlaygroundClient() {
   };
 
   const reseed = () => {
+    /*
+     * Picking a NEW seed is the one place unseeded randomness is correct: the
+     * seed is then fixed for the whole run, shown in the UI, and shareable by
+     * URL, so replay stays exact. Everything downstream of this line is seeded.
+     */
+    // eslint-disable-next-line no-restricted-properties
     const next = Math.floor(Math.random() * 90000) + 1;
     setSeed(next);
     window.history.replaceState(null, "", `?sim=${slug}&seed=${next}`);
