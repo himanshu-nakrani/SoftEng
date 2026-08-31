@@ -500,6 +500,27 @@ export const learningGuides: Record<string, LearningGuide> = {
     "Complete the suite and watch the score plateau at 60%: the two survivors left are exactly the equivalent mutants.",
     [{ slug: "coverage-vs-correctness", relation: "builds on" }],
   ),
+  "quorums": guide(
+    "How can a replicated system return a correct answer without waiting for every replica?",
+    "A write now returns after only W of N replicas ack and a read consults only R, so neither blocks on the slowest node — but a read set and a write set drawn from the same N can miss each other entirely.",
+    "One inequality decides correctness: R + W > N forces every read set to overlap every write set, so a read cannot miss the newest committed write. At or below N the sets can be disjoint and reads go stale — and it is the SUM you choose, not the split, that decides correctness, while the split decides which side pays the latency.",
+    "Hold R + W > N and slide the split: W=1 R=5 makes writes cheap, W=5 R=1 makes reads cheap, and both stay at 0% stale. Then kill replicas below W and watch writes get rejected.",
+    [{ slug: "replication", relation: "builds on" }],
+  ),
+  "bulkheads": guide(
+    "When several dependencies share one pool, what happens to the healthy ones if a single dependency slows down?",
+    "A call holds its slot for the dependency's whole service time, so a stalled dependency keeps its slots and fills the shared pool; healthy calls then find nothing free and are rejected. Reserving each dependency its own half confines the stall.",
+    "Availability becomes coupled across dependencies that have nothing to do with each other: with one pool, the slowest dependency dictates everybody's availability, so an incident in one feature quietly takes down others. A bulkhead moves the blast radius, and it is paid for in utilisation — a reserved slot sits idle when its dependency is quiet.",
+    "Turn on isolation, then stall a dependency, and compare the healthy one's throughput against the shared run — then look at what it cost in pool utilisation.",
+    [{ slug: "circuit-breaker", relation: "builds on" }],
+  ),
+  "canary-releases": guide(
+    "If a new version is broken, does it matter how many users you gave it to?",
+    "Traffic to the new version is a fraction you set, so its errors are bounded to that fraction instead of reaching everyone, and one control takes it back.",
+    "A canary turns a bad release from an outage you dig out of into a bounded, reversible signal. The bound is the point: the blast radius is a number you chose in advance rather than one you discover afterwards.",
+    "Hold the share at 5% and notice the error rate barely moves — then ask what a slow leak or a rare-input bug would have shown at that share in two minutes, and why a clean canary is a reason to widen rather than a proof it is safe.",
+    [],
+  ),
 };
 
 export function getLearningGuide(slug: string): LearningGuide {

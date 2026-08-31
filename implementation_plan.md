@@ -9,8 +9,8 @@ and invariants; this document is only *what is done, what is left, and what has
 already been decided*. Open debt lives in [`debt.md`](./debt.md).
 
 **State verified 2026-08-31**, by running the gate rather than recalling:
-49 lessons · 161 sections · **5 tracks** · 555 unit tests (18 files) · 116 e2e
-tests sampled (63 run, 53 in the opt-in visual suite) and 148 on the full
+52 lessons · 173 sections · **5 tracks** · 561 unit tests (18 files) · 121 e2e
+tests sampled (65 run, 56 in the opt-in visual suite) and 156 on the full
 smoke+axe+search sweep · clean static export. `npm run check` green.
 
 ---
@@ -75,7 +75,7 @@ in order, every time:
 | 2 | Engine archetypes | A–E **done**; F and G remain, both conditional |
 | 3 | Authoring pipeline | **Done** |
 | 4 | CI + weight budget | **Done** (OG consolidation deferred with a measurement) |
-| 5 | Track rollout | 5 of 11 tracks; 49 lessons of ~120 |
+| 5 | Track rollout | 5 of 11 tracks; 52 lessons of ~120 |
 
 ### Foundations in place
 
@@ -144,7 +144,7 @@ or the lesson does not ship.** A choice that only reveals text is a quiz, and
 
 ### Phase 5 · Track rollout
 
-Roughly **71 lessons remain**. Each track is independently shippable; the gate for
+Roughly **68 lessons remain**. Each track is independently shippable; the gate for
 each is the per-lesson loop in §1 plus a regenerated README.
 
 **A track's number is its POSITION IN THE REGISTRY ARRAY**, not an identity —
@@ -154,11 +154,11 @@ these numbers as the current display order.
 
 | # | Track (slug) | Archetypes | Est. | Status |
 |---|---|---|---|---|
-| 01 | System Design Fundamentals (`system-design-fundamentals`) | A | 26 | 27 shipped — **open again** |
+| 01 | System Design Fundamentals (`system-design-fundamentals`) | A | 26 | 29 shipped — **open again** |
 | 02 | Concurrency (`concurrency`) | C on B | 9 | **complete** |
 | 03 | Databases & Transactions (`databases`) | B | ~10 | **open — 8 shipped** |
 | 04 | Testing & Verification (`testing`) | D | ~8 | **open — 3 shipped** |
-| 05 | Version Control & Delivery (`version-control`) | E | ~8 | **open — 2 shipped** |
+| 05 | Version Control & Delivery (`version-control`) | E + A | ~8 | **open — 3 shipped, 2 modules** |
 | — | Networking & the Web | A + B | ~10 | not started |
 | — | Security Engineering | A + B + D | ~12 | not started |
 | — | Languages & Runtimes | B | ~12 | not started |
@@ -282,6 +282,16 @@ Do not re-litigate these without new information.
   meter read a metric the step never wrote. Every archetype-B lesson since the
   scaffolder was written had hidden it. Four fixes; it is now genuinely
   check-clean untouched.
+- **Two readouts with one label showing two numbers reads as a bug.** The canary
+  figure had a `canary share` METER (the effective routing share, opened by a
+  scripted beat) beside a `canary share` SLIDER at 0% — and dragging the slider
+  down could not lower the meter, because routing took `max(slider, scripted)`.
+  The scripted value must YIELD once the reader touches the control, and the two
+  readouts must not share a name. Same family as `AlgoFigure` printing a def's
+  `size` twice.
+- **Check that every node is inside the frame.** One of the quorums lesson's five
+  replicas sat at y=390, under the stage edge where the caption sits, so the
+  figure showed four replicas while the prose discussed five.
 - **Raising z-index cannot escape an ancestor stacking context.** The command
   palette rendered inside the sidebar's `<aside>` and page chrome painted over it.
   A portal to `document.body` is the fix.

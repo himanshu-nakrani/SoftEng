@@ -1,0 +1,45 @@
+{
+  "lesson": "resilience/bulkheads",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:bulkheads-starve@14",
+      "t": 14.033333,
+      "metrics": {
+        "poolA": 8,
+        "rejected": 6,
+        "rejectedB": 4,
+        "servedB": 0.643727,
+        "util": 100
+      },
+      "packets": 6,
+      "nextPacketId": 166,
+      "nodes": {
+        "client": "healthy",
+        "depA": "dead",
+        "depB": "healthy",
+        "router": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "poolA": 8,
+        "rejected": 75,
+        "rejectedB": 48,
+        "servedB": 0,
+        "util": 100
+      },
+      "packets": 4,
+      "nextPacketId": 303,
+      "nodes": {
+        "client": "healthy",
+        "depA": "dead",
+        "depB": "healthy",
+        "router": "healthy"
+      }
+    }
+  ]
+}

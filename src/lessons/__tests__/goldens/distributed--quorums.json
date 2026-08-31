@@ -1,0 +1,47 @@
+{
+  "lesson": "distributed/quorums",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:quorums-overlap@13.6",
+      "t": 13.633333,
+      "metrics": {
+        "committed": 37,
+        "overlap": -1,
+        "rejected": 0,
+        "stalePct": 0
+      },
+      "packets": 32,
+      "nextPacketId": 483,
+      "nodes": {
+        "client": "healthy",
+        "r1": "healthy",
+        "r2": "healthy",
+        "r3": "healthy",
+        "r4": "healthy",
+        "r5": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "committed": 89,
+        "overlap": 1,
+        "rejected": 0,
+        "stalePct": 0.010938
+      },
+      "packets": 17,
+      "nextPacketId": 1160,
+      "nodes": {
+        "client": "healthy",
+        "r1": "healthy",
+        "r2": "healthy",
+        "r3": "healthy",
+        "r4": "healthy",
+        "r5": "healthy"
+      }
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "lesson": "delivery/canary-releases",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:canary-share-scales@7.05",
+      "t": 7.066667,
+      "metrics": {
+        "canaryShare": 0,
+        "errorRate": 0,
+        "errors": 0,
+        "served": 56
+      },
+      "packets": 22,
+      "nextPacketId": 260,
+      "nodes": {
+        "canary": "healthy",
+        "client": "healthy",
+        "lb": "healthy",
+        "stable": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "canaryShare": 20,
+        "errorRate": 21.816663,
+        "errors": 29,
+        "served": 286
+      },
+      "packets": 31,
+      "nextPacketId": 1188,
+      "nodes": {
+        "canary": "healthy",
+        "client": "healthy",
+        "lb": "healthy",
+        "stable": "healthy"
+      }
+    }
+  ]
+}

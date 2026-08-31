@@ -283,6 +283,23 @@ export const curriculum: Curriculum = {
                 { id: "what-to-drop", title: "Choosing what to refuse", kind: "concept" },
               ],
             },
+                      {
+              slug: "bulkheads",
+              moduleSlug: "resilience",
+              title: "Bulkheads",
+              tagline:
+                "One shared pool is efficient until a single slow dependency drinks it dry and takes the healthy ones with it.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["circuit-breaker"],
+              status: "available",
+              sections: [
+                { id: "one-pool", title: "One pool for everything", kind: "concept" },
+                { id: "shared", title: "The shared pool drowning", kind: "interactive" },
+                { id: "isolated", title: "Partitioned pools", kind: "interactive" },
+                { id: "sizing", title: "What isolation costs", kind: "concept" },
+              ],
+            },
           ],
         },
         {
@@ -490,6 +507,23 @@ export const curriculum: Curriculum = {
                 { id: "two-regions", title: "Write in two regions", kind: "interactive" },
                 { id: "conflict-or-wait", title: "Conflict or wait — pick one", kind: "interactive" },
                 { id: "region-failover", title: "Region failover", kind: "concept" },
+              ],
+            },
+                      {
+              slug: "quorums",
+              moduleSlug: "distributed",
+              title: "Quorums",
+              tagline:
+                "Ask fewer replicas and you answer faster — until a read and a write pick sets that never touch.",
+              difficulty: "advanced",
+              estimatedMinutes: 14,
+              prerequisites: ["replication"],
+              status: "available",
+              sections: [
+                { id: "why-majority", title: "Why a majority is the unit", kind: "concept" },
+                { id: "write-quorum", title: "Waiting for W acks", kind: "interactive" },
+                { id: "read-quorum", title: "Reading from R replicas", kind: "interactive" },
+                { id: "tuning", title: "Trading latency for certainty", kind: "concept" },
               ],
             },
           ],
@@ -965,6 +999,31 @@ export const curriculum: Curriculum = {
                 { id: "ff", title: "When it fast-forwards", kind: "interactive" },
                 { id: "no-ff", title: "When it cannot", kind: "interactive" },
                 { id: "divergence", title: "Divergence is the condition", kind: "concept" },
+              ],
+            },
+          ],
+        },
+        {
+          slug: "delivery",
+          title: "Shipping It",
+          description:
+            "Getting a change in front of users without betting the whole fleet on it.",
+          lessons: [
+            {
+              slug: "canary-releases",
+              moduleSlug: "delivery",
+              title: "Canary Releases",
+              tagline:
+                "A bad deploy to everyone fails everyone. A bad deploy to a slice fails only the slice, and hands you a slider back.",
+              difficulty: "intermediate",
+              estimatedMinutes: 13,
+              prerequisites: [],
+              status: "available",
+              sections: [
+                { id: "all-at-once", title: "Shipping to everyone at once", kind: "concept" },
+                { id: "canary", title: "A fraction of the traffic", kind: "interactive" },
+                { id: "rollback", title: "Catching it and backing out", kind: "interactive" },
+                { id: "blind-spots", title: "What a canary cannot see", kind: "concept" },
               ],
             },
           ],

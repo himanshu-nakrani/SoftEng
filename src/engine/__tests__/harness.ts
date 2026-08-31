@@ -46,6 +46,9 @@ import { clientServerSim } from "@/lessons/scaling/client-server";
 import { loadBalancingSim } from "@/lessons/scaling/load-balancing";
 import { realtimeDeliverySim } from "@/lessons/scaling/realtime-delivery";
 import { scalingStrategiesSim } from "@/lessons/scaling/scaling-strategies";
+import { canaryReleasesSim } from "@/lessons/delivery/canary-releases";
+import { bulkheadsSim } from "@/lessons/resilience/bulkheads";
+import { quorumsSim } from "@/lessons/distributed/quorums";
 import { loadSheddingSim } from "@/lessons/resilience/load-shedding";
 
 /* ------------------------------------------------------------------ *
@@ -102,6 +105,9 @@ const SIM_BY_KEY: Record<string, LessonSim<unknown>> = {
   "distributed/geo-replication": widen(geoReplicationSim),
   "distributed/two-phase-commit": widen(twoPhaseCommitSim),
   "resilience/load-shedding": widen(loadSheddingSim),
+  "distributed/quorums": widen(quorumsSim),
+  "resilience/bulkheads": widen(bulkheadsSim),
+  "delivery/canary-releases": widen(canaryReleasesSim),
 };
 
 export interface LessonUnderTest {
