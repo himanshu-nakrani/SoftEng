@@ -185,9 +185,9 @@ these numbers as the current display order.
 |---|---|---|---|---|
 | 01 | System Design Fundamentals (`system-design-fundamentals`) | A | 26 | 31 shipped — **effectively finished** (see §6) |
 | 02 | Concurrency (`concurrency`) | C on B | 9 | **complete** |
-| 03 | Databases & Transactions (`databases`) | B | ~10 | **open — 8 shipped** |
-| 04 | Testing & Verification (`testing`) | D + C | ~8 | **open — 4 shipped, 2 modules** |
-| 05 | Version Control & Delivery (`version-control`) | E + A | ~8 | **open — 6 shipped, 2 modules** |
+| 03 | Databases & Transactions (`databases`) | B | ~10 | **open — 9 shipped, 3 modules** |
+| 04 | Testing & Verification (`testing`) | D + C | ~8 | **open — 5 shipped, 2 modules** |
+| 05 | Version Control & Delivery (`version-control`) | E + A | ~8 | **open — 7 shipped, 2 modules** |
 | 06 | Networking & the Web (`networking`) | A + B | ~10 | **open — 4 shipped, 1 module** |
 | 07 | Software Design & Architecture (`software-design`) | F on B | ~10 | **open — 3 shipped, 1 module** |
 | 08 | Engineering Practice (`engineering-practice`) | G on B | ~8 | **open — 2 shipped, 1 module** |
@@ -234,12 +234,16 @@ things the transaction lessons never needed: a `size` slider used as something
 other than a size (the crash point), and a state contract whose subject is what
 survives losing power rather than what a transaction can see.
 
+The `mvcc` module is **open at one lesson**: **MVCC** shipped, on its own new
+view (`algo/mvcc.ts`, `views/VersionsView.tsx`) — row version chains that open
+the "snapshot" black box the isolation lessons rely on. It is deliberately an
+isolated view rather than a change to `runTransactions`, so it did not disturb
+the five isolation lessons that depend on that model.
+
 **The remaining topics each need a new view built from scratch** — unlike the five
 transaction lessons, which all reused `runTransactions` and `TableView`. Budget
 accordingly:
 
-- **MVCC** — needs row version chains; opens the "snapshot" black box the
-  isolation lessons rely on. Note this changes a model five lessons depend on.
 - **B-tree vs LSM**, **indexes & query plans** — new views each.
 
 #### Tracks 04 and 05, specifically
@@ -247,21 +251,22 @@ accordingly:
 Both rendered their view for the first time — which closed D1 and cost three real
 defects (see the closed section of `debt.md`). Both engines carry more:
 
-- **04 Testing**, 3 lessons on `runMutationSuite`: Coverage Is Not Correctness ·
-  Boundaries and Off-By-One · Not Every Survivor Is a Bug. The third is the
-  deliberate correction to the first — an equivalent mutant can never be killed, so
-  the score has a floor and 100% is the wrong target. The harness also supports
-  test-suite smells coverage cannot express (a test asserting nothing, a mutant no
-  input reaches, a suite resting on one test). Judge honestly whether each is a
-  distinct lesson or the same point twice; the module is already a complete
-  argument at three.
-- **05 Version Control & Delivery**, 4 lessons across TWO modules and TWO
-  archetypes: `history` on the repo DAG (Merge vs Rebase · Fast-Forward) and
-  `delivery` on the PACKET engine (Canary Releases · Blue-Green Deploys). Proof
-  that a track is not tied to one engine. `RepoOp` covers
-  commit/branch/checkout/merge/rebase and nothing else, so cherry-pick, revert and
-  reset would each need a new op — cheap. A CONFLICT is not cheap: the model has no
-  file contents at all.
+- **04 Testing**, 5 lessons across TWO modules. `test-quality` (3 lessons on
+  `runMutationSuite`): Coverage Is Not Correctness · Boundaries and Off-By-One ·
+  Not Every Survivor Is a Bug. The third is the deliberate correction to the first
+  — an equivalent mutant can never be killed, so the score has a floor and 100% is
+  the wrong target. The harness also supports test-suite smells coverage cannot
+  express (a test asserting nothing, a mutant no input reaches, a suite resting on
+  one test). `flakiness` (2 lessons): Why Suites Go Flaky · Tests That Depend on
+  Each Other — the second demonstrates order-dependent tests via a hidden setup
+  dependency.
+- **05 Version Control & Delivery**, 7 lessons across TWO modules and TWO
+  archetypes: `history` on the repo DAG (Merge vs Rebase · Fast-Forward ·
+  Cherry-Pick and Revert · Reset) and `delivery` on the PACKET engine (Canary
+  Releases · Blue-Green Deploys · Feature Flags). Proof that a track is not tied to
+  one engine. `RepoOp` now covers commit/branch/checkout/merge/rebase plus the
+  cherry-pick/revert/reset ops added for the `history` lessons; a CONFLICT is still
+  not cheap, because the model has no file contents at all.
 
 #### Track 01's addition list is spent
 
@@ -400,13 +405,16 @@ Do not re-litigate these without new information.
 1. **Extend tracks 04 and 05** — the cheapest work left. Both are open on engines
    and views that are built, tested and now screenshot-verified, so the expensive
    part is already paid; they need content and a screenshot pass.
-2. **Open one of the four unstarted tracks** — Networking & the Web, Security
-   Engineering, Languages & Runtimes, Operating Systems (~46 lessons between them).
-   Mid-priced: they reuse existing archetypes but each subject needs its own state
-   shape and view. Networking is the closest fit to what already exists (A + B).
-3. **Track 03's remaining topics** — MVCC and the storage/index lessons, each
-   needing a new view. MVCC also changes a model five shipped lessons depend on, so
-   it is the most expensive thing on this list.
+2. **Extend track 06 Networking, or open one of the three unstarted tracks** —
+   Networking & the Web is now open (`web-requests`, 4 lessons on A + B) and is the
+   cheapest of this tier to continue; the remaining unstarted tracks are Security
+   Engineering, Languages & Runtimes and Operating Systems (~36 lessons between
+   them). Mid-priced: they reuse existing archetypes but each subject needs its own
+   state shape and view.
+3. **Track 03's remaining topics** — MVCC shipped (its own `mvcc` module and
+   `VersionsView`, deliberately isolated so it did not disturb the five isolation
+   lessons); what remains are the storage/index lessons (B-tree vs LSM, indexes &
+   query plans), each needing a new view.
 4. **Extend tracks 07 and 08** — F and G are RESOLVED (both BUILD, §3) and their
    archetypes (`refactor.ts`, `scenario.ts`), views and tests are built and
    screenshot-verified, so the expensive part is paid. Track 07 can add lessons
