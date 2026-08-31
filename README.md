@@ -39,12 +39,12 @@ An interactive system-design learning site. Not articles — every concept is a 
 
 ### Track 04 — Testing & Verification
 
-4 lessons across 2 modules, about 48 minutes end to end.
+5 lessons across 2 modules, about 1h 0m end to end.
 
 | Module | Lessons |
 |---|---|
 | **What a Suite Actually Checks** | Coverage Is Not Correctness · Boundaries and Off-By-One · Not Every Survivor Is a Bug |
-| **Tests That Lie** | Why Suites Go Flaky |
+| **Tests That Lie** | Why Suites Go Flaky · Tests That Depend on Each Other |
 
 ### Track 05 — Version Control & Delivery
 

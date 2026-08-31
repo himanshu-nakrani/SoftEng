@@ -8,6 +8,10 @@ import {
   flakyTestsAlgo,
   flakyTestsIsolatedAlgo,
 } from "@/lessons/flakiness/flaky-tests";
+import {
+  testPollutionAlgo,
+  testPollutionIsolatedAlgo,
+} from "@/lessons/flakiness/test-pollution";
 
 /**
  * Track 04's flakiness lesson states NUMBERS — "about half of the orders fail",
@@ -101,5 +105,69 @@ describe("flaky-tests: the shared slot is order-dependent, isolation removes it"
       );
     }
     expect(orders.size).toBeGreaterThan(1);
+  });
+});
+
+describe("test-pollution: a dependent test leans on order, isolation removes it", () => {
+  it("ids start with the lesson slug", () => {
+    // check-curriculum enforces this, but pin it here so the intent is local.
+    expect(testPollutionAlgo.id).toBe("test-pollution");
+    expect(testPollutionIsolatedAlgo.id.startsWith("test-pollution")).toBe(true);
+  });
+
+  it("is deterministic: the same seed replays an identical run", () => {
+    // The page relies on "(program, seed) replays one order exactly".
+    expect(buildAlgoSteps(testPollutionAlgo, 0, 42)).toEqual(
+      buildAlgoSteps(testPollutionAlgo, 0, 42),
+    );
+  });
+
+  it("fails the dependent test at seed 42 — B asserts before A inserts", () => {
+    // The page's polluted figure opens at seed 42 on a failing order: test B
+    // reads an empty table and fails while test A passes.
+    const { state } = run(testPollutionAlgo, 42);
+    expect(state.memory.passed).toBe(1);
+    expect(state.memory.failed).toBe(1);
+  });
+
+  it("passes both tests at seed 0 — the SAME code, a different order", () => {
+    // The page says the other half of the orders pass with identical code.
+    const { state } = run(testPollutionAlgo, 0);
+    expect(state.memory.passed).toBe(2);
+    expect(state.memory.failed).toBe(0);
+  });
+
+  it("fails in about half of the polluted orders, never all and never none", () => {
+    // The page says "about half of the orders fail — 101 of the first 200
+    // seeds, 495 of the first 1000".
+    expect(failingRuns(testPollutionAlgo, 200)).toBe(101);
+    expect(failingRuns(testPollutionAlgo, 1000)).toBe(495);
+  });
+
+  it("passes EVERY isolated order — 0 failures across 1000 seeds", () => {
+    // The page says isolation makes B fail in "0 of 1000" orders.
+    expect(failingRuns(testPollutionIsolatedAlgo, 1000)).toBe(0);
+  });
+
+  it("costs one extra op: three steps polluted become four isolated, every seed", () => {
+    // The page says the run goes from three steps to four — B's own setup.
+    for (let seed = 0; seed < 500; seed++) {
+      expect(run(testPollutionAlgo, seed).counter(C.steps)).toBe(3);
+      expect(run(testPollutionIsolatedAlgo, seed).counter(C.steps)).toBe(4);
+    }
+  });
+
+  it("has exactly two legal orders — B's one step falls before or after A's insert", () => {
+    // The page says "there are only two orders that matter here".
+    const orders = new Set<string>();
+    for (let seed = 0; seed < 40; seed++) {
+      orders.add(
+        run(testPollutionAlgo, seed)
+          .steps.slice(1)
+          .map((f) => f.state.ranOp)
+          .join("|"),
+      );
+    }
+    expect(orders.size).toBe(2);
   });
 });

@@ -563,6 +563,13 @@ export const learningGuides: Record<string, LearningGuide> = {
     "Flip the flag on, kill it and watch the error counter freeze mid-tail, then set it to the beta cohort and compare that blast radius with a canary's random share.",
     [{ slug: "canary-releases", relation: "builds on" }],
   ),
+  "test-pollution": guide(
+    "If a test passes in the suite but fails when you run it alone, what did it depend on?",
+    "A dependent test reads shared state it never set up, so its verdict is decided by whether the seeding test ran before it — reframed as an interleaving, not luck.",
+    "This is the asymmetric flake: unlike a collision over one slot, one test quietly leans on another's leftover state. It hides until someone reorders or isolates the suite, and then the depending test fails for a reason nobody changed. Running tests in a random order is the cheapest way to surface a dependence the code refused to declare.",
+    "Reseed the polluted figure until the dependent test's assertion falls before the seeding insert, then give it its own setup and confirm no order can fail.",
+    [{ slug: "flaky-tests", relation: "builds on" }],
+  ),
 };
 
 export function getLearningGuide(slug: string): LearningGuide {
