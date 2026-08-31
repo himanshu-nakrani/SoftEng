@@ -913,6 +913,32 @@ export const curriculum: Curriculum = {
             },
           ],
         },
+        {
+          slug: "mvcc",
+          title: "Multi-Version Concurrency Control",
+          description:
+            "How a reader looks at an older world while writers move on — the machinery behind the snapshot.",
+          lessons: [
+            {
+              slug: "multi-version-reads",
+              moduleSlug: "mvcc",
+              title: "Multi-Version Reads",
+              tagline:
+                "TODO: one line that states the tension, not the topic.",
+              difficulty: "advanced",
+              estimatedMinutes: 13,
+              prerequisites: ["non-repeatable-reads", "lost-update"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "one-cell", title: "A row is not one cell", kind: "concept" },
+                { id: "readers-dont-block", title: "Readers never block writers", kind: "interactive" },
+                { id: "write-conflict", title: "When two writers collide", kind: "interactive" },
+                { id: "what-it-costs", title: "What versions cost", kind: "concept" },
+              ],
+            },
+          ],
+        },
       ],
     },
     {

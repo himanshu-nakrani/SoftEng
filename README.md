@@ -30,12 +30,13 @@ An interactive system-design learning site. Not articles — every concept is a 
 
 ### Track 03 — Databases & Transactions
 
-8 lessons across 2 modules, about 1h 35m end to end.
+9 lessons across 3 modules, about 1h 48m end to end.
 
 | Module | Lessons |
 |---|---|
 | **Transactions** | Dirty Reads and Read Committed · Non-Repeatable Reads · Write Skew · Lost Update · Two-Phase Locking |
 | **Durability & Recovery** | Write-Ahead Logging · Checkpoints · Group Commit |
+| **Multi-Version Concurrency Control** | Multi-Version Reads |
 
 ### Track 04 — Testing & Verification
 

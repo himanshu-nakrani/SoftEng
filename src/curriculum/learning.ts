@@ -620,6 +620,17 @@ export const learningGuides: Record<string, LearningGuide> = {
       { slug: "thread-pools", relation: "connects to" },
     ],
   ),
+  "multi-version-reads": guide(
+    "How can a reader see a consistent world without blocking the writers changing it?",
+    "A row becomes a chain of versions, and a transaction reads the newest one committed before its snapshot — so an old version stays readable beside a newer committed one, and a write-write conflict is refused rather than lost.",
+    "It is the machinery behind repeatable read's snapshot: readers never wait for writers, which is why MVCC underpins most production databases — and why write skew still slips through it.",
+    "Reshuffle the report until the transfer commits between its two reads and watch it ring the OLD version; then run the conflict figure and confirm the loser is rolled back, never merged.",
+    [
+      { slug: "non-repeatable-reads", relation: "builds on" },
+      { slug: "lost-update", relation: "builds on" },
+      { slug: "write-skew", relation: "connects to" },
+    ],
+  ),
 };
 
 export function getLearningGuide(slug: string): LearningGuide {
