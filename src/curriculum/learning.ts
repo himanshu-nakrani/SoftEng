@@ -715,6 +715,13 @@ export const learningGuides: Record<string, LearningGuide> = {
     "Slide between the monolithic rename, premature read release, and expand/contract to see how decoupling DB migrations from code deployments avoids downtime.",
     [{ slug: "the-mutex-call", relation: "builds on" }],
   ),
+  "memory-leak-triage": guide(
+    "How do you triage a severe memory leak without dropping live traffic or destroying diagnostic data?",
+    "Simultaneous restarts drop 350 to 500 in-flight requests, waiting for OOM-kill resets sockets mid-flight across 0/200 runs, but rolling graceful drain holds SLA in 200/200 runs.",
+    "Killing or crashing a leaking container destroys the in-memory object graph and drops in-flight work; cordoning before draining preserves both client requests and diagnostic heap dumps.",
+    "Slide between simultaneous restart, waiting for OOM-kill, and rolling drain to compare dropped connections and SLA compliance across 200 incident runs.",
+    [{ slug: "the-mutex-call", relation: "builds on" }],
+  ),
 };
 
 export function getLearningGuide(slug: string): LearningGuide {

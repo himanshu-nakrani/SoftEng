@@ -1527,6 +1527,31 @@ export const curriculum: Curriculum = {
             },
           ],
         },
+        {
+          slug: "resilience-engineering",
+          title: "Resilience Engineering",
+          description:
+            "Diagnosing and mitigating production failure modes — heap exhaustion, cascading failure, and distributed state partitions under load.",
+          lessons: [
+            {
+              slug: "memory-leak-triage",
+              moduleSlug: "resilience-engineering",
+              title: "Memory Leak and Buffer Bloat",
+              tagline:
+                "Panic-restarting drops live traffic and waiting for OOM resets sockets; only cordoning and graceful draining preserves uptime and diagnostic memory.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["the-mutex-call"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "heap-growth", title: "Unbounded heap growth", kind: "concept" },
+                { id: "triage-action", title: "Choose triage action", kind: "interactive" },
+                { id: "graceful-drain", title: "Traffic draining and diagnostics", kind: "concept" },
+              ],
+            },
+          ],
+        },
       ],
     },
   ],
