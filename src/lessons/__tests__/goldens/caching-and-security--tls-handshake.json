@@ -7,10 +7,14 @@
       "label": "t=30",
       "t": 30,
       "metrics": {
-        "requests": 172
+        "earlyDataExecuted": 0,
+        "handshakeMs": 300,
+        "replaysBlocked": 0,
+        "roundTrips": 1,
+        "sessionsCompleted": 15
       },
-      "packets": 11,
-      "nextPacketId": 173,
+      "packets": 0,
+      "nextPacketId": 61,
       "nodes": {
         "client": "healthy",
         "server": "healthy"

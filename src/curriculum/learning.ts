@@ -790,10 +790,10 @@ export const learningGuides: Record<string, LearningGuide> = {
     [{ slug: "http-caching", relation: "builds on" }],
   ),
   "tls-handshake": guide(
-    "TODO: the question this lesson answers?",
-    "TODO: what changed, in one sentence.",
-    "TODO: why it matters.",
-    "TODO: what to try next.",
+    "How does TLS 1.3 eliminate handshake round trips without sacrificing forward secrecy or inviting replay attacks?",
+    "TLS 1.3 bundles ECDHE key share with ClientHello for 1-RTT setup and uses PSK resumption for 0-RTT early data while rejecting duplicate tickets with anti-replay caches.",
+    "Shaving 1 to 2 round trips dramatically speeds up mobile connection setup, but 0-RTT early data lacks interactive forward secrecy and requires single-use ticket enforcement to prevent duplicate execution.",
+    "Explore next tracks to see how systems maintain data consistency, tolerate network partitions, and scale distributed architectures.",
     [{ slug: "conditional-requests", relation: "builds on" }],
   ),
   "property-shrinking": guide(

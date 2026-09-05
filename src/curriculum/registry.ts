@@ -1481,7 +1481,7 @@ export const curriculum: Curriculum = {
               moduleSlug: "caching-and-security",
               title: "The TLS Handshake: 1-RTT to 0-RTT",
               tagline:
-                "TODO: one line that states the tension, not the topic.",
+                "TLS 1.3 cuts cryptographic setup to 1 RTT and 0-RTT resumption transmits early data on the first packet — but sending payloads before interactive key confirmation leaves requests vulnerable to replay attacks.",
               difficulty: "advanced",
               estimatedMinutes: 12,
               prerequisites: ["conditional-requests"],
