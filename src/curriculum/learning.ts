@@ -666,6 +666,20 @@ export const learningGuides: Record<string, LearningGuide> = {
     "Slide to opposite orders and watch the completion bar fall to roughly half; the missing runs deadlocked rather than erroring.",
     [{ slug: "the-mutex-call", relation: "builds on" }],
   ),
+  "assertion-free-tests": guide(
+    "Why can a suite with 100% line coverage fail to catch broken calculations?",
+    "A smoke test suite that exercises every line without assertions only catches unhandled crashes, letting every mutated calculation survive.",
+    "Line coverage measures only code execution, not verification; catching defects requires asserting the observable outcome.",
+    "Compare how the asserted suite catches calculation mutants by verifying output values against expected return states.",
+    [{ slug: "equivalent-mutants", relation: "builds on" }],
+  ),
+  "brittle-mocks": guide(
+    "Why do mock-heavy test suites fail when internal code is safely refactored?",
+    "Mock assertions couple tests to internal call counts and sequences, creating false alarms on harmless refactorings while missing real output errors.",
+    "Verifying observable state decouples tests from implementation details, letting you refactor safely while catching genuine regressions.",
+    "Compare how the state verification suite stays green across three refactorings while catching all three calculation bugs.",
+    [{ slug: "assertion-free-tests", relation: "builds on" }],
+  ),
 };
 
 export function getLearningGuide(slug: string): LearningGuide {

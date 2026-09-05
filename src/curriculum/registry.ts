@@ -1008,6 +1008,42 @@ export const curriculum: Curriculum = {
                 { id: "reading-the-score", title: "What the number is for", kind: "concept" },
               ],
             },
+                      {
+              slug: "assertion-free-tests",
+              moduleSlug: "test-quality",
+              title: "Assertion-Free Tests",
+              tagline:
+                "Every line executes and CI turns green, but a suite without assertions only catches crashes.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["equivalent-mutants"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "line-coverage", title: "A suite that asserts nothing", kind: "concept" },
+                { id: "smoke-suite", title: "The smoke test", kind: "interactive" },
+                { id: "with-assertions", title: "Checking the outcome", kind: "interactive" },
+                { id: "assertion-density", title: "What coverage missed", kind: "concept" },
+              ],
+            },
+                      {
+              slug: "brittle-mocks",
+              moduleSlug: "test-quality",
+              title: "Brittle Mocks vs State Verification",
+              tagline:
+                "Asserting how code executes breaks on safe refactors and sleeps through broken results.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["assertion-free-tests"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "mock-fragility", title: "Coupling to implementation", kind: "concept" },
+                { id: "mock-suite", title: "The mock-heavy suite", kind: "interactive" },
+                { id: "state-suite", title: "Testing the outcome", kind: "interactive" },
+                { id: "state-vs-interaction", title: "Testing what vs how", kind: "concept" },
+              ],
+            },
           ],
         },
         {

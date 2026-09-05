@@ -16,6 +16,14 @@ import {
   equivalentMutantsBaseline,
   equivalentMutantFns,
 } from "@/lessons/test-quality/equivalent-mutants";
+import {
+  assertionFreeTestsSmokeAlgo,
+  assertionFreeTestsAssertedAlgo,
+} from "@/lessons/test-quality/assertion-free-tests";
+import {
+  brittleMocksMockAlgo,
+  brittleMocksStateAlgo,
+} from "@/lessons/test-quality/brittle-mocks";
 import { describe, expect, it } from "vitest";
 
 /**
@@ -362,3 +370,152 @@ describe("equivalent-mutants · the equivalent mutants are genuinely equivalent"
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// assertion-free-tests
+// ---------------------------------------------------------------------------
+
+describe("assertion-free-tests · smoke suite only catches crashes", () => {
+  it("passes the unmutated baseline with 4 smoke tests", () => {
+    const r = run(assertionFreeTestsSmokeAlgo);
+    expect(r.state.baselineGreen).toBe(true);
+    expect(r.state.mutants).toHaveLength(6);
+  });
+
+  it("smoke suite kills only the 2 crashing mutants, leaving 4 logic mutants alive", () => {
+    const r = run(assertionFreeTestsSmokeAlgo);
+    expect(r.killed).toBe(2);
+    expect(r.survived).toBe(4);
+    expect(r.counters[C.killed]).toBe(2);
+    expect(r.counters[C.survived]).toBe(4);
+    expect(r.killedIds.sort()).toEqual(
+      ["aft-crash-always", "aft-crash-express"].sort(),
+    );
+    expect(r.survivors.sort()).toEqual(
+      [
+        "aft-rate-double",
+        "aft-surcharge-double",
+        "aft-invert-express",
+        "aft-always-free",
+      ].sort(),
+    );
+  });
+
+  it("aft-crash-always is killed by standard 5kg", () => {
+    const r = run(assertionFreeTestsSmokeAlgo);
+    expect(r.killedBy("aft-crash-always")).toBe("smoke: standard 5kg");
+  });
+
+  it("aft-crash-express is killed by express 5kg", () => {
+    const r = run(assertionFreeTestsSmokeAlgo);
+    expect(r.killedBy("aft-crash-express")).toBe("smoke: express 5kg");
+  });
+
+  it("smoke suite verdict is identical across seeds", () => {
+    for (const seed of [0, 1, 7, 42, 99, 123, 2026]) {
+      const r = run(assertionFreeTestsSmokeAlgo, seed);
+      expect(r.killed).toBe(2);
+      expect(r.survived).toBe(4);
+    }
+  });
+});
+
+describe("assertion-free-tests · asserted suite kills all 6 mutants", () => {
+  it("kills all 6 mutants with 0 survivors", () => {
+    const r = run(assertionFreeTestsAssertedAlgo);
+    expect(r.killed).toBe(6);
+    expect(r.survived).toBe(0);
+    expect(r.counters[C.killed]).toBe(6);
+    expect(r.counters[C.survived] ?? 0).toBe(0);
+  });
+
+  it("asserted suite verdict is identical across seeds", () => {
+    for (const seed of [0, 1, 7, 42, 99, 123, 2026]) {
+      const r = run(assertionFreeTestsAssertedAlgo, seed);
+      expect(r.killed).toBe(6);
+      expect(r.survived).toBe(0);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// brittle-mocks
+// ---------------------------------------------------------------------------
+
+describe("brittle-mocks · mock suite breaks on refactors and sleeps through bugs", () => {
+  it("passes the unmutated baseline with 4 spy assertions", () => {
+    const r = run(brittleMocksMockAlgo);
+    expect(r.state.baselineGreen).toBe(true);
+    expect(r.state.mutants).toHaveLength(6);
+  });
+
+  it("kills all 3 refactorings while letting all 3 calculation bugs survive", () => {
+    const r = run(brittleMocksMockAlgo);
+    expect(r.killed).toBe(3);
+    expect(r.survived).toBe(3);
+    expect(r.counters[C.killed]).toBe(3);
+    expect(r.counters[C.survived]).toBe(3);
+    expect(r.killedIds.sort()).toEqual(
+      [
+        "bm-refactor-omit-validate",
+        "bm-refactor-batch",
+        "bm-refactor-reorder",
+      ].sort(),
+    );
+    expect(r.survivors.sort()).toEqual(
+      [
+        "bm-bug-subtract",
+        "bm-bug-omit-fee",
+        "bm-bug-double-fee",
+      ].sort(),
+    );
+  });
+
+  it("mock suite verdict is identical across seeds", () => {
+    for (const seed of [0, 1, 7, 42, 99, 123, 2026]) {
+      const r = run(brittleMocksMockAlgo, seed);
+      expect(r.killed).toBe(3);
+      expect(r.survived).toBe(3);
+    }
+  });
+});
+
+describe("brittle-mocks · state verification suite survives refactors and kills bugs", () => {
+  it("passes the unmutated baseline with 4 state assertions", () => {
+    const r = run(brittleMocksStateAlgo);
+    expect(r.state.baselineGreen).toBe(true);
+    expect(r.state.mutants).toHaveLength(6);
+  });
+
+  it("leaves all 3 refactorings green while killing all 3 calculation bugs", () => {
+    const r = run(brittleMocksStateAlgo);
+    expect(r.killed).toBe(3);
+    expect(r.survived).toBe(3);
+    expect(r.counters[C.killed]).toBe(3);
+    expect(r.counters[C.survived]).toBe(3);
+    expect(r.survivors.sort()).toEqual(
+      [
+        "bm-refactor-omit-validate",
+        "bm-refactor-batch",
+        "bm-refactor-reorder",
+      ].sort(),
+    );
+    expect(r.killedIds.sort()).toEqual(
+      [
+        "bm-bug-subtract",
+        "bm-bug-omit-fee",
+        "bm-bug-double-fee",
+      ].sort(),
+    );
+  });
+
+  it("state suite verdict is identical across seeds", () => {
+    for (const seed of [0, 1, 7, 42, 99, 123, 2026]) {
+      const r = run(brittleMocksStateAlgo, seed);
+      expect(r.killed).toBe(3);
+      expect(r.survived).toBe(3);
+    }
+  });
+});
+
+
