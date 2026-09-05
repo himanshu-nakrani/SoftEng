@@ -6,6 +6,10 @@ import { describe, expect, it } from "vitest";
 import { extractFunctionAlgo } from "@/lessons/refactoring/extract-function";
 import { duplicatedLogicAlgo } from "@/lessons/refactoring/duplicated-logic";
 import { inlineAndRenameAlgo } from "@/lessons/refactoring/inline-and-rename";
+import {
+  replaceConditionalAlgo,
+  replaceConditionalPolymorphicAlgo,
+} from "@/lessons/refactoring/replace-conditional";
 
 /**
  * Track 10's prose states numbers folded from the toy AST — "complexity 7 to 2",
@@ -90,5 +94,57 @@ describe("inline-and-rename — inlining lowers fan-out, renaming moves nothing"
     expect(afterRename.metrics.maxFanOut).toBe(afterInline.metrics.maxFanOut);
     expect(fn(afterRename, "commit")).toBeDefined();
     expect(fn(afterRename, "doThing")).toBeUndefined();
+  });
+});
+
+describe("replace-conditional — polymorphic dispatch dissolves centralized complexity", () => {
+  const { first, last, steps } = run(replaceConditionalAlgo);
+
+  it("calcShipping opens at cyclomatic complexity 6 with 5 decision points", () => {
+    expect(fn(first, "calcShipping")!.complexity).toBe(6);
+    expect(first.metrics.totalDecisions).toBe(5);
+    expect(first.metrics.maxComplexity).toBe(6);
+  });
+
+  it("complexity falls sequentially across each extracted strategy", () => {
+    const expected = [6, 5, 4, 3, 2, 1];
+    for (let i = 0; i < steps.length; i++) {
+      expect(fn(steps[i].state, "calcShipping")!.complexity).toBe(expected[i]);
+      expect(steps[i].state.metrics.maxComplexity).toBe(expected[i]);
+    }
+  });
+
+  it("each extracted strategy method has cyclomatic complexity 1", () => {
+    const strategies = [
+      "StandardFee",
+      "ExpressFee",
+      "OvernightFee",
+      "FreightFee",
+      "IntlFee",
+    ];
+    for (const name of strategies) {
+      expect(fn(last, name)!.complexity).toBe(1);
+    }
+  });
+
+  it("ends with every method in the module at complexity 1 and 0 total decision points", () => {
+    expect(last.metrics.maxComplexity).toBe(1);
+    expect(last.metrics.totalDecisions).toBe(0);
+    for (const f of last.fns) {
+      expect(f.complexity).toBe(1);
+    }
+  });
+
+  it("calcShipping delegates via dynamic dispatch in the final step", () => {
+    expect(fn(last, "calcShipping")!.lines.some((l) => l.callee === "strategy")).toBe(true);
+  });
+
+  it("polymorphic extension (OCP) adds a strategy without modifying existing classes", () => {
+    const { first: polyFirst, last: polyLast } = run(replaceConditionalPolymorphicAlgo);
+    expect(polyFirst.metrics.maxComplexity).toBe(1);
+    expect(polyLast.metrics.maxComplexity).toBe(1);
+    expect(polyLast.fns.length).toBe(polyFirst.fns.length + 1);
+    expect(fn(polyLast, "SameDayFee")!.complexity).toBe(1);
+    expect(fn(polyFirst, "calcShipping")!.lines).toEqual(fn(polyLast, "calcShipping")!.lines);
   });
 });

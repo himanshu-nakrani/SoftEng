@@ -680,6 +680,20 @@ export const learningGuides: Record<string, LearningGuide> = {
     "Compare how the state verification suite stays green across three refactorings while catching all three calculation bugs.",
     [{ slug: "assertion-free-tests", relation: "builds on" }],
   ),
+  "extract-class": guide(
+    "How do you break up an overloaded class without breaking callers?",
+    "Splitting fields and methods across two classes drops lack of cohesion from high to low.",
+    "Classes should have high cohesion and low coupling.",
+    "Observe how responsibilities separate cleanly.",
+    [{ slug: "extract-function", relation: "builds on" }],
+  ),
+  "replace-conditional": guide(
+    "How do you eliminate cascading switch statements without duplicating branching logic?",
+    "Refactoring a type-dispatching switch chain into polymorphic strategy handlers reduces the dispatcher's cyclomatic complexity from 6 to 1, distributing single-responsibility methods of complexity 1.",
+    "Centralized conditionals require editing a single hotspot every time a new variant is introduced, violating the Open-Closed Principle; polymorphic dispatch turns type branching into extensible object collaboration.",
+    "Step through each strategy extraction, observe the dispatcher shedding decision points as its complexity falls to 1, and verify that adding a new type requires zero edits to existing code.",
+    [{ slug: "extract-class", relation: "builds on" }],
+  ),
 };
 
 export function getLearningGuide(slug: string): LearningGuide {
