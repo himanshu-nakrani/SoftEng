@@ -6,12 +6,13 @@ import { describe, expect, it } from "vitest";
 
 import { theMutexCallAlgo } from "@/lessons/on-call/the-mutex-call";
 import { retryOrBackOffAlgo } from "@/lessons/on-call/retry-or-back-off";
+import { threadPoolSizingAlgo } from "@/lessons/on-call/thread-pool-sizing";
 
 /**
  * Track 11's prose states numbers MEASURED from real sub-runs — "correct in 54
- * of 200", "all 200", "roughly half", "about 102". Same contract as the other
- * claim suites: a failure here means an on-call scenario page now lies about a
- * figure its own producer measured.
+ * of 200", "all 200", "roughly half", "about 102", "29 of 200". Same contract
+ * as the other claim suites: a failure here means an on-call scenario page now
+ * lies about a figure its own producer measured.
  *
  * These have been PROVEN to fail: break the lock handling in `interleave`, or
  * the measurement in `algo/scenario.ts`, and the numbers move and this suite
@@ -64,5 +65,42 @@ describe("retry-or-back-off — lock ordering is a measured distribution", () =>
     expect(optionById(retryOrBackOffAlgo, "same").outcome.value).toBeGreaterThan(
       optionById(retryOrBackOffAlgo, "opposite").outcome.value,
     );
+  });
+});
+
+describe("thread-pool-sizing — concurrency limits vs queue depth under downstream spike", () => {
+  it("bounded pool with load shedding holds SLA in all 200 runs at 400ms", () => {
+    const bounded = optionById(threadPoolSizingAlgo, "bounded-pool");
+    expect(bounded.outcome.value).toBe(200);
+    expect(bounded.outcome.outOf).toBe(200);
+    expect(bounded.outcome.headline).toBe("p99 latency (ms) held 400 — held in 200/200 runs");
+  });
+
+  it("unbounded queue explodes latency to 30s and holds SLA in 0 of 200 runs", () => {
+    const queue = optionById(threadPoolSizingAlgo, "unbounded-queue");
+    expect(queue.outcome.value).toBe(0);
+    expect(queue.outcome.outOf).toBe(200);
+    expect(queue.outcome.headline).toBe("p99 latency (ms) held 30000 — held in 0/200 runs");
+  });
+
+  it("expanding thread pool thrashes and holds SLA in only 29 of 200 runs", () => {
+    const expand = optionById(threadPoolSizingAlgo, "expand-pool");
+    expect(expand.outcome.value).toBe(29);
+    expect(expand.outcome.outOf).toBe(200);
+    expect(expand.outcome.headline).toBe("p99 latency (ms) ranged 1600 to 2400 — held in 29/200 runs");
+  });
+
+  it("slider selects the corresponding policy choice", () => {
+    expect(chosen(threadPoolSizingAlgo, 0).option.id).toBe("expand-pool");
+    expect(chosen(threadPoolSizingAlgo, 1).option.id).toBe("unbounded-queue");
+    expect(chosen(threadPoolSizingAlgo, 2).option.id).toBe("bounded-pool");
+  });
+
+  it("the bounded pool with shedding strictly dominates unbounded queue and thread expansion", () => {
+    const bounded = optionById(threadPoolSizingAlgo, "bounded-pool").outcome.value;
+    const expand = optionById(threadPoolSizingAlgo, "expand-pool").outcome.value;
+    const queue = optionById(threadPoolSizingAlgo, "unbounded-queue").outcome.value;
+    expect(bounded).toBeGreaterThan(expand);
+    expect(expand).toBeGreaterThan(queue);
   });
 });

@@ -680,6 +680,13 @@ export const learningGuides: Record<string, LearningGuide> = {
     "Compare how the state verification suite stays green across three refactorings while catching all three calculation bugs.",
     [{ slug: "assertion-free-tests", relation: "builds on" }],
   ),
+  "thread-pool-sizing": guide(
+    "How should a service handle traffic when a downstream dependency slows down by 40x?",
+    "Expanding threads thrashes CPU and deep queues explode latency to 30s; keeping a bounded pool of 16 threads and shedding excess preserves a 400ms SLA for all admitted requests across all 200 runs.",
+    "Adding threads or queue depth during a downstream slowdown turns latency into an outage; fast rejection with 503 protects system capacity and ensures admitted work completes on time.",
+    "Move the slider across the three policies and compare how SLA compliance and latency headlines respond across 200 runs.",
+    [{ slug: "the-mutex-call", relation: "builds on" }],
+  ),
 };
 
 export function getLearningGuide(slug: string): LearningGuide {
