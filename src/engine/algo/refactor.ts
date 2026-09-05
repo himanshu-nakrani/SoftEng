@@ -170,6 +170,10 @@ export type Transform =
       end: number;
       /** Name of the new function. */
       into: string;
+      /** Optional transform label override (e.g. "Extract Class"). */
+      label?: string;
+      /** Optional note override for this step. */
+      note?: string;
     }
   | {
       kind: "inline";
@@ -402,9 +406,11 @@ export function runRefactor(script: RefactorScript): AlgoStep<RefactorState>[] {
       changed.add(result.created);
       newFns.add(result.created);
       activeFn = result.created;
-      transformLabel = "Extract Function";
+      transformLabel = step.label ?? "Extract Function";
       rec.bump(REFACTOR_COUNTERS.extracted);
-      note = `Extract ${step.into} from ${step.from}: ${step.from} sheds decision points, a new function gains them`;
+      note =
+        step.note ??
+        `Extract ${step.into} from ${step.from}: ${step.from} sheds decision points, a new function gains them`;
     } else if (step.kind === "dedupe") {
       const src = working.fns.find((f) => f.name === step.from)!;
       for (const node of src.body.slice(step.start, step.end)) touchedText.add(node.text);

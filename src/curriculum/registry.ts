@@ -1389,6 +1389,23 @@ export const curriculum: Curriculum = {
                 { id: "what-moved", title: "Duplication as a number", kind: "concept" },
               ],
             },
+                      {
+              slug: "extract-class",
+              moduleSlug: "refactoring",
+              title: "Extract Class",
+              tagline:
+                "A class that calculates prices and formats receipts has two reasons to change and twice the coupling.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["extract-function"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "god-class", title: "The god class", kind: "concept" },
+                { id: "extract-class", title: "Extract the class", kind: "interactive" },
+                { id: "cohesion-metrics", title: "Lack of cohesion", kind: "concept" },
+              ],
+            },
           ],
         },
       ],

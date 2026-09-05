@@ -680,6 +680,13 @@ export const learningGuides: Record<string, LearningGuide> = {
     "Compare how the state verification suite stays green across three refactorings while catching all three calculation bugs.",
     [{ slug: "assertion-free-tests", relation: "builds on" }],
   ),
+  "extract-class": guide(
+    "How does decomposing a god class change coupling and cohesion across a module?",
+    "Extracting receipt formatting from OrderProcessor drops its cyclomatic complexity from 7 to 3 and its fan-out from 5 to 3, while module max fan-out falls from 5 to 3.",
+    "Low cohesion is not just an aesthetic flaw; it binds unrelated subsystems together. Extracting a class partitions dependencies so changes to presentation cannot ripple into pricing calculations.",
+    "Step forward to extract ReceiptFormatter, then check how OrderProcessor's fan-out drops as its formatting callees migrate to the new class.",
+    [{ slug: "extract-function", relation: "builds on" }],
+  ),
 };
 
 export function getLearningGuide(slug: string): LearningGuide {
