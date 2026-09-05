@@ -1,0 +1,23 @@
+{
+  "lesson": "http-protocols/http2-multiplexing",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "activeStreams": 0,
+        "framesDelivered": 60,
+        "pageMs": 1167,
+        "tcpStallMs": 0
+      },
+      "packets": 0,
+      "nextPacketId": 61,
+      "nodes": {
+        "client": "healthy",
+        "server": "healthy"
+      }
+    }
+  ]
+}

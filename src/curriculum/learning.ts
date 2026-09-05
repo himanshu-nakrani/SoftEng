@@ -754,6 +754,41 @@ export const learningGuides: Record<string, LearningGuide> = {
     "Step through the diverged merge to see the two-parent commit join c4 and c3, then contrast it with the fast-forward run where no merge commit is created.",
     [{ slug: "merge-vs-rebase", relation: "builds on" }],
   ),
+  "http-pipelining-hol": guide(
+    "Why was HTTP/1.1 pipelining abandoned despite promising zero-wait requests?",
+    "Sending requests back-to-back works, but RFC 2616 requires responses in exact FIFO order, trapping fast assets behind slow ones.",
+    "A single heavy query blocks every subsequent asset at the application layer, driving browsers to open multiple parallel TCP connections instead.",
+    "Move to HTTP/2 Multiplexing to see how binary framing breaks streams into interleaved chunks over a single connection.",
+    [{ slug: "connection-reuse", relation: "builds on" }],
+  ),
+  "http2-multiplexing": guide(
+    "How does HTTP/2 interleave streams concurrently without waiting for slow responses?",
+    "Binary framing divides messages into tagged frames that interleave over a single TCP socket, eliminating application HOL blocking.",
+    "Small responses finish in milliseconds alongside large downloads, but TCP in-order delivery means a single dropped packet stalls every stream simultaneously.",
+    "Advance to QUIC & HTTP/3 to see how running streams independently over UDP eliminates transport head-of-line blocking.",
+    [{ slug: "http-pipelining-hol", relation: "builds on" }],
+  ),
+  "http3-quic": guide(
+    "How does HTTP/3 eliminate transport-level head-of-line blocking under packet loss?",
+    "QUIC replaces TCP with UDP, providing independent per-stream sequencing and loss recovery in user space.",
+    "A dropped packet on one stream retransmits independently while other streams continue streaming without a millisecond of delay.",
+    "Explore HTTP Caching & Revalidation to see how client and CDN edge caches eliminate network round trips entirely.",
+    [{ slug: "http2-multiplexing", relation: "builds on" }],
+  ),
+  "http-caching": guide(
+    "How do HTTP cache headers eliminate round trips across browser, CDN, and origin?",
+    "Directives like max-age serve responses from local memory with 0ms latency, while stale-while-revalidate refreshes in the background.",
+    "Caching cuts server traffic by over 50% and slashes user-perceived load times, but requires precise invalidation rules.",
+    "Proceed to Conditional Requests & ETags to see how 304 Not Modified saves bandwidth when a cached resource has not changed.",
+    [{ slug: "connection-reuse", relation: "builds on" }],
+  ),
+  "conditional-requests": guide(
+    "How do conditional headers eliminate redundant payload downloads when a cache expires?",
+    "If-None-Match sends a content hash (ETag) to the origin, which responds with a 304 header if the data is unchanged.",
+    "A 304 response carries zero body bytes, saving >80% of total transfer bandwidth and sparing origin database load.",
+    "Explore the TLS Handshake to see how cryptographic key exchange protects connections from eavesdropping and tampering.",
+    [{ slug: "http-caching", relation: "builds on" }],
+  ),
 };
 
 export function getLearningGuide(slug: string): LearningGuide {

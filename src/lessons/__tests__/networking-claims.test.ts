@@ -4,6 +4,11 @@ import { dnsResolutionSim } from "@/lessons/web-requests/dns-resolution";
 import { connectionReuseSim } from "@/lessons/web-requests/connection-reuse";
 import { httpRequestResponseSim } from "@/lessons/web-requests/http-request-response";
 import { tcpHandshakeSim } from "@/lessons/web-requests/tcp-handshake";
+import { httpPipeliningHolSim } from "@/lessons/http-protocols/http-pipelining-hol";
+import { http2MultiplexingSim } from "@/lessons/http-protocols/http2-multiplexing";
+import { http3QuicSim } from "@/lessons/http-protocols/http3-quic";
+import { httpCachingSim } from "@/lessons/caching-and-security/http-caching";
+import { conditionalRequestsSim } from "@/lessons/caching-and-security/conditional-requests";
 import { describe, expect, it } from "vitest";
 
 /**
@@ -256,3 +261,189 @@ describe("connection-reuse · turning reuse off makes the lanes converge", () =>
     expect(r.state.metrics.opened ?? 0).toBeGreaterThan(5);
   });
 });
+
+describe("http-pipelining-hol · FIFO ordering traps completed fast responses", () => {
+  it("slow first request produces >700ms peak head-of-line buffering delay", () => {
+    const r = createRunner(httpPipeliningHolSim, {
+      seed: 42,
+      params: { pipelining: true, slowFirst: true, connections: 1 },
+    });
+    let peakHol = 0;
+    while (r.state.t < 4) {
+      r.tick();
+      peakHol = Math.max(peakHol, r.state.metrics.holDelayMs ?? 0);
+    }
+    // Page: "accumulating over 730ms of head-of-line delay"
+    expect(peakHol).toBeGreaterThan(700);
+    expect(peakHol).toBeLessThan(800);
+    expect(r.state.metrics.pageMs).toBeGreaterThan(1200);
+    expect(r.state.metrics.completed).toBe(4);
+  });
+
+  it("uniform processing completely eliminates head-of-line delay", () => {
+    const r = createRunner(httpPipeliningHolSim, {
+      seed: 42,
+      params: { pipelining: true, slowFirst: false, connections: 1 },
+    });
+    let peakHol = 0;
+    while (r.state.t < 4) {
+      r.tick();
+      peakHol = Math.max(peakHol, r.state.metrics.holDelayMs ?? 0);
+    }
+    // Page: "HOL delay drops to 0ms and page load finishes in 633ms"
+    expect(peakHol).toBe(0);
+    expect(r.state.metrics.pageMs).toBe(633);
+    expect(r.state.metrics.completed).toBe(4);
+  });
+});
+
+describe("http2-multiplexing · interleaved frames vs transport head-of-line blocking", () => {
+  it("fast stream completes early (733ms) without waiting for heavy stream (1200ms)", () => {
+    function getStream5Finish(multiplexing: boolean) {
+      const r = createRunner(http2MultiplexingSim, {
+        seed: 1,
+        params: { multiplexing, lossRate: 0 },
+      });
+      let finishMs = 0;
+      while (r.state.t < 3 && finishMs === 0) {
+        for (const p of r.state.packets) {
+          if (p.payload?.streamId === 5 && p.payload?.frameIndex === 2 && p.progress >= 0.99) {
+            finishMs = Math.round((r.state.t - 0.5) * 1000);
+          }
+        }
+        r.tick();
+      }
+      return finishMs;
+    }
+
+    const multiplexedS5 = getStream5Finish(true);
+    const sequentialS5 = getStream5Finish(false);
+    // Page: "Stream 5 completes in roughly 733ms"
+    expect(multiplexedS5).toBe(733);
+    // Page: "under sequential HTTP/1.1 ordering, Stream 5 is starved behind the image, delaying its arrival to 1200ms"
+    expect(sequentialS5).toBe(1200);
+    expect(multiplexedS5).toBeLessThan(sequentialS5);
+  });
+
+  it("packet loss triggers a 600ms TCP transport head-of-line freeze across all streams", () => {
+    const rClean = createRunner(http2MultiplexingSim, {
+      seed: 1,
+      params: { multiplexing: true, lossRate: 0 },
+    });
+    while (rClean.state.t < 3) rClean.tick();
+    expect(rClean.state.metrics.tcpStallMs).toBe(0);
+    expect(rClean.state.metrics.pageMs).toBe(1167);
+
+    const rLoss = createRunner(http2MultiplexingSim, {
+      seed: 1,
+      params: { multiplexing: true, lossRate: 15 },
+    });
+    while (rLoss.state.t < 3) rLoss.tick();
+    // Page: "producing a 600ms transport freeze"
+    expect(rLoss.state.metrics.tcpStallMs).toBe(600);
+    expect(rLoss.state.metrics.pageMs).toBeGreaterThan(1700);
+  });
+});
+
+describe("http3-quic · UDP streams eliminate transport head-of-line blocking", () => {
+  it("QUIC keeps transport HOL delay at strictly 0ms under packet loss", () => {
+    const rQuic = createRunner(http3QuicSim, {
+      seed: 1,
+      params: { protocol: "http3", lossRate: 15 },
+    });
+    while (rQuic.state.t < 4) rQuic.tick();
+    // Page: "under HTTP/3, it stays pinned at exactly 0ms"
+    expect(rQuic.state.metrics.holStallMs).toBe(0);
+    // Page: "watch Stream 2 (the script) complete in roughly 833ms despite packet drops"
+    expect(rQuic.state.metrics.stream2Ms).toBe(833);
+  });
+
+  it("HTTP/2 under the same loss stalls all streams with a 600ms HOL delay", () => {
+    const rH2 = createRunner(http3QuicSim, {
+      seed: 1,
+      params: { protocol: "http2", lossRate: 15 },
+    });
+    while (rH2.state.t < 4) rH2.tick();
+    // Page: "watch a single lost packet freeze all streams, introducing a 600ms HOL stall and delaying Stream 2 to 1100ms or more"
+    expect(rH2.state.metrics.holStallMs).toBe(600);
+    expect(rH2.state.metrics.stream2Ms).toBeGreaterThanOrEqual(1100);
+  });
+});
+
+describe("http-caching · max-age and stale-while-revalidate eliminate origin round trips", () => {
+  it("max-age raises browser hit rate to 63% and cuts latency from 700ms to 256ms", () => {
+    const rNoCache = createRunner(httpCachingSim, {
+      seed: 42,
+      params: { strategy: "no-cache", ttl: 4 },
+    });
+    while (rNoCache.state.t < 15) rNoCache.tick();
+    // Page: "collapsing hit rate to 0% and inflating average latency back to 700ms"
+    expect(rNoCache.state.metrics.hitRate).toBe(0);
+    expect(rNoCache.state.metrics.avgLatencyMs).toBe(700);
+    expect(rNoCache.state.metrics.originHits).toBe(7);
+
+    const rMaxAge = createRunner(httpCachingSim, {
+      seed: 42,
+      params: { strategy: "max-age", ttl: 4 },
+    });
+    while (rMaxAge.state.t < 15) rMaxAge.tick();
+    // Page: "browser cache hit rate climbs to 63%, cutting average response latency from 700ms down to 256ms"
+    expect(rMaxAge.state.metrics.hitRate).toBe(63);
+    expect(rMaxAge.state.metrics.avgLatencyMs).toBe(256);
+    expect(rMaxAge.state.metrics.originHits).toBe(3);
+  });
+
+  it("stale-while-revalidate serves stale content instantly with 88% hit rate and <60ms latency", () => {
+    const rSWR = createRunner(httpCachingSim, {
+      seed: 42,
+      params: { strategy: "stale-while-revalidate", ttl: 4 },
+    });
+    while (rSWR.state.t < 15) rSWR.tick();
+    // Page: "user-perceived hit rate jump to 88% and average latency drop below 60ms"
+    expect(rSWR.state.metrics.hitRate).toBe(88);
+    expect(rSWR.state.metrics.avgLatencyMs).toBe(58);
+  });
+});
+
+describe("conditional-requests · ETags and 304 Not Modified eliminate payload re-downloads", () => {
+  it("If-None-Match cuts bandwidth from 300 KB to 51.5 KB with 83% 304 rate", () => {
+    const rNaive = createRunner(conditionalRequestsSim, {
+      seed: 42,
+      params: { useEtags: false, resourceModified: false },
+    });
+    while (rNaive.state.t < 11) rNaive.tick();
+    // Page: "watch unconditional GETs re-download the 50 KB body every time, transferring 300 KB with 0% bandwidth savings"
+    expect(rNaive.state.metrics.bytesTransferredKb).toBe(300);
+    expect(rNaive.state.metrics.status304Ratio).toBe(0);
+    expect(rNaive.state.metrics.bandwidthSavedPct).toBe(0);
+
+    const rEtag = createRunner(conditionalRequestsSim, {
+      seed: 42,
+      params: { useEtags: true, resourceModified: false },
+    });
+    while (rEtag.state.t < 11) rEtag.tick();
+    // Page: "total data transferred is only 51.5 KB (saving 83% of bandwidth) with an 83% 304 response rate"
+    expect(rEtag.state.metrics.bytesTransferredKb).toBe(51.5);
+    expect(rEtag.state.metrics.status304Ratio).toBe(83);
+    expect(rEtag.state.metrics.bandwidthSavedPct).toBe(83);
+  });
+
+  it("modifying origin resource forces 200 OK transfer to update client cache", () => {
+    const r = createRunner(conditionalRequestsSim, {
+      seed: 42,
+      params: { useEtags: true, resourceModified: false },
+    });
+    while (r.state.t < 3) r.tick();
+    expect(r.state.metrics.bytesTransferredKb).toBe(50.3);
+
+    // Origin changes content
+    r.setParam("resourceModified", true);
+    while (r.state.t < 6) r.tick();
+    // Page: "watch the ETag hash mismatch trigger a fresh 200 OK transfer to sync the new version"
+    expect(r.state.metrics.bytesTransferredKb).toBe(100.3);
+  });
+});
+
+
+
+

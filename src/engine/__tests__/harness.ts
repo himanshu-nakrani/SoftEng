@@ -46,6 +46,11 @@ import { clientServerSim } from "@/lessons/scaling/client-server";
 import { loadBalancingSim } from "@/lessons/scaling/load-balancing";
 import { realtimeDeliverySim } from "@/lessons/scaling/realtime-delivery";
 import { scalingStrategiesSim } from "@/lessons/scaling/scaling-strategies";
+import { conditionalRequestsSim } from "@/lessons/caching-and-security/conditional-requests";
+import { httpCachingSim } from "@/lessons/caching-and-security/http-caching";
+import { http3QuicSim } from "@/lessons/http-protocols/http3-quic";
+import { http2MultiplexingSim } from "@/lessons/http-protocols/http2-multiplexing";
+import { httpPipeliningHolSim } from "@/lessons/http-protocols/http-pipelining-hol";
 import { connectionReuseSim } from "@/lessons/web-requests/connection-reuse";
 import { httpRequestResponseSim } from "@/lessons/web-requests/http-request-response";
 import { tcpHandshakeSim } from "@/lessons/web-requests/tcp-handshake";
@@ -124,6 +129,11 @@ const SIM_BY_KEY: Record<string, LessonSim<unknown>> = {
   "web-requests/tcp-handshake": widen(tcpHandshakeSim),
   "web-requests/http-request-response": widen(httpRequestResponseSim),
   "web-requests/connection-reuse": widen(connectionReuseSim),
+  "http-protocols/http-pipelining-hol": widen(httpPipeliningHolSim),
+  "http-protocols/http2-multiplexing": widen(http2MultiplexingSim),
+  "http-protocols/http3-quic": widen(http3QuicSim),
+  "caching-and-security/http-caching": widen(httpCachingSim),
+  "caching-and-security/conditional-requests": widen(conditionalRequestsSim),
 };
 
 export interface LessonUnderTest {

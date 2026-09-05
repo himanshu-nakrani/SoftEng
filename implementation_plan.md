@@ -8,15 +8,16 @@ running, deterministic simulation.
 and invariants; this document is only *what is done, what is left, and what has
 already been decided*. Open debt lives in [`debt.md`](./debt.md).
 
-**State verified 2026-09-05**, by running the gate rather than recalling:
-82 lessons · 278 sections · **8 tracks** · 818 unit tests (26 files) · 47 quizzes ·
+**State verified 2026-09-06**, by running the gate rather than recalling:
+87 lessons · 293 sections · **8 tracks** · 863 unit tests (26 files) · 47 quizzes ·
 clean static export, 26 legacy redirect stubs. `npm run check` green.
 
-Track 08 (`engineering-practice`, 8 lessons across `on-call` and `resilience-engineering`)
-is now **complete**. Track 05 (`version-control`, 8 lessons) finished its core `history` module
-(5 lessons) with 3-way merge. Track 04 (`testing`, 8 lessons) added async race condition
-analysis to `flakiness` (3 lessons). Track 07 (`software-design`, 5 lessons) has a complete
-`refactoring` module.
+Track 06 (`networking`, 9 lessons across 3 modules) completed its `http-protocols` module
+(3 lessons: HTTP/1.1 Pipelining, HTTP/2 Multiplexing, QUIC & HTTP/3) and added 2 lessons to
+`caching-and-security` (HTTP Caching & Revalidation, Conditional Requests & ETags). Track 08
+(`engineering-practice`, 8 lessons across `on-call` and `resilience-engineering`) is complete.
+Track 05 (`version-control`, 8 lessons) finished its core `history` module. Track 04 (`testing`, 8 lessons)
+and Track 07 (`software-design`, 5 lessons) have complete first modules.
 
 **Every number in this document was re-checked against the repository on the date
 above.** If you change the curriculum, the honest way to update them is to run the
@@ -187,7 +188,7 @@ these numbers as the current display order.
 | 03 | Databases & Transactions (`databases`) | B | ~10 | **open — 9 shipped, 3 modules** |
 | 04 | Testing & Verification (`testing`) | D + C | ~8 | **open — 8 shipped, 2 modules** |
 | 05 | Version Control & Delivery (`version-control`) | E + A | ~8 | **open — 8 shipped, 2 modules** |
-| 06 | Networking & the Web (`networking`) | A + B | ~10 | **open — 4 shipped, 1 module** |
+| 06 | Networking & the Web (`networking`) | A + B | ~10 | **open — 9 shipped, 3 modules** |
 | 07 | Software Design & Architecture (`software-design`) | F on B | ~10 | **open — 5 shipped, 1 module** |
 | 08 | Engineering Practice (`engineering-practice`) | G on B | ~8 | **complete — 8 shipped, 2 modules** |
 | — | Security Engineering | A + B + D | ~12 | not started |
@@ -272,29 +273,19 @@ to extend to 9 lessons:
 
 Currently 8 lessons across TWO modules: `history` on the repo DAG (**5 shipped — module
 complete**: Merge vs Rebase, Fast-Forward, Cherry-Pick and Revert, Reset, Three-Way
-Merge & Conflicts) and `delivery` on the packet engine (3 lessons: Canary Releases,
-Blue-Green Deployment, Feature Flags). Core git graph curriculum is complete.
+#### Track 06 · Networking & the Web (~1 lesson remaining to ~10)
 
-#### Track 06 · Networking & the Web (~6 lessons remaining to ~10)
+Currently 9 lessons across THREE modules: `web-requests` (4 lessons: DNS Resolution,
+The TCP Handshake, HTTP Request & Response, Keep-Alive & Connection Reuse), `http-protocols`
+(**3 lessons — module complete**), and `caching-and-security` (2 lessons shipped).
 
-Currently 4 lessons in `web-requests` (DNS Resolution, The TCP Handshake, HTTP
-Request & Response, Keep-Alive & Connection Reuse). To reach ~10 lessons, add:
-
-- Module 2: `http-protocols` (3 lessons, Archetypes A + B):
-  - **HTTP/1.1 Pipelining & Head-of-Line Blocking**: FIFO ordering on a single TCP
-    stream. A slow dynamic response stalls subsequent fast static requests, forcing
-    browsers to open parallel connections.
-  - **HTTP/2 Multiplexing & Stream Priorities**: binary framing layer interleaving
-    concurrent streams over a single connection. Stream prioritization weights
-    bandwidth allocation, but packet loss reveals transport-level HOL blocking.
-  - **QUIC & HTTP/3: Independent UDP Streams**: eliminates transport HOL blocking
-    by decoupling streams onto UDP. Packet loss on stream 1 halts only stream 1;
-    streams 2 and 3 continue unimpeded. Measured across packet drop rates (0%–10%).
-- Module 3: `caching-and-security` (3 lessons, Archetype A):
-  - **HTTP Caching: Max-Age & Revalidation**: `Cache-Control` directives (`max-age`,
-    `s-maxage`, `stale-while-revalidate`). Client vs CDN vs origin server hit rates.
-  - **Conditional Requests & ETags**: `If-None-Match` and `If-Modified-Since`.
-    Compares full payload transfer (200 OK) against 304 Not Modified 0-byte transfer.
+- Module 2: `http-protocols` (**3 shipped — module complete**):
+  - **HTTP/1.1 Pipelining & Head-of-Line Blocking** (shipped — RFC 2616 FIFO response constraint traps fast static assets behind slow dynamic queries, causing >700ms HOL delay; uniform requests drop HOL delay to 0ms)
+  - **HTTP/2 Multiplexing & Stream Priorities** (shipped — binary framing interleaves streams over one TCP socket, letting fast API call finish in 733ms vs 1200ms sequential; packet loss causes 600ms TCP transport freeze across all streams)
+  - **QUIC & HTTP/3: Independent UDP Streams** (shipped — independent UDP stream delivery isolates packet loss to the affected stream alone, keeping transport HOL delay pinned at strictly 0ms)
+- Module 3: `caching-and-security` (2 shipped, 1 remaining):
+  - **HTTP Caching: Max-Age & Revalidation** (shipped — max-age serves from local memory with 0ms latency, raising hit rate to 63% and cutting latency from 700ms to 256ms; stale-while-revalidate serves stale content instantly with 88% hit rate and 58ms average latency)
+  - **Conditional Requests & ETags** (shipped — If-None-Match with 304 Not Modified header cuts bandwidth from 300 KB to 51.5 KB with 83% 304 rate, saving 83% of wire transfer)
   - **The TLS Handshake: 1-RTT to 0-RTT**: asymmetric key agreement (ECDHE),
     certificate validation, and session key derivation. Demonstrates 1-RTT full
     handshake vs 0-RTT session resumption with replay attack trade-offs.

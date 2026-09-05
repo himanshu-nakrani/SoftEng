@@ -1,0 +1,23 @@
+{
+  "lesson": "caching-and-security/conditional-requests",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "avgTransferMs": 301,
+        "bandwidthSavedPct": 93,
+        "bytesTransferredKb": 54.2,
+        "status304Ratio": 93
+      },
+      "packets": 0,
+      "nextPacketId": 31,
+      "nodes": {
+        "client": "healthy",
+        "server": "healthy"
+      }
+    }
+  ]
+}

@@ -1357,6 +1357,102 @@ export const curriculum: Curriculum = {
             },
           ],
         },
+        {
+          slug: "http-protocols",
+          title: "HTTP Protocols & Multiplexing",
+          description:
+            "From FIFO pipelining to interleaved binary framing and independent QUIC streams — eliminating head-of-line blocking.",
+          lessons: [
+            {
+              slug: "http-pipelining-hol",
+              moduleSlug: "http-protocols",
+              title: "HTTP/1.1 Pipelining & Head-of-Line Blocking",
+              tagline:
+                "Pipelining lets a browser send three requests without waiting, but RFC 2616 forces FIFO responses — so a single slow query traps every fast static asset behind it.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["connection-reuse"],
+              status: "available",
+              sections: [
+                { id: "pipelining-promise", title: "Pipelining without waiting", kind: "concept" },
+                { id: "fifo-head-of-line", title: "The FIFO ordering trap", kind: "interactive" },
+                { id: "middlebox-reality", title: "Why browsers disabled it", kind: "concept" },
+              ],
+            },
+                      {
+              slug: "http2-multiplexing",
+              moduleSlug: "http-protocols",
+              title: "HTTP/2 Multiplexing & Framing",
+              tagline:
+                "Binary framing splits requests into interleaved frames over one TCP socket to kill application HOL blocking — until a single dropped packet stalls every stream at the transport layer.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["http-pipelining-hol"],
+              status: "available",
+              sections: [
+                { id: "binary-framing", title: "Splitting streams into frames", kind: "concept" },
+                { id: "interleaved-multiplexing", title: "Multiplexed frames over one connection", kind: "interactive" },
+                { id: "tcp-hol-blocking", title: "Transport head-of-line blocking", kind: "concept" },
+              ],
+            },
+                      {
+              slug: "http3-quic",
+              moduleSlug: "http-protocols",
+              title: "QUIC & HTTP/3: Independent UDP Streams",
+              tagline:
+                "Moving transport to UDP gives each stream its own independent delivery sequence — a dropped packet on stream 1 freezes stream 1 alone while the rest of the page loads at full speed.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["http2-multiplexing"],
+              status: "available",
+              sections: [
+                { id: "udp-transport", title: "Decoupling streams from TCP", kind: "concept" },
+                { id: "independent-delivery", title: "Packet loss across streams", kind: "interactive" },
+                { id: "zero-rtt-resumption", title: "Connection migration and 0-RTT", kind: "concept" },
+              ],
+            },
+          ],
+        },
+        {
+          slug: "caching-and-security",
+          title: "Caching & Security",
+          description:
+            "Freshness, revalidation, and encrypted handshakes — saving round trips and bytes with HTTP caches and TLS 1.3.",
+          lessons: [
+            {
+              slug: "http-caching",
+              moduleSlug: "caching-and-security",
+              title: "HTTP Caching & Revalidation",
+              tagline:
+                "The fastest request is the one that never leaves the machine — max-age serves instantly from memory, while stale-while-revalidate hides origin round trips behind background refreshes.",
+              difficulty: "foundational",
+              estimatedMinutes: 12,
+              prerequisites: ["connection-reuse"],
+              status: "available",
+              sections: [
+                { id: "cache-layers", title: "Browser CDN and origin", kind: "concept" },
+                { id: "cache-control-directives", title: "Tuning max-age and revalidation", kind: "interactive" },
+                { id: "stale-while-revalidate", title: "Background refreshes", kind: "concept" },
+              ],
+            },
+                      {
+              slug: "conditional-requests",
+              moduleSlug: "caching-and-security",
+              title: "Conditional Requests & ETags",
+              tagline:
+                "When a cache goes stale, re-downloading the entire payload is pure waste — If-None-Match asks the origin if anything changed, replacing megabytes of data with a 304 header.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["http-caching"],
+              status: "available",
+              sections: [
+                { id: "validators", title: "ETags and Last-Modified", kind: "concept" },
+                { id: "not-modified-exchange", title: "The 304 response", kind: "interactive" },
+                { id: "bandwidth-savings", title: "Eliminating payload transfers", kind: "concept" },
+              ],
+            },
+          ],
+        },
       ],
     },
     {

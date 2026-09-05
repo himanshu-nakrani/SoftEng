@@ -1,0 +1,23 @@
+{
+  "lesson": "http-protocols/http3-quic",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "holStallMs": 0,
+        "packetsDelivered": 42,
+        "pageMs": 1168,
+        "stream2Ms": 967
+      },
+      "packets": 0,
+      "nextPacketId": 43,
+      "nodes": {
+        "client": "healthy",
+        "server": "healthy"
+      }
+    }
+  ]
+}

@@ -58,11 +58,13 @@ An interactive system-design learning site. Not articles — every concept is a 
 
 ### Track 06 — Networking & the Web
 
-4 lessons across 1 module, about 48 minutes end to end.
+9 lessons across 3 modules, about 1h 48m end to end.
 
 | Module | Lessons |
 |---|---|
 | **Making a Web Request** | DNS Resolution · The TCP Handshake · HTTP Request & Response · Keep-Alive & Connection Reuse |
+| **HTTP Protocols & Multiplexing** | HTTP/1.1 Pipelining & Head-of-Line Blocking · HTTP/2 Multiplexing & Framing · QUIC & HTTP/3: Independent UDP Streams |
+| **Caching & Security** | HTTP Caching & Revalidation · Conditional Requests & ETags |
 
 ### Track 07 — Software Design & Architecture
 
