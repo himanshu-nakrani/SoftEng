@@ -1177,6 +1177,23 @@ export const curriculum: Curriculum = {
                 { id: "reset-vs-revert", title: "Reset versus revert", kind: "concept" },
               ],
             },
+            {
+              slug: "three-way-merge",
+              moduleSlug: "history",
+              title: "Three-Way Merge & Conflicts",
+              tagline:
+                "Comparing two branch tips cannot tell who changed what. Git finds their common ancestor to integrate non-overlapping work — until changes collide and a human must choose.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["merge-vs-rebase"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "common-ancestor", title: "The merge base", kind: "concept" },
+                { id: "three-way-join", title: "Three-way merge", kind: "interactive" },
+                { id: "conflict-resolution", title: "When changes collide", kind: "concept" },
+              ],
+            },
           ],
         },
         {
