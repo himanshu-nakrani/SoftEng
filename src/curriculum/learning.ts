@@ -804,11 +804,14 @@ export const learningGuides: Record<string, LearningGuide> = {
     [{ slug: "async-race", relation: "builds on" }],
   ),
   "coupling-metrics": guide(
-    "TODO: the question this lesson answers?",
-    "TODO: what changed, in one sentence.",
-    "TODO: why it matters.",
-    "TODO: what to try next.",
-    [{ slug: "replace-conditional", relation: "builds on" }],
+    "How do architectural refactorings quantitatively move afferent and efferent coupling across package boundaries?",
+    "Extracting domain interfaces and injecting dependencies reduced billing's efferent coupling from 3 to 1 and db's afferent coupling from 3 to 2, shrinking total system coupling from 12 to 8.",
+    "High efferent coupling (Ce) makes a package fragile to upstream churn, while high afferent coupling (Ca) makes concrete infrastructure hazardous to modify without triggering cascading regressions.",
+    "Step through each refactoring phase to observe how inverting dependencies converts high-instability concrete imports into isolated, stable domain boundaries.",
+    [
+      { slug: "replace-conditional", relation: "builds on" },
+      { slug: "instability-abstractness", relation: "leads to" },
+    ],
   ),
   "instability-abstractness": guide(
     "TODO: the question this lesson answers?",

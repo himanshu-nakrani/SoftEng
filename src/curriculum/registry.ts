@@ -1607,7 +1607,7 @@ export const curriculum: Curriculum = {
               moduleSlug: "modularity-coupling",
               title: "Afferent & Efferent Coupling",
               tagline:
-                "TODO: one line that states the tension, not the topic.",
+                "Every outgoing import makes a package fragile to external churn, while every incoming import freezes its contract — decoupling converts brittle infrastructure links into stable domain boundaries.",
               difficulty: "intermediate",
               estimatedMinutes: 12,
               prerequisites: ["replace-conditional"],

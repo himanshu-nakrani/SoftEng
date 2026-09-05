@@ -1,7 +1,7 @@
 "use client";
 
 import { SectionAlgoFigure } from "@/components/lesson/SectionAlgoFigure";
-import { ThreadsView } from "@/engine/algo/views/ThreadsView";
+import { TableView } from "@/engine/algo/views/TableView";
 import { couplingMetricsAlgo } from "./coupling-metrics";
 
 /**
@@ -13,8 +13,8 @@ export function CouplingMetricsFigure() {
   return (
     <SectionAlgoFigure
       def={couplingMetricsAlgo}
-      view={ThreadsView}
-      description="TODO: what a reader should watch for, in one or two sentences. This is the figure's accessible description."
+      view={TableView}
+      description="A four-package system (api, billing, orders, db) undergoing modular refactoring. Watch billing's efferent coupling (Ce) fall from 3 to 1 as db is extracted behind a domain interface and dependencies are injected, while db's afferent coupling (Ca) drops from 3 to 2."
     />
   );
 }
