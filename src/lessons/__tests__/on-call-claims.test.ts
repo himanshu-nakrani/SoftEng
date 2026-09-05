@@ -11,6 +11,7 @@ import { circuitBreakerHysteresisAlgo } from "@/lessons/on-call/circuit-breaker-
 import { zeroDowntimeMigrationAlgo } from "@/lessons/on-call/zero-downtime-migration";
 import { splitBrainPartitionAlgo } from "@/lessons/resilience-engineering/split-brain-partition";
 import { memoryLeakTriageAlgo } from "@/lessons/resilience-engineering/memory-leak-triage";
+import { cascadingFailureAlgo } from "@/lessons/resilience-engineering/cascading-failure";
 
 /**
  * Track 11's prose states numbers MEASURED from real sub-runs — "correct in 54
@@ -237,5 +238,42 @@ describe("split-brain-partition — network partition handling in a 3-node clust
     expect(quorum).toBe(200);
     expect(both).toBe(0);
     expect(freeze).toBe(0);
+  });
+});
+
+describe("cascading-failure — cache failure under 10k QPS and thundering herd mitigation", () => {
+  it("direct DB passthrough exhausts connection pool and fails SLA in all 200 runs", () => {
+    const direct = optionById(cascadingFailureAlgo, "direct-db");
+    expect(direct.outcome.value).toBe(0);
+    expect(direct.outcome.outOf).toBe(200);
+    expect(direct.outcome.headline).toBe("db cpu (%) held 100 — held in 0/200 runs");
+  });
+
+  it("aggressive retries without backoff causes total collapse and fails SLA in all 200 runs", () => {
+    const retries = optionById(cascadingFailureAlgo, "aggressive-retries");
+    expect(retries.outcome.value).toBe(0);
+    expect(retries.outcome.outOf).toBe(200);
+    expect(retries.outcome.headline).toBe("db cpu (%) held 100 — held in 0/200 runs");
+  });
+
+  it("singleflight request coalescing keeps DB CPU under 40% and holds SLA in all 200 runs", () => {
+    const singleflight = optionById(cascadingFailureAlgo, "singleflight");
+    expect(singleflight.outcome.value).toBe(200);
+    expect(singleflight.outcome.outOf).toBe(200);
+    expect(singleflight.outcome.headline).toBe("db cpu (%) ranged 32 to 38 — held in 200/200 runs");
+  });
+
+  it("slider selects each stampede policy in order", () => {
+    expect(chosen(cascadingFailureAlgo, 0).option.id).toBe("direct-db");
+    expect(chosen(cascadingFailureAlgo, 1).option.id).toBe("aggressive-retries");
+    expect(chosen(cascadingFailureAlgo, 2).option.id).toBe("singleflight");
+  });
+
+  it("singleflight request coalescing strictly dominates direct passthrough and aggressive retries", () => {
+    const singleflight = optionById(cascadingFailureAlgo, "singleflight").outcome.value;
+    const direct = optionById(cascadingFailureAlgo, "direct-db").outcome.value;
+    const retries = optionById(cascadingFailureAlgo, "aggressive-retries").outcome.value;
+    expect(singleflight).toBeGreaterThan(direct);
+    expect(singleflight).toBeGreaterThan(retries);
   });
 });

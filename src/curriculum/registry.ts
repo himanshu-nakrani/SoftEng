@@ -1548,8 +1548,25 @@ export const curriculum: Curriculum = {
           slug: "resilience-engineering",
           title: "Resilience Engineering",
           description:
-            "Diagnosing and mitigating production failure modes — heap exhaustion, cascading failure, and distributed state partitions under load.",
+            "Hardening distributed systems against cascading failure, stampedes, and partition anomalies — where local protective actions must not amplify systemic collapse.",
           lessons: [
+            {
+              slug: "cascading-failure",
+              moduleSlug: "resilience-engineering",
+              title: "Cascading Failure and Thundering Herd",
+              tagline:
+                "When a cache node fails under 10k QPS, direct queries and blind retries crush the database; only singleflight coalescing collapses the thundering herd.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["the-mutex-call"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "cache-failure", title: "Cache node failure", kind: "concept" },
+                { id: "stampede-policy", title: "Handle the stampede", kind: "interactive" },
+                { id: "singleflight-protection", title: "Request coalescing", kind: "concept" },
+              ],
+            },
             {
               slug: "memory-leak-triage",
               moduleSlug: "resilience-engineering",

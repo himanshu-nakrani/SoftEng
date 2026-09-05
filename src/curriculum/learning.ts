@@ -710,10 +710,21 @@ export const learningGuides: Record<string, LearningGuide> = {
   ),
   "zero-downtime-migration": guide(
     "How do you migrate a live database schema without locking out writes or crashing reads?",
-"A direct ALTER TABLE locks the table and drops over 200 writes, premature reads crash on NULLs, but expand/contract completes cleanly in 200/200 runs.",
+    "A direct ALTER TABLE locks the table and drops over 200 writes, premature reads crash on NULLs, but expand/contract completes cleanly in 200/200 runs.",
     "High-throughput tables cannot tolerate exclusive table locks or out-of-order code releases; schema changes must be broken into backward-compatible phases.",
     "Slide between the monolithic rename, premature read release, and expand/contract to see how decoupling DB migrations from code deployments avoids downtime.",
     [{ slug: "the-mutex-call", relation: "builds on" }],
+  ),
+  "cascading-failure": guide(
+    "What happens when a cache node crashes under 10k QPS, and how do you stop the primary database from collapsing?",
+    "Direct DB queries and unbacked retries exhaust connection pools and trigger total failure in 0/200 runs; singleflight coalesces duplicate key queries so DB CPU stays < 40% across all 200/200 runs.",
+    "When caches fail under peak load, the database cannot handle raw traffic; resilience requires collapsing redundant concurrent requests before they reach the data store.",
+    "Move the slider to compare direct database passthrough, aggressive retries, and singleflight request coalescing to see how query coalescing preserves availability.",
+    [
+      { slug: "the-mutex-call", relation: "builds on" },
+      { slug: "caching", relation: "connects to" },
+      { slug: "circuit-breaker-hysteresis", relation: "connects to" },
+    ],
   ),
   "memory-leak-triage": guide(
     "How do you triage a severe memory leak without dropping live traffic or destroying diagnostic data?",
