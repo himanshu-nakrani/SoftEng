@@ -1527,6 +1527,31 @@ export const curriculum: Curriculum = {
             },
           ],
         },
+        {
+          slug: "resilience-engineering",
+          title: "Resilience Engineering",
+          description:
+            "Architecting distributed systems to tolerate failure modes: partitions, cascading load, and resource exhaustion.",
+          lessons: [
+            {
+              slug: "split-brain-partition",
+              moduleSlug: "resilience-engineering",
+              title: "Split-Brain and Network Partitions",
+              tagline:
+                "Allowing isolated nodes to accept writes causes catastrophic data loss upon healing, while freezing the cluster destroys availability; only majority quorum with fencing commits safely.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["the-mutex-call"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "partition-split", title: "The network partition", kind: "concept" },
+                { id: "quorum-choice", title: "Choose partition behavior", kind: "interactive" },
+                { id: "fencing-tokens", title: "Majority quorum and fencing", kind: "concept" },
+              ],
+            },
+          ],
+        },
       ],
     },
   ],

@@ -74,11 +74,12 @@ An interactive system-design learning site. Not articles — every concept is a 
 
 ### Track 08 — Engineering Practice
 
-5 lessons across 1 module, about 1h 0m end to end.
+6 lessons across 2 modules, about 1h 12m end to end.
 
 | Module | Lessons |
 |---|---|
 | **On-Call Decisions** | The Mutex Call · Retry or Back Off · Thread Pool vs Bounded Queue · Circuit Breaker Hysteresis · Zero-Downtime Schema Migration |
+| **Resilience Engineering** | Split-Brain and Network Partitions |
 
 <!-- CURRICULUM:END -->
 

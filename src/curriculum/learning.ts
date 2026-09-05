@@ -715,6 +715,13 @@ export const learningGuides: Record<string, LearningGuide> = {
     "Slide between the monolithic rename, premature read release, and expand/contract to see how decoupling DB migrations from code deployments avoids downtime.",
     [{ slug: "the-mutex-call", relation: "builds on" }],
   ),
+  "split-brain-partition": guide(
+    "How should a distributed database handle writes when a network partition cuts off a minority node?",
+    "Accepting writes on both sides loses 40 to 60 updates upon healing (0/200 safe) and freezing halts write traffic (0/200 meet SLA), while majority quorum with fencing commits safely in all 200 runs.",
+    "In an asynchronous network, an isolated node cannot distinguish network lag from peer crashes; without majority quorum and fencing tokens, concurrent split-brain writes permanently destroy data.",
+    "Slide between uncoordinated dual writes, global write freezing, and majority quorum with fencing to observe how consensus and fencing tokens guarantee zero write loss.",
+    [{ slug: "the-mutex-call", relation: "builds on" }],
+  ),
 };
 
 export function getLearningGuide(slug: string): LearningGuide {

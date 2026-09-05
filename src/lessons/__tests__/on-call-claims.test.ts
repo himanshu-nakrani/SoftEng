@@ -9,6 +9,7 @@ import { retryOrBackOffAlgo } from "@/lessons/on-call/retry-or-back-off";
 import { threadPoolSizingAlgo } from "@/lessons/on-call/thread-pool-sizing";
 import { circuitBreakerHysteresisAlgo } from "@/lessons/on-call/circuit-breaker-hysteresis";
 import { zeroDowntimeMigrationAlgo } from "@/lessons/on-call/zero-downtime-migration";
+import { splitBrainPartitionAlgo } from "@/lessons/resilience-engineering/split-brain-partition";
 
 /**
  * Track 11's prose states numbers MEASURED from real sub-runs — "correct in 54
@@ -168,5 +169,43 @@ describe("zero-downtime-migration — schema migration under continuous traffic"
     expect(chosen(zeroDowntimeMigrationAlgo, 0).option.id).toBe("alter-table");
     expect(chosen(zeroDowntimeMigrationAlgo, 1).option.id).toBe("premature-read");
     expect(chosen(zeroDowntimeMigrationAlgo, 2).option.id).toBe("expand-contract");
+  });
+});
+
+describe("split-brain-partition — network partition handling in a 3-node cluster", () => {
+  it("allowing both sides to write causes catastrophic data loss in all 200 runs", () => {
+    const both = optionById(splitBrainPartitionAlgo, "both-accept");
+    expect(both.outcome.value).toBe(0);
+    expect(both.outcome.outOf).toBe(200);
+    expect(both.outcome.headline).toBe("lost writes ranged 40 to 60 — held in 0/200 runs");
+  });
+
+  it("freezing all writes drops availability to 0% and fails SLA across all 200 runs", () => {
+    const freeze = optionById(splitBrainPartitionAlgo, "freeze-writes");
+    expect(freeze.outcome.value).toBe(0);
+    expect(freeze.outcome.outOf).toBe(200);
+    expect(freeze.outcome.headline).toBe("write availability (%) held 0 — held in 0/200 runs");
+  });
+
+  it("majority quorum with fencing commits safely with 0 lost writes in all 200 runs", () => {
+    const quorum = optionById(splitBrainPartitionAlgo, "majority-quorum");
+    expect(quorum.outcome.value).toBe(200);
+    expect(quorum.outcome.outOf).toBe(200);
+    expect(quorum.outcome.headline).toBe("lost writes held 0 — held in 200/200 runs");
+  });
+
+  it("slider selects the three partition policies in order", () => {
+    expect(chosen(splitBrainPartitionAlgo, 0).option.id).toBe("both-accept");
+    expect(chosen(splitBrainPartitionAlgo, 1).option.id).toBe("freeze-writes");
+    expect(chosen(splitBrainPartitionAlgo, 2).option.id).toBe("majority-quorum");
+  });
+
+  it("majority quorum strictly dominates uncoordinated writes and cluster freeze", () => {
+    const quorum = optionById(splitBrainPartitionAlgo, "majority-quorum").outcome.value;
+    const both = optionById(splitBrainPartitionAlgo, "both-accept").outcome.value;
+    const freeze = optionById(splitBrainPartitionAlgo, "freeze-writes").outcome.value;
+    expect(quorum).toBe(200);
+    expect(both).toBe(0);
+    expect(freeze).toBe(0);
   });
 });
