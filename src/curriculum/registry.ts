@@ -1440,6 +1440,23 @@ export const curriculum: Curriculum = {
                 { id: "what-diverged", title: "What diverged", kind: "concept" },
               ],
             },
+                      {
+              slug: "circuit-breaker-hysteresis",
+              moduleSlug: "on-call",
+              title: "Circuit Breaker Hysteresis",
+              tagline:
+                "Reopen too quickly and a fragile service collapses again; wait too long and healthy capacity sits idle.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["the-mutex-call"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "dependency-flapping", title: "The flapping dependency", kind: "concept" },
+                { id: "probe-policy", title: "Choose recovery probing", kind: "interactive" },
+                { id: "hysteresis", title: "Damped recovery", kind: "concept" },
+              ],
+            },
           ],
         },
       ],

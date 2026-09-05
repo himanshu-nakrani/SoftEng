@@ -680,6 +680,13 @@ export const learningGuides: Record<string, LearningGuide> = {
     "Compare how the state verification suite stays green across three refactorings while catching all three calculation bugs.",
     [{ slug: "assertion-free-tests", relation: "builds on" }],
   ),
+  "circuit-breaker-hysteresis": guide(
+    "How should a circuit breaker reopen when a failing dependency starts to recover?",
+    "Immediate reopening crashes fragile dependencies in 0/200 runs and fixed cooldowns waste capacity in 100/200, while rate-ramped probing recovers cleanly in all 200 runs.",
+    "Recovering dependencies cannot absorb sudden thundering herds; asymmetric hysteresis damping allows caches and connection pools to warm up safely under controlled probe traffic.",
+    "Slide between immediate reopening, fixed cooldown, and half-open probing to observe how rate damping eliminates both flapping loops and artificial downtime.",
+    [{ slug: "the-mutex-call", relation: "builds on" }],
+  ),
 };
 
 export function getLearningGuide(slug: string): LearningGuide {
