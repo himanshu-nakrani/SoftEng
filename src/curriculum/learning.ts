@@ -680,6 +680,13 @@ export const learningGuides: Record<string, LearningGuide> = {
     "Compare how the state verification suite stays green across three refactorings while catching all three calculation bugs.",
     [{ slug: "assertion-free-tests", relation: "builds on" }],
   ),
+  "zero-downtime-migration": guide(
+    "How do you migrate a live database schema without locking out writes or crashing reads?",
+    "A direct ALTER TABLE locks the table and drops over 200 writes, premature reads crash on NULLs, but expand/contract completes cleanly in 200/200 runs.",
+    "High-throughput tables cannot tolerate exclusive table locks or out-of-order code releases; schema changes must be broken into backward-compatible phases.",
+    "Slide between the monolithic rename, premature read release, and expand/contract to see how decoupling DB migrations from code deployments avoids downtime.",
+    [{ slug: "the-mutex-call", relation: "builds on" }],
+  ),
 };
 
 export function getLearningGuide(slug: string): LearningGuide {

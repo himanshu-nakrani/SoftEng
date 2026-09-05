@@ -13,6 +13,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    pool: "forks",
     include: ["src/**/__tests__/**/*.test.ts"],
     /**
      * The per-lesson invariant tests drive thousands of sim ticks; the slowest

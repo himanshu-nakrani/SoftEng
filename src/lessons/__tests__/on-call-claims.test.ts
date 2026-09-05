@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 
 import { theMutexCallAlgo } from "@/lessons/on-call/the-mutex-call";
 import { retryOrBackOffAlgo } from "@/lessons/on-call/retry-or-back-off";
+import { zeroDowntimeMigrationAlgo } from "@/lessons/on-call/zero-downtime-migration";
 
 /**
  * Track 11's prose states numbers MEASURED from real sub-runs — "correct in 54
@@ -64,5 +65,34 @@ describe("retry-or-back-off — lock ordering is a measured distribution", () =>
     expect(optionById(retryOrBackOffAlgo, "same").outcome.value).toBeGreaterThan(
       optionById(retryOrBackOffAlgo, "opposite").outcome.value,
     );
+  });
+});
+
+describe("zero-downtime-migration — schema migration under continuous traffic", () => {
+  it("a single ALTER TABLE rename causes exclusive locks and drops writes in all 200 runs", () => {
+    const alter = optionById(zeroDowntimeMigrationAlgo, "alter-table");
+    expect(alter.outcome.value).toBe(0);
+    expect(alter.outcome.outOf).toBe(200);
+    expect(alter.outcome.headline).toBe("dropped writes ranged 200 to 300 — held in 0/200 runs");
+  });
+
+  it("prematurely reading new columns fails reads across all 200 runs", () => {
+    const premature = optionById(zeroDowntimeMigrationAlgo, "premature-read");
+    expect(premature.outcome.value).toBe(0);
+    expect(premature.outcome.outOf).toBe(200);
+    expect(premature.outcome.headline).toBe("unmigrated null reads ranged 200 to 300 — held in 0/200 runs");
+  });
+
+  it("the expand/contract pattern completes cleanly with zero dropped writes in all 200 runs", () => {
+    const expand = optionById(zeroDowntimeMigrationAlgo, "expand-contract");
+    expect(expand.outcome.value).toBe(200);
+    expect(expand.outcome.outOf).toBe(200);
+    expect(expand.outcome.headline).toBe("dropped writes held 0 — held in 200/200 runs");
+  });
+
+  it("the slider selects each migration strategy and mutates the chosen outcome", () => {
+    expect(chosen(zeroDowntimeMigrationAlgo, 0).option.id).toBe("alter-table");
+    expect(chosen(zeroDowntimeMigrationAlgo, 1).option.id).toBe("premature-read");
+    expect(chosen(zeroDowntimeMigrationAlgo, 2).option.id).toBe("expand-contract");
   });
 });

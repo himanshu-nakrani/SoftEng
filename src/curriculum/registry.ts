@@ -1440,6 +1440,23 @@ export const curriculum: Curriculum = {
                 { id: "what-diverged", title: "What diverged", kind: "concept" },
               ],
             },
+                      {
+              slug: "zero-downtime-migration",
+              moduleSlug: "on-call",
+              title: "Zero-Downtime Schema Migration",
+              tagline:
+                "A single ALTER TABLE drops hundreds of live writes behind an exclusive lock — unless you expand, dual-write, and contract.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["the-mutex-call"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "live-database", title: "Migrating under 1000 writes per sec", kind: "concept" },
+                { id: "migration-sequence", title: "Pick the step sequence", kind: "interactive" },
+                { id: "expand-contract", title: "The expand contract pattern", kind: "concept" },
+              ],
+            },
           ],
         },
       ],
