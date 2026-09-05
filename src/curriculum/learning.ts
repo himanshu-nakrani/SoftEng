@@ -814,10 +814,10 @@ export const learningGuides: Record<string, LearningGuide> = {
     ],
   ),
   "instability-abstractness": guide(
-    "TODO: the question this lesson answers?",
-    "TODO: what changed, in one sentence.",
-    "TODO: why it matters.",
-    "TODO: what to try next.",
+    "How do stability and abstractness balance to prevent rigid dependencies in core packages?",
+    "Refactoring a concrete core package with abstract interfaces raised abstractness from A=0 to A=0.5, cutting distance from the Main Sequence D from 1.0 down to 0.5.",
+    "Maximally stable packages with many dependents must be abstract so new behaviors can be plugged in without modifying brittle production code.",
+    "Explore Cyclic Dependencies & ADP to discover how circular dependencies shatter package release stability and how to invert them.",
     [{ slug: "coupling-metrics", relation: "builds on" }],
   ),
   "cyclic-dependencies": guide(

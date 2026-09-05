@@ -1,7 +1,7 @@
 "use client";
 
 import { SectionAlgoFigure } from "@/components/lesson/SectionAlgoFigure";
-import { ThreadsView } from "@/engine/algo/views/ThreadsView";
+import { TableView } from "@/engine/algo/views/TableView";
 import { instabilityAbstractnessAlgo } from "./instability-abstractness";
 
 /**
@@ -13,8 +13,8 @@ export function InstabilityAbstractnessFigure() {
   return (
     <SectionAlgoFigure
       def={instabilityAbstractnessAlgo}
-      view={ThreadsView}
-      description="TODO: what a reader should watch for, in one or two sentences. This is the figure's accessible description."
+      view={TableView}
+      description="Package metrics table showing Afferent Coupling (Ca), Efferent Coupling (Ce), Instability (I), Abstractness (A), and Distance from the Main Sequence (D) as the core package is refactored with abstract interfaces."
     />
   );
 }

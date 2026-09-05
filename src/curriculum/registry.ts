@@ -1624,7 +1624,7 @@ export const curriculum: Curriculum = {
               moduleSlug: "modularity-coupling",
               title: "Instability & Abstractness",
               tagline:
-                "TODO: one line that states the tension, not the topic.",
+                "A package everyone depends on cannot easily change; unless it is abstract, every new requirement brings pain.",
               difficulty: "advanced",
               estimatedMinutes: 12,
               prerequisites: ["coupling-metrics"],
