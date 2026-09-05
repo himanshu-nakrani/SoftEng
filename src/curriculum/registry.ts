@@ -1406,6 +1406,23 @@ export const curriculum: Curriculum = {
                 { id: "cohesion-metrics", title: "Lack of cohesion", kind: "concept" },
               ],
             },
+            {
+              slug: "replace-conditional",
+              moduleSlug: "refactoring",
+              title: "Replace Conditional with Polymorphism",
+              tagline:
+                "Every branch on a type code is a future edit waiting to happen — polymorphic dispatch trades one centralized hotspot for distributed, single-path collaborators.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["extract-class"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "switch-chains", title: "Cascading conditionals", kind: "concept" },
+                { id: "polymorphic-dispatch", title: "Polymorphic dispatch", kind: "interactive" },
+                { id: "complexity-distribution", title: "Distributing complexity", kind: "concept" },
+              ],
+            },
           ],
         },
       ],

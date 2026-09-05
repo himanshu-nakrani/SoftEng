@@ -195,7 +195,27 @@ export type Transform =
       end: number;
       into: string;
     }
-  | { kind: "rename"; from: string; to: string };
+  | { kind: "rename"; from: string; to: string }
+  | {
+      kind: "polymorph";
+      /** The dispatcher function being refactored. */
+      from: string;
+      /** Name of the polymorphic handler / subclass method. */
+      handler: string;
+      /** The handler's straight-line body (cc = 1). */
+      body: AstNode[];
+      /** The updated body of the dispatcher after shedding this conditional branch. */
+      updatedDispatcherBody: AstNode[];
+      label?: string;
+      note?: string;
+    }
+  | {
+      kind: "add-strategy";
+      name: string;
+      body: AstNode[];
+      label?: string;
+      note?: string;
+    };
 
 export interface RefactorScript {
   module: RefactorModule;
@@ -306,6 +326,8 @@ export const REFACTOR_COUNTERS = {
   transforms: "transforms",
   /** Functions created by extraction. */
   extracted: "extracted",
+  /** Polymorphic handlers created. */
+  polymorphicHandlers: "polymorphicHandlers",
 } as const;
 
 /* ------------------------------------------------------------------ *
@@ -427,13 +449,51 @@ export function runRefactor(script: RefactorScript): AlgoStep<RefactorState>[] {
       activeFn = step.caller;
       transformLabel = "Inline Function";
       note = `Inline ${step.callee} into ${step.caller}: one call becomes the body, ${step.callee} disappears`;
-    } else {
+    } else if (step.kind === "rename") {
       const result = applyRename(working, step);
       working = result.module;
       changed = result.changed;
       activeFn = step.to;
       transformLabel = "Rename";
       note = `Rename ${step.from} to ${step.to}: every call site updated`;
+    } else if (step.kind === "polymorph") {
+      const srcIndex = working.fns.findIndex((f) => f.name === step.from);
+      if (srcIndex !== -1) {
+        working.fns[srcIndex] = {
+          name: step.from,
+          body: cloneNodes(step.updatedDispatcherBody),
+        };
+      }
+      working.fns.push({
+        name: step.handler,
+        body: cloneNodes(step.body),
+      });
+      changed = new Set([step.from, step.handler]);
+      newFns.add(step.handler);
+      activeFn = step.handler;
+      transformLabel = step.label ?? "Polymorphic Handler";
+      rec.bump(REFACTOR_COUNTERS.extracted);
+      rec.bump(REFACTOR_COUNTERS.polymorphicHandlers);
+      note =
+        step.note ??
+        `Extract ${step.handler} strategy (cc 1): ${step.from} sheds branch, complexity falls`;
+      for (const node of step.body) touchedText.add(node.text);
+      for (const node of step.updatedDispatcherBody) touchedText.add(node.text);
+    } else if (step.kind === "add-strategy") {
+      working.fns.push({
+        name: step.name,
+        body: cloneNodes(step.body),
+      });
+      changed = new Set([step.name]);
+      newFns.add(step.name);
+      activeFn = step.name;
+      transformLabel = step.label ?? "Add Strategy (OCP)";
+      rec.bump(REFACTOR_COUNTERS.extracted);
+      rec.bump(REFACTOR_COUNTERS.polymorphicHandlers);
+      note =
+        step.note ??
+        `Add new strategy ${step.name} (cc 1): dispatcher and existing handlers untouched`;
+      for (const node of step.body) touchedText.add(node.text);
     }
 
     rec.bump(REFACTOR_COUNTERS.transforms);

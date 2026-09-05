@@ -687,6 +687,13 @@ export const learningGuides: Record<string, LearningGuide> = {
     "Step forward to extract ReceiptFormatter, then check how OrderProcessor's fan-out drops as its formatting callees migrate to the new class.",
     [{ slug: "extract-function", relation: "builds on" }],
   ),
+  "replace-conditional": guide(
+    "How do you eliminate cascading switch statements without duplicating branching logic?",
+    "Refactoring a type-dispatching switch chain into polymorphic strategy handlers reduces the dispatcher's cyclomatic complexity from 6 to 1, distributing single-responsibility methods of complexity 1.",
+    "Centralized conditionals require editing a single hotspot every time a new variant is introduced, violating the Open-Closed Principle; polymorphic dispatch turns type branching into extensible object collaboration.",
+    "Step through each strategy extraction, observe the dispatcher shedding decision points as its complexity falls to 1, and verify that adding a new type requires zero edits to existing code.",
+    [{ slug: "extract-class", relation: "builds on" }],
+  ),
 };
 
 export function getLearningGuide(slug: string): LearningGuide {

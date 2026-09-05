@@ -66,11 +66,11 @@ An interactive system-design learning site. Not articles — every concept is a 
 
 ### Track 07 — Software Design & Architecture
 
-4 lessons across 1 module, about 47 minutes end to end.
+5 lessons across 1 module, about 59 minutes end to end.
 
 | Module | Lessons |
 |---|---|
-| **Refactoring by the Numbers** | Extract Function · Inline & Rename · Duplicated Logic · Extract Class |
+| **Refactoring by the Numbers** | Extract Function · Inline & Rename · Duplicated Logic · Extract Class · Replace Conditional with Polymorphism |
 
 ### Track 08 — Engineering Practice
 
