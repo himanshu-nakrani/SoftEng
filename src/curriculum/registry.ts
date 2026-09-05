@@ -1474,6 +1474,23 @@ export const curriculum: Curriculum = {
                 { id: "what-diverged", title: "What diverged", kind: "concept" },
               ],
             },
+                      {
+              slug: "thread-pool-sizing",
+              moduleSlug: "on-call",
+              title: "Thread Pool vs Bounded Queue",
+              tagline:
+                "When downstream calls stall, expanding threads thrashes CPU and deep queues explode latency; only bounded pools with fast rejection preserve throughput.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["the-mutex-call"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "latency-spike", title: "Downstream latency spike", kind: "concept" },
+                { id: "queue-vs-threads", title: "Tune pool and queue", kind: "interactive" },
+                { id: "fail-fast", title: "Fast rejection preserves throughput", kind: "concept" },
+              ],
+            },
           ],
         },
       ],
