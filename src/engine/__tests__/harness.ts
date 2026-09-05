@@ -46,6 +46,7 @@ import { clientServerSim } from "@/lessons/scaling/client-server";
 import { loadBalancingSim } from "@/lessons/scaling/load-balancing";
 import { realtimeDeliverySim } from "@/lessons/scaling/realtime-delivery";
 import { scalingStrategiesSim } from "@/lessons/scaling/scaling-strategies";
+import { tlsHandshakeSim } from "@/lessons/caching-and-security/tls-handshake";
 import { conditionalRequestsSim } from "@/lessons/caching-and-security/conditional-requests";
 import { httpCachingSim } from "@/lessons/caching-and-security/http-caching";
 import { http3QuicSim } from "@/lessons/http-protocols/http3-quic";
@@ -134,6 +135,7 @@ const SIM_BY_KEY: Record<string, LessonSim<unknown>> = {
   "http-protocols/http3-quic": widen(http3QuicSim),
   "caching-and-security/http-caching": widen(httpCachingSim),
   "caching-and-security/conditional-requests": widen(conditionalRequestsSim),
+  "caching-and-security/tls-handshake": widen(tlsHandshakeSim),
 };
 
 export interface LessonUnderTest {

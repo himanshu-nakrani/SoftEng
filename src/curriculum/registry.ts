@@ -1107,6 +1107,31 @@ export const curriculum: Curriculum = {
             },
           ],
         },
+        {
+          slug: "property-testing",
+          title: "Property-Based Testing",
+          description:
+            "Generating inputs to break invariants, and shrinking counterexamples down to the minimal reproducible failure.",
+          lessons: [
+            {
+              slug: "property-shrinking",
+              moduleSlug: "property-testing",
+              title: "Property Shrinking",
+              tagline:
+                "TODO: one line that states the tension, not the topic.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["async-race"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "failing-inputs", title: "The random counterexample", kind: "concept" },
+                { id: "shrink-strategies", title: "Bisection and deletion shrinking", kind: "interactive" },
+                { id: "minimal-repro", title: "The minimal failing case", kind: "concept" },
+              ],
+            },
+          ],
+        },
       ],
     },
     {
@@ -1451,6 +1476,22 @@ export const curriculum: Curriculum = {
                 { id: "bandwidth-savings", title: "Eliminating payload transfers", kind: "concept" },
               ],
             },
+                      {
+              slug: "tls-handshake",
+              moduleSlug: "caching-and-security",
+              title: "The TLS Handshake: 1-RTT to 0-RTT",
+              tagline:
+                "TODO: one line that states the tension, not the topic.",
+              difficulty: "advanced",
+              estimatedMinutes: 12,
+              prerequisites: ["conditional-requests"],
+              status: "available",
+              sections: [
+                { id: "asymmetric-agreement", title: "ECDHE key exchange", kind: "concept" },
+                { id: "handshake-round-trips", title: "Full 1-RTT vs resumed 0-RTT", kind: "interactive" },
+                { id: "replay-vulnerabilities", title: "Early data and replay attacks", kind: "concept" },
+              ],
+            },
           ],
         },
       ],
@@ -1551,6 +1592,65 @@ export const curriculum: Curriculum = {
                 { id: "switch-chains", title: "Cascading conditionals", kind: "concept" },
                 { id: "polymorphic-dispatch", title: "Polymorphic dispatch", kind: "interactive" },
                 { id: "complexity-distribution", title: "Distributing complexity", kind: "concept" },
+              ],
+            },
+          ],
+        },
+        {
+          slug: "modularity-coupling",
+          title: "Modularity & Coupling",
+          description:
+            "Quantifying dependencies across package boundaries — afferent and efferent coupling, instability, abstractness, and breaking import cycles.",
+          lessons: [
+            {
+              slug: "coupling-metrics",
+              moduleSlug: "modularity-coupling",
+              title: "Afferent & Efferent Coupling",
+              tagline:
+                "TODO: one line that states the tension, not the topic.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["replace-conditional"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "module-boundaries", title: "Incoming vs outgoing dependencies", kind: "concept" },
+                { id: "measuring-coupling", title: "Compute Ca and Ce on the graph", kind: "interactive" },
+                { id: "coupling-sensitivity", title: "The blast radius of change", kind: "concept" },
+              ],
+            },
+                      {
+              slug: "instability-abstractness",
+              moduleSlug: "modularity-coupling",
+              title: "Instability & Abstractness",
+              tagline:
+                "TODO: one line that states the tension, not the topic.",
+              difficulty: "advanced",
+              estimatedMinutes: 12,
+              prerequisites: ["coupling-metrics"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "instability-metric", title: "The I metric", kind: "concept" },
+                { id: "main-sequence", title: "Distance from the main sequence", kind: "interactive" },
+                { id: "zone-of-pain", title: "Stable concrete packages", kind: "concept" },
+              ],
+            },
+                      {
+              slug: "cyclic-dependencies",
+              moduleSlug: "modularity-coupling",
+              title: "Cyclic Dependencies & ADP",
+              tagline:
+                "TODO: one line that states the tension, not the topic.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["instability-abstractness"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "the-import-cycle", title: "The circular dependency", kind: "concept" },
+                { id: "breaking-cycles", title: "Invert with interfaces", kind: "interactive" },
+                { id: "acyclic-principle", title: "Topological release order", kind: "concept" },
               ],
             },
           ],

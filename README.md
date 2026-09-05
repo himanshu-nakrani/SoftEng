@@ -40,12 +40,13 @@ An interactive system-design learning site. Not articles — every concept is a 
 
 ### Track 04 — Testing & Verification
 
-8 lessons across 2 modules, about 1h 36m end to end.
+9 lessons across 3 modules, about 1h 48m end to end.
 
 | Module | Lessons |
 |---|---|
 | **What a Suite Actually Checks** | Coverage Is Not Correctness · Boundaries and Off-By-One · Not Every Survivor Is a Bug · Assertion-Free Tests · Brittle Mocks vs State Verification |
 | **Tests That Lie** | Why Suites Go Flaky · Tests That Depend on Each Other · Async Timing and Sleep Flakes |
+| **Property-Based Testing** | Property Shrinking |
 
 ### Track 05 — Version Control & Delivery
 
@@ -58,21 +59,22 @@ An interactive system-design learning site. Not articles — every concept is a 
 
 ### Track 06 — Networking & the Web
 
-9 lessons across 3 modules, about 1h 48m end to end.
+10 lessons across 3 modules, about 2h 0m end to end.
 
 | Module | Lessons |
 |---|---|
 | **Making a Web Request** | DNS Resolution · The TCP Handshake · HTTP Request & Response · Keep-Alive & Connection Reuse |
 | **HTTP Protocols & Multiplexing** | HTTP/1.1 Pipelining & Head-of-Line Blocking · HTTP/2 Multiplexing & Framing · QUIC & HTTP/3: Independent UDP Streams |
-| **Caching & Security** | HTTP Caching & Revalidation · Conditional Requests & ETags |
+| **Caching & Security** | HTTP Caching & Revalidation · Conditional Requests & ETags · The TLS Handshake: 1-RTT to 0-RTT |
 
 ### Track 07 — Software Design & Architecture
 
-5 lessons across 1 module, about 59 minutes end to end.
+8 lessons across 2 modules, about 1h 35m end to end.
 
 | Module | Lessons |
 |---|---|
 | **Refactoring by the Numbers** | Extract Function · Inline & Rename · Duplicated Logic · Extract Class · Replace Conditional with Polymorphism |
+| **Modularity & Coupling** | Afferent & Efferent Coupling · Instability & Abstractness · Cyclic Dependencies & ADP |
 
 ### Track 08 — Engineering Practice
 

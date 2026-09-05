@@ -789,6 +789,41 @@ export const learningGuides: Record<string, LearningGuide> = {
     "Explore the TLS Handshake to see how cryptographic key exchange protects connections from eavesdropping and tampering.",
     [{ slug: "http-caching", relation: "builds on" }],
   ),
+  "tls-handshake": guide(
+    "TODO: the question this lesson answers?",
+    "TODO: what changed, in one sentence.",
+    "TODO: why it matters.",
+    "TODO: what to try next.",
+    [{ slug: "conditional-requests", relation: "builds on" }],
+  ),
+  "property-shrinking": guide(
+    "TODO: the question this lesson answers?",
+    "TODO: what changed, in one sentence.",
+    "TODO: why it matters.",
+    "TODO: what to try next.",
+    [{ slug: "async-race", relation: "builds on" }],
+  ),
+  "coupling-metrics": guide(
+    "TODO: the question this lesson answers?",
+    "TODO: what changed, in one sentence.",
+    "TODO: why it matters.",
+    "TODO: what to try next.",
+    [{ slug: "replace-conditional", relation: "builds on" }],
+  ),
+  "instability-abstractness": guide(
+    "TODO: the question this lesson answers?",
+    "TODO: what changed, in one sentence.",
+    "TODO: why it matters.",
+    "TODO: what to try next.",
+    [{ slug: "coupling-metrics", relation: "builds on" }],
+  ),
+  "cyclic-dependencies": guide(
+    "TODO: the question this lesson answers?",
+    "TODO: what changed, in one sentence.",
+    "TODO: why it matters.",
+    "TODO: what to try next.",
+    [{ slug: "instability-abstractness", relation: "builds on" }],
+  ),
 };
 
 export function getLearningGuide(slug: string): LearningGuide {

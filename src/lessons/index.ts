@@ -51,6 +51,7 @@ import { clientServerSim } from "@/lessons/scaling/client-server";
 import { loadBalancingSim } from "@/lessons/scaling/load-balancing";
 import { realtimeDeliverySim } from "@/lessons/scaling/realtime-delivery";
 import { scalingStrategiesSim } from "@/lessons/scaling/scaling-strategies";
+import { tlsHandshakeSim } from "@/lessons/caching-and-security/tls-handshake";
 import { conditionalRequestsSim } from "@/lessons/caching-and-security/conditional-requests";
 import { httpCachingSim } from "@/lessons/caching-and-security/http-caching";
 import { http3QuicSim } from "@/lessons/http-protocols/http3-quic";
@@ -130,6 +131,7 @@ export const simBySlug: Record<string, LessonSim<unknown>> = {
   "http3-quic": widen(http3QuicSim),
   "http-caching": widen(httpCachingSim),
   "conditional-requests": widen(conditionalRequestsSim),
+  "tls-handshake": widen(tlsHandshakeSim),
 };
 
 /** Slugs already reported by `getSim`, so dev warns once per slug, not per render. */
