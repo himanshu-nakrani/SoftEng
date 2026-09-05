@@ -14,7 +14,7 @@
 
 export type TxnStatus = "active" | "committed" | "aborted";
 
-export interface TxnFrame<V = number | string> {
+export interface TxnFrame<V = number> {
   id: string;
   /** Display name, e.g. "T1 · transfer". */
   name: string;
@@ -40,7 +40,7 @@ export interface PackageCoupling {
   total: number;
 }
 
-export interface RowFrame<V = number | string> {
+export interface RowFrame<V = number> {
   /** Column/row key, e.g. "alice" or package name. */
   key: string;
   /** The durable, committed value every transaction may read. */
@@ -56,7 +56,7 @@ export interface RowFrame<V = number | string> {
   values?: Record<string, number | string>;
 }
 
-export interface TableState<V = number | string> {
+export interface TableState<V = number> {
   columns?: TableColumn[];
   rows: RowFrame<V>[];
   txns: TxnFrame<V>[];
