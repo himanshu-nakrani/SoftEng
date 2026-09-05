@@ -715,6 +715,17 @@ export const learningGuides: Record<string, LearningGuide> = {
     "Slide between the monolithic rename, premature read release, and expand/contract to see how decoupling DB migrations from code deployments avoids downtime.",
     [{ slug: "the-mutex-call", relation: "builds on" }],
   ),
+  "cascading-failure": guide(
+    "What happens when a cache node crashes under 10k QPS, and how do you stop the primary database from collapsing?",
+    "Direct DB queries and unbacked retries exhaust connection pools and trigger total failure in 0/200 runs; singleflight coalesces duplicate key queries so DB CPU stays < 40% across all 200/200 runs.",
+    "When caches fail under peak load, the database cannot handle raw traffic; resilience requires collapsing redundant concurrent requests before they reach the data store.",
+    "Move the slider to compare direct database passthrough, aggressive retries, and singleflight request coalescing to see how query coalescing preserves availability.",
+    [
+      { slug: "the-mutex-call", relation: "builds on" },
+      { slug: "caching", relation: "connects to" },
+      { slug: "circuit-breaker-hysteresis", relation: "connects to" },
+    ],
+  ),
 };
 
 export function getLearningGuide(slug: string): LearningGuide {
