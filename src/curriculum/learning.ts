@@ -710,10 +710,17 @@ export const learningGuides: Record<string, LearningGuide> = {
   ),
   "zero-downtime-migration": guide(
     "How do you migrate a live database schema without locking out writes or crashing reads?",
-    "A direct ALTER TABLE locks the table and drops over 200 writes, premature reads crash on NULLs, but expand/contract completes cleanly in 200/200 runs.",
+"A direct ALTER TABLE locks the table and drops over 200 writes, premature reads crash on NULLs, but expand/contract completes cleanly in 200/200 runs.",
     "High-throughput tables cannot tolerate exclusive table locks or out-of-order code releases; schema changes must be broken into backward-compatible phases.",
     "Slide between the monolithic rename, premature read release, and expand/contract to see how decoupling DB migrations from code deployments avoids downtime.",
     [{ slug: "the-mutex-call", relation: "builds on" }],
+  ),
+  "async-race": guide(
+    "Why does an asynchronous test pass on a fast development machine but intermittently fail in CI?",
+    "Replacing an arbitrary sleep with condition awaiting eliminates the timing window, turning a 50% flake rate into 100% deterministic passes.",
+    "A fixed sleep is a wager on thread scheduling and container load; when CI throttles CPU, the sleep expires before background work finishes. Synchronizing on actual state conditions removes the race while allowing fast runs to proceed without artificial delay.",
+    "Run the sleep figure at seed 42 to observe the early assertion failure, then switch to the awaiting figure and confirm that 100% of orders pass.",
+    [{ slug: "flaky-tests", relation: "builds on" }],
   ),
   "cascading-failure": guide(
     "What happens when a cache node crashes under 10k QPS, and how do you stop the primary database from collapsing?",

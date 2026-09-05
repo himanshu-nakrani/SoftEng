@@ -40,12 +40,12 @@ An interactive system-design learning site. Not articles — every concept is a 
 
 ### Track 04 — Testing & Verification
 
-7 lessons across 2 modules, about 1h 24m end to end.
+8 lessons across 2 modules, about 1h 36m end to end.
 
 | Module | Lessons |
 |---|---|
 | **What a Suite Actually Checks** | Coverage Is Not Correctness · Boundaries and Off-By-One · Not Every Survivor Is a Bug · Assertion-Free Tests · Brittle Mocks vs State Verification |
-| **Tests That Lie** | Why Suites Go Flaky · Tests That Depend on Each Other |
+| **Tests That Lie** | Why Suites Go Flaky · Tests That Depend on Each Other · Async Timing and Sleep Flakes |
 
 ### Track 05 — Version Control & Delivery
 

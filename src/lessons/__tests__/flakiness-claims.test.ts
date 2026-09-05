@@ -9,6 +9,10 @@ import {
   flakyTestsIsolatedAlgo,
 } from "@/lessons/flakiness/flaky-tests";
 import {
+  asyncRaceAwaitingAlgo,
+  asyncRaceSleepAlgo,
+} from "@/lessons/flakiness/async-race";
+import {
   testPollutionAlgo,
   testPollutionIsolatedAlgo,
 } from "@/lessons/flakiness/test-pollution";
@@ -169,5 +173,72 @@ describe("test-pollution: a dependent test leans on order, isolation removes it"
       );
     }
     expect(orders.size).toBe(2);
+  });
+});
+
+describe("async-race: arbitrary sleep flakes under timing jitter, awaiting synchronizes deterministically", () => {
+  it("ids start with the lesson slug", () => {
+    // check-curriculum enforces this, but pin it here so the intent is local.
+    expect(asyncRaceSleepAlgo.id.startsWith("async-race")).toBe(true);
+    expect(asyncRaceAwaitingAlgo.id.startsWith("async-race")).toBe(true);
+  });
+
+  it("is deterministic: the same seed replays an identical run", () => {
+    // Both algorithms replay deterministically for a given seed.
+    expect(buildAlgoSteps(asyncRaceSleepAlgo, 0, 42)).toEqual(
+      buildAlgoSteps(asyncRaceSleepAlgo, 0, 42),
+    );
+    expect(buildAlgoSteps(asyncRaceAwaitingAlgo, 0, 42)).toEqual(
+      buildAlgoSteps(asyncRaceAwaitingAlgo, 0, 42),
+    );
+  });
+
+  it("fails the test at seed 42 — test asserts before worker sets ready", () => {
+    // The page opens at seed 42 on a failing order: test wakes from sleep
+    // and asserts ready == 1 before the worker has written ready = 1.
+    const { state } = run(asyncRaceSleepAlgo, 42);
+    expect(state.memory.passed).toBe(0);
+    expect(state.memory.failed).toBe(1);
+    expect(state.memory.ready).toBe(1);
+  });
+
+  it("passes the test at seed 0 — worker finishes before test asserts", () => {
+    // The page says seed 0 passes with the identical code under a different schedule.
+    const { state } = run(asyncRaceSleepAlgo, 0);
+    expect(state.memory.passed).toBe(1);
+    expect(state.memory.failed).toBe(0);
+    expect(state.memory.ready).toBe(1);
+  });
+
+  it("fails in about half of the sleep orders, never all and never none", () => {
+    // The page says "about half of the orders fail — 110 of the first 200 seeds, 517 of the first 1000".
+    expect(failingRuns(asyncRaceSleepAlgo, 200)).toBe(110);
+    expect(failingRuns(asyncRaceSleepAlgo, 500)).toBe(255);
+    expect(failingRuns(asyncRaceSleepAlgo, 1000)).toBe(517);
+  });
+
+  it("passes EVERY awaiting order — 0 failures across 1000 seeds", () => {
+    // The page says condition awaiting makes 0 of 1000 orders fail.
+    expect(failingRuns(asyncRaceAwaitingAlgo, 1000)).toBe(0);
+  });
+
+  it("both execute 4 steps per run across all seeds", () => {
+    for (let seed = 0; seed < 100; seed++) {
+      expect(run(asyncRaceSleepAlgo, seed).counter(C.steps)).toBe(4);
+      expect(run(asyncRaceAwaitingAlgo, seed).counter(C.steps)).toBe(4);
+    }
+  });
+
+  it("explores multiple legal orders under sleep — reseeding is not a no-op", () => {
+    const orders = new Set<string>();
+    for (let seed = 0; seed < 40; seed++) {
+      orders.add(
+        run(asyncRaceSleepAlgo, seed)
+          .steps.slice(1)
+          .map((f) => f.state.ranOp)
+          .join("|"),
+      );
+    }
+    expect(orders.size).toBeGreaterThan(1);
   });
 });

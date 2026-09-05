@@ -266,7 +266,7 @@ export const curriculum: Curriculum = {
                 { id: "half-open", title: "The half-open probe", kind: "interactive" },
               ],
             },
-                      {
+            {
               slug: "load-shedding",
               moduleSlug: "resilience",
               title: "Load Shedding",
@@ -1086,6 +1086,23 @@ export const curriculum: Curriculum = {
                 { id: "polluted", title: "When one test needs another", kind: "interactive" },
                 { id: "isolated", title: "Setting up your own state", kind: "interactive" },
                 { id: "isolation-cost", title: "Isolation is the cure", kind: "concept" },
+              ],
+            },
+                      {
+              slug: "async-race",
+              moduleSlug: "flakiness",
+              title: "Async Timing and Sleep Flakes",
+              tagline:
+                "A fixed sleep is a wager on thread scheduling — condition polling waits on the state itself.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["flaky-tests"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "sleep-anti-pattern", title: "The arbitrary sleep", kind: "concept" },
+                { id: "timing-jitter", title: "Fixed sleep vs condition polling", kind: "interactive" },
+                { id: "deterministic-awaits", title: "Awaiting the event", kind: "concept" },
               ],
             },
           ],
