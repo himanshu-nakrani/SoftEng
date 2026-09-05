@@ -680,7 +680,6 @@ export const learningGuides: Record<string, LearningGuide> = {
     "Compare how the state verification suite stays green across three refactorings while catching all three calculation bugs.",
     [{ slug: "assertion-free-tests", relation: "builds on" }],
   ),
-<<<<<<< HEAD
   "extract-class": guide(
     "How does decomposing a god class change coupling and cohesion across a module?",
     "Extracting receipt formatting from OrderProcessor drops its cyclomatic complexity from 7 to 3 and its fan-out from 5 to 3, while module max fan-out falls from 5 to 3.",
@@ -707,6 +706,13 @@ export const learningGuides: Record<string, LearningGuide> = {
     "Immediate reopening crashes fragile dependencies in 0/200 runs and fixed cooldowns waste capacity in 100/200, while rate-ramped probing recovers cleanly in all 200 runs.",
     "Recovering dependencies cannot absorb sudden thundering herds; asymmetric hysteresis damping allows caches and connection pools to warm up safely under controlled probe traffic.",
     "Slide between immediate reopening, fixed cooldown, and half-open probing to observe how rate damping eliminates both flapping loops and artificial downtime.",
+    [{ slug: "the-mutex-call", relation: "builds on" }],
+  ),
+  "zero-downtime-migration": guide(
+    "How do you migrate a live database schema without locking out writes or crashing reads?",
+    "A direct ALTER TABLE locks the table and drops over 200 writes, premature reads crash on NULLs, but expand/contract completes cleanly in 200/200 runs.",
+    "High-throughput tables cannot tolerate exclusive table locks or out-of-order code releases; schema changes must be broken into backward-compatible phases.",
+    "Slide between the monolithic rename, premature read release, and expand/contract to see how decoupling DB migrations from code deployments avoids downtime.",
     [{ slug: "the-mutex-call", relation: "builds on" }],
   ),
 };
