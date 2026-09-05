@@ -9,15 +9,14 @@ and invariants; this document is only *what is done, what is left, and what has
 already been decided*. Open debt lives in [`debt.md`](./debt.md).
 
 **State verified 2026-09-05**, by running the gate rather than recalling:
-77 lessons · 263 sections · **8 tracks** · 788 unit tests (26 files) · 47 quizzes ·
+82 lessons · 278 sections · **8 tracks** · 818 unit tests (26 files) · 47 quizzes ·
 clean static export, 26 legacy redirect stubs. `npm run check` green.
 
-Phase 2 F and G are now RESOLVED, both BUILD: the F spike proved a real code
-metric (cyclomatic complexity) moves as a consequence of a toy-AST refactoring,
-and the G gate proved a scenario choice mutates a real archetype-B run's measured
-outcome. Both unlocked tracks opened with a complete first module — Software Design &
-Architecture (`software-design`, 5 lessons shipped across `refactoring`) and Engineering Practice
-(`engineering-practice`, 5 lessons shipped across `on-call`).
+Track 08 (`engineering-practice`, 8 lessons across `on-call` and `resilience-engineering`)
+is now **complete**. Track 05 (`version-control`, 8 lessons) finished its core `history` module
+(5 lessons) with 3-way merge. Track 04 (`testing`, 8 lessons) added async race condition
+analysis to `flakiness` (3 lessons). Track 07 (`software-design`, 5 lessons) has a complete
+`refactoring` module.
 
 **Every number in this document was re-checked against the repository on the date
 above.** If you change the curriculum, the honest way to update them is to run the
@@ -186,11 +185,11 @@ these numbers as the current display order.
 | 01 | System Design Fundamentals (`system-design-fundamentals`) | A | 26 | 31 shipped — **effectively finished** (see §6) |
 | 02 | Concurrency (`concurrency`) | C on B | 9 | **complete** |
 | 03 | Databases & Transactions (`databases`) | B | ~10 | **open — 9 shipped, 3 modules** |
-| 04 | Testing & Verification (`testing`) | D + C | ~8 | **open — 7 shipped, 2 modules** |
-| 05 | Version Control & Delivery (`version-control`) | E + A | ~8 | **open — 7 shipped, 2 modules** |
+| 04 | Testing & Verification (`testing`) | D + C | ~8 | **open — 8 shipped, 2 modules** |
+| 05 | Version Control & Delivery (`version-control`) | E + A | ~8 | **open — 8 shipped, 2 modules** |
 | 06 | Networking & the Web (`networking`) | A + B | ~10 | **open — 4 shipped, 1 module** |
 | 07 | Software Design & Architecture (`software-design`) | F on B | ~10 | **open — 5 shipped, 1 module** |
-| 08 | Engineering Practice (`engineering-practice`) | G on B | ~8 | **open — 5 shipped, 1 module** |
+| 08 | Engineering Practice (`engineering-practice`) | G on B | ~8 | **complete — 8 shipped, 2 modules** |
 | — | Security Engineering | A + B + D | ~12 | not started |
 | — | Languages & Runtimes | B | ~12 | not started |
 | — | Operating Systems | B + C | ~12 | not started |
@@ -255,12 +254,13 @@ accordingly:
   table scan vs index seek, showing the tipping point where a secondary index lookup
   becomes more expensive than a full scan due to random I/O bookmark lookups.
 
-#### Track 04 · Testing & Verification (~1 lesson remaining to ~8)
+#### Track 04 · Testing & Verification (8 shipped across 2 modules)
 
-Currently 7 lessons across TWO modules (`test-quality` [5 lessons: Coverage Is Not
+Currently 8 lessons across TWO modules (`test-quality` [5 lessons: Coverage Is Not
 Correctness, Boundaries and Off-By-One, Not Every Survivor Is a Bug, Assertion-Free
-Tests, Brittle Mocks vs State Verification], `flakiness` [2 lessons: Why Suites Go
-Flaky, Tests That Depend on Each Other]). Remaining topic:
+Tests, Brittle Mocks vs State Verification], `flakiness` [3 lessons: Why Suites Go
+Flaky, Tests That Depend on Each Other, Async Timing and Sleep Flakes]). Remaining topic
+to extend to 9 lessons:
 
 - Module 3: `property-testing` (1 lesson, Archetype B: `algo/shrinking.ts`, `views/ShrinkView.tsx`):
   - **Property Shrinking**: a generated random input fails an invariant. The runner
@@ -268,19 +268,12 @@ Flaky, Tests That Depend on Each Other]). Remaining topic:
     deletion, integer decrementing) until finding the minimal reproducible
     counterexample. Slider controls search budget or input bounds.
 
-#### Track 05 · Version Control & Delivery (~1 lesson remaining to ~8)
+#### Track 05 · Version Control & Delivery (8 shipped across 2 modules)
 
-Currently 7 lessons across TWO modules: `history` on the repo DAG (4 lessons) and
-`delivery` on the packet engine (3 lessons).
-
-- In `history`:
-  - **Three-Way Merge & Conflict Mechanics** (`algo/repo.ts`, extended `views/RepoView.tsx`):
-    moves beyond fast-forward and clean rebase. Identifies the merge base (Best
-    Common Ancestor / LCA) between two diverged branches `ours` and `theirs`. Uses
-    a chunk-level diff model: non-overlapping chunk changes auto-merge cleanly,
-    while overlapping modifications to the same hunk produce a conflict state
-    requiring manual resolution. Counters: `commits`, `ancestor_dist`, `clean_hunks`,
-    `conflict_hunks`.
+Currently 8 lessons across TWO modules: `history` on the repo DAG (**5 shipped — module
+complete**: Merge vs Rebase, Fast-Forward, Cherry-Pick and Revert, Reset, Three-Way
+Merge & Conflicts) and `delivery` on the packet engine (3 lessons: Canary Releases,
+Blue-Green Deployment, Feature Flags). Core git graph curriculum is complete.
 
 #### Track 06 · Networking & the Web (~6 lessons remaining to ~10)
 
@@ -334,12 +327,10 @@ modularity and architecture boundaries:
   - **The Strangler Fig Pattern**: routing traffic between a legacy monolith and an
     extracted microservice, migrating endpoints incrementally with zero downtime.
 
-#### Track 08 · Engineering Practice (~3 lessons remaining to ~8)
+#### Track 08 · Engineering Practice (**complete — 8 shipped across 2 modules**)
 
-Currently 5 lessons in `on-call` (**complete module** on `algo/scenario.ts` driving real
-discrete/scheduler simulations: The Mutex Call, Retry or Back Off, Thread Pool Sizing,
-Circuit Breaker Hysteresis, Zero-Downtime Migration). To reach ~8 lessons, add resilience
-scenarios:
+Track complete on Archetype G (`algo/scenario.ts` driving real discrete/scheduler simulations,
+rendered by `views/ScenarioView.tsx`):
 
 - Module 1: `on-call` (**5 shipped — module complete**):
   - **The Mutex Call** (shipped)
@@ -347,13 +338,10 @@ scenarios:
   - **Thread Pool vs Bounded Queue Sizing** (shipped — bounded pool with shedding maintains SLA; deep queue explodes latency to 30s)
   - **Circuit Breaker Hysteresis** (shipped — rate-ramping half-open probing prevents flapping loop and artificial downtime)
   - **Zero-Downtime Schema Migration (Expand/Contract)** (shipped — 5-phase expand/contract completes under 1000 writes/sec with 0 dropped writes)
-- Module 2: `resilience-engineering` (3 lessons on Archetype G + A):
-  - **Memory Leak & Buffer Bloat Triage**: heap allocation rate outpaces GC.
-    Choosing restart vs throttling vs heap dump capture under impending OOM kill.
-  - **Cascading Failure & Thundering Herd**: cache node crashes; cold cache
-    thunders against primary database. Cache warm-up vs singleflight request coalescing.
-  - **Split-Brain & Partition Healing**: 2-node vs 3-node partition reconciliation.
-    Conflict resolution and write loss under inconsistent majority assumptions.
+- Module 2: `resilience-engineering` (**3 shipped — module complete**):
+  - **Cascading Failure & Thundering Herd** (shipped — singleflight request coalescing collapses 10k QPS cache failure, DB CPU stays < 40% across 200/200 runs)
+  - **Memory Leak & Buffer Bloat Triage** (shipped — pod cordoning and rolling drain prevents dropped connections and captures heap profile in 200/200 runs)
+  - **Split-Brain & Network Partitions** (shipped — majority quorum with monotonic fencing token prevents split-brain write collision in 200/200 runs)
 
 #### Unstarted Track · Security Engineering (~12 lessons)
 
