@@ -9,15 +9,15 @@ and invariants; this document is only *what is done, what is left, and what has
 already been decided*. Open debt lives in [`debt.md`](./debt.md).
 
 **State verified 2026-09-05**, by running the gate rather than recalling:
-72 lessons · 248 sections · **8 tracks** · 762 unit tests (26 files) · 47 quizzes ·
+77 lessons · 263 sections · **8 tracks** · 788 unit tests (26 files) · 47 quizzes ·
 clean static export, 26 legacy redirect stubs. `npm run check` green.
 
 Phase 2 F and G are now RESOLVED, both BUILD: the F spike proved a real code
 metric (cyclomatic complexity) moves as a consequence of a toy-AST refactoring,
 and the G gate proved a scenario choice mutates a real archetype-B run's measured
-outcome. Both unlocked tracks opened with a first module — Software Design &
-Architecture (`software-design`, 3 lessons) and Engineering Practice
-(`engineering-practice`, 2 lessons).
+outcome. Both unlocked tracks opened with a complete first module — Software Design &
+Architecture (`software-design`, 5 lessons shipped across `refactoring`) and Engineering Practice
+(`engineering-practice`, 5 lessons shipped across `on-call`).
 
 **Every number in this document was re-checked against the repository on the date
 above.** If you change the curriculum, the honest way to update them is to run the
@@ -189,8 +189,8 @@ these numbers as the current display order.
 | 04 | Testing & Verification (`testing`) | D + C | ~8 | **open — 7 shipped, 2 modules** |
 | 05 | Version Control & Delivery (`version-control`) | E + A | ~8 | **open — 7 shipped, 2 modules** |
 | 06 | Networking & the Web (`networking`) | A + B | ~10 | **open — 4 shipped, 1 module** |
-| 07 | Software Design & Architecture (`software-design`) | F on B | ~10 | **open — 3 shipped, 1 module** |
-| 08 | Engineering Practice (`engineering-practice`) | G on B | ~8 | **open — 2 shipped, 1 module** |
+| 07 | Software Design & Architecture (`software-design`) | F on B | ~10 | **open — 5 shipped, 1 module** |
+| 08 | Engineering Practice (`engineering-practice`) | G on B | ~8 | **open — 5 shipped, 1 module** |
 | — | Security Engineering | A + B + D | ~12 | not started |
 | — | Languages & Runtimes | B | ~12 | not started |
 | — | Operating Systems | B + C | ~12 | not started |
@@ -306,19 +306,19 @@ Request & Response, Keep-Alive & Connection Reuse). To reach ~10 lessons, add:
     certificate validation, and session key derivation. Demonstrates 1-RTT full
     handshake vs 0-RTT session resumption with replay attack trade-offs.
 
-#### Track 07 · Software Design & Architecture (~7 lessons remaining to ~10)
+#### Track 07 · Software Design & Architecture (~5 lessons remaining to ~10)
 
-Currently 3 lessons in `refactoring` (Extract Function, Duplicated Logic, Inline &
-Rename on `algo/refactor.ts`). To reach ~10 lessons, expand beyond function-level
-metrics into class modularity and coupling:
+Currently 5 lessons in `refactoring` (**complete module** on `algo/refactor.ts`:
+Extract Function, Duplicated Logic, Inline & Rename, Extract Class, Replace Conditional
+with Polymorphism). To reach ~10 lessons, expand beyond function/class refactoring into
+modularity and architecture boundaries:
 
-- In `refactoring` (2 lessons on `refactor.ts`):
-  - **Extract Class / Modularity**: splitting an AST node with multiple disparate
-    responsibilities into two cohesive units. Measures Lack of Cohesion of Methods
-    (LCOM) dropping from high to low.
-  - **Replace Conditional with Polymorphism**: converting cascading `switch(type)`
-    or `if-else` blocks into polymorphic dispatch. Centralized cyclomatic
-    complexity drops to 1 per subclass method.
+- Module 1: `refactoring` (**5 shipped — module complete**):
+  - **Extract Function** (shipped)
+  - **Duplicated Logic** (shipped)
+  - **Inline & Rename** (shipped)
+  - **Extract Class** (shipped — god class decomposed, complexity and fan-out drop, decisions conserved)
+  - **Replace Conditional with Polymorphism** (shipped — cascading conditionals refactored to strategy handlers, cc drops to 1)
 - Module 2: `modularity-coupling` (3 lessons on Archetype B, `views/DependencyGraphView.tsx`):
   - **Afferent & Efferent Coupling ($C_a, C_e$)**: quantifying incoming dependencies
     ($C_a$) vs outgoing dependencies ($C_e$) across module boundaries as code is reorganized.
@@ -334,21 +334,19 @@ metrics into class modularity and coupling:
   - **The Strangler Fig Pattern**: routing traffic between a legacy monolith and an
     extracted microservice, migrating endpoints incrementally with zero downtime.
 
-#### Track 08 · Engineering Practice (~6 lessons remaining to ~8)
+#### Track 08 · Engineering Practice (~3 lessons remaining to ~8)
 
-Currently 2 lessons in `on-call` (The Mutex Call, Retry or Back Off on `algo/scenario.ts`).
-To reach ~8 lessons, add real incident and resilience scenarios where choices mutate
-a running simulation's parameters:
+Currently 5 lessons in `on-call` (**complete module** on `algo/scenario.ts` driving real
+discrete/scheduler simulations: The Mutex Call, Retry or Back Off, Thread Pool Sizing,
+Circuit Breaker Hysteresis, Zero-Downtime Migration). To reach ~8 lessons, add resilience
+scenarios:
 
-- In `on-call` (3 lessons on Archetype G `scenario.ts` driving real B/A runs):
-  - **Thread Pool vs Bounded Queue Sizing**: downstream dependency latency jumps
-    10ms → 400ms. Sizing the queue too large hides latency; pool too large causes
-    OOM/context switching; fast-reject (shedding) maintains SLA for un-queued callers.
-  - **Circuit Breaker Hysteresis**: dependency flaps between healthy and broken.
-    Fixed failure threshold vs damped exponential recovery probing.
-  - **Zero-Downtime Schema Migration (Expand/Contract)**: column rename/split under
-    1,000 writes/sec. 5-step sequence (add nullable → dual-write → backfill → read
-    new → drop old). Breaking sequence drops writes or causes lock contention.
+- Module 1: `on-call` (**5 shipped — module complete**):
+  - **The Mutex Call** (shipped)
+  - **Retry or Back Off** (shipped)
+  - **Thread Pool vs Bounded Queue Sizing** (shipped — bounded pool with shedding maintains SLA; deep queue explodes latency to 30s)
+  - **Circuit Breaker Hysteresis** (shipped — rate-ramping half-open probing prevents flapping loop and artificial downtime)
+  - **Zero-Downtime Schema Migration (Expand/Contract)** (shipped — 5-phase expand/contract completes under 1000 writes/sec with 0 dropped writes)
 - Module 2: `resilience-engineering` (3 lessons on Archetype G + A):
   - **Memory Leak & Buffer Bloat Triage**: heap allocation rate outpaces GC.
     Choosing restart vs throttling vs heap dump capture under impending OOM kill.
@@ -605,10 +603,10 @@ A sequenced execution plan covering the remaining ~50 lessons and open debt:
    - Implement `algo/storage.ts` + `views/StorageView.tsx` (B-Tree vs LSM write/read amplification).
    - Implement `algo/query_plan.ts` + `views/QueryPlanView.tsx` (clustered vs secondary index seek/scan tipping point).
    - This completes Track 03 Databases & Transactions at ~11 lessons.
-4. **Tier 4 · Extend Tracks 07 and 08 on resolved archetypes F and G (~13 lessons)**:
+4. **Tier 4 · Extend Tracks 07 and 08 on resolved archetypes F and G (~8 lessons remaining)**:
    - Archetypes F (`refactor.ts`) and G (`scenario.ts`) are proven and screenshot-verified.
-   - *Track 07 (~7 lessons):* Add Extract Class and Replace Conditional with Polymorphism to `refactoring`; build `views/DependencyGraphView.tsx` for `modularity-coupling` ($C_a, C_e, I, A$ metrics and ADP cycle detection); add Ports/Adapters and Strangler Fig to `architecture-boundaries`.
-   - *Track 08 (~6 lessons):* Add Thread Pool Sizing, Circuit Breaker Hysteresis, and Zero-Downtime Migration to `on-call`; add Memory Leaks, Cascading Herd, and Split-Brain to `resilience-engineering`.
+   - *Phase A (Shipped — 5 lessons):* Added Extract Class and Replace Conditional with Polymorphism to `refactoring` (Track 07 now 5 shipped, `refactoring` module complete); added Thread Pool Sizing, Circuit Breaker Hysteresis, and Zero-Downtime Migration to `on-call` (Track 08 now 5 shipped, `on-call` module complete).
+   - *Phase B (Remaining — ~8 lessons):* Build `views/DependencyGraphView.tsx` for `modularity-coupling` ($C_a, C_e, I, A$ metrics and ADP cycle detection); add Ports/Adapters and Strangler Fig to `architecture-boundaries` in Track 07; add Memory Leaks, Cascading Herd, and Split-Brain to `resilience-engineering` in Track 08.
 5. **Tier 5 · Open Track 11 Operating Systems (~12 lessons)**:
    - Highly mechanical and natural fit for Archetype B discrete steps and C scheduler.
    - Build `views/PagingView.tsx` (Virtual Memory: page tables, TLB hits/misses, page faults, LRU/CLOCK).
