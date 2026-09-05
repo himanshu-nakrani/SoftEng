@@ -74,11 +74,11 @@ An interactive system-design learning site. Not articles — every concept is a 
 
 ### Track 08 — Engineering Practice
 
-3 lessons across 1 module, about 36 minutes end to end.
+4 lessons across 1 module, about 48 minutes end to end.
 
 | Module | Lessons |
 |---|---|
-| **On-Call Decisions** | The Mutex Call · Retry or Back Off · Thread Pool vs Bounded Queue |
+| **On-Call Decisions** | The Mutex Call · Retry or Back Off · Thread Pool vs Bounded Queue · Circuit Breaker Hysteresis |
 
 <!-- CURRICULUM:END -->
 

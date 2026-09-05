@@ -680,6 +680,7 @@ export const learningGuides: Record<string, LearningGuide> = {
     "Compare how the state verification suite stays green across three refactorings while catching all three calculation bugs.",
     [{ slug: "assertion-free-tests", relation: "builds on" }],
   ),
+<<<<<<< HEAD
   "extract-class": guide(
     "How does decomposing a god class change coupling and cohesion across a module?",
     "Extracting receipt formatting from OrderProcessor drops its cyclomatic complexity from 7 to 3 and its fan-out from 5 to 3, while module max fan-out falls from 5 to 3.",
@@ -699,6 +700,13 @@ export const learningGuides: Record<string, LearningGuide> = {
     "Expanding threads thrashes CPU and deep queues explode latency to 30s; keeping a bounded pool of 16 threads and shedding excess preserves a 400ms SLA for all admitted requests across all 200 runs.",
     "Adding threads or queue depth during a downstream slowdown turns latency into an outage; fast rejection with 503 protects system capacity and ensures admitted work completes on time.",
     "Move the slider across the three policies and compare how SLA compliance and latency headlines respond across 200 runs.",
+    [{ slug: "the-mutex-call", relation: "builds on" }],
+  ),
+  "circuit-breaker-hysteresis": guide(
+    "How should a circuit breaker reopen when a failing dependency starts to recover?",
+    "Immediate reopening crashes fragile dependencies in 0/200 runs and fixed cooldowns waste capacity in 100/200, while rate-ramped probing recovers cleanly in all 200 runs.",
+    "Recovering dependencies cannot absorb sudden thundering herds; asymmetric hysteresis damping allows caches and connection pools to warm up safely under controlled probe traffic.",
+    "Slide between immediate reopening, fixed cooldown, and half-open probing to observe how rate damping eliminates both flapping loops and artificial downtime.",
     [{ slug: "the-mutex-call", relation: "builds on" }],
   ),
 };
