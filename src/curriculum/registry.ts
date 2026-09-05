@@ -1641,7 +1641,7 @@ export const curriculum: Curriculum = {
               moduleSlug: "modularity-coupling",
               title: "Cyclic Dependencies & ADP",
               tagline:
-                "TODO: one line that states the tension, not the topic.",
+                "When packages depend in a cycle, none can be built or released first: invert one dependency to restore a linear topological order.",
               difficulty: "intermediate",
               estimatedMinutes: 12,
               prerequisites: ["instability-abstractness"],

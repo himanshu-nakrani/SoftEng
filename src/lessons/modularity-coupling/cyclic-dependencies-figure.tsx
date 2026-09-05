@@ -1,7 +1,7 @@
 "use client";
 
 import { SectionAlgoFigure } from "@/components/lesson/SectionAlgoFigure";
-import { ThreadsView } from "@/engine/algo/views/ThreadsView";
+import { TableView } from "@/engine/algo/views/TableView";
 import { cyclicDependenciesAlgo } from "./cyclic-dependencies";
 
 /**
@@ -13,8 +13,8 @@ export function CyclicDependenciesFigure() {
   return (
     <SectionAlgoFigure
       def={cyclicDependenciesAlgo}
-      view={ThreadsView}
-      description="TODO: what a reader should watch for, in one or two sentences. This is the figure's accessible description."
+      view={TableView}
+      description="Three packages form a cyclic dependency loop. Tarjan DFS identifies the cycle and topological sort fails. Dependency Inversion extracts UsersInterface, breaking the cycle and computing linear release order [Billing, Users, Orders]."
     />
   );
 }

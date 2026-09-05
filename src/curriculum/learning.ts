@@ -821,10 +821,10 @@ export const learningGuides: Record<string, LearningGuide> = {
     [{ slug: "coupling-metrics", relation: "builds on" }],
   ),
   "cyclic-dependencies": guide(
-    "TODO: the question this lesson answers?",
-    "TODO: what changed, in one sentence.",
-    "TODO: why it matters.",
-    "TODO: what to try next.",
+    "How do cyclic dependencies paralyze independent releases, and how does interface inversion break the loop?",
+    "Replacing Billing's direct concrete dependency on Users with an extracted UsersInterface broke the circular cycle and restored a Directed Acyclic Graph.",
+    "Circular dependencies fuse independent packages into an indivisible unit where no package can be built or versioned first; breaking the cycle restores a deterministic topological release order.",
+    "Step forward to see Tarjan's cycle detection flag the back-edge, then watch topological sort compute the linear build sequence [Billing, Users, Orders].",
     [{ slug: "instability-abstractness", relation: "builds on" }],
   ),
 };
