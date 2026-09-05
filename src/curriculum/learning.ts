@@ -710,7 +710,7 @@ export const learningGuides: Record<string, LearningGuide> = {
   ),
   "zero-downtime-migration": guide(
     "How do you migrate a live database schema without locking out writes or crashing reads?",
-    "A direct ALTER TABLE locks the table and drops over 200 writes, premature reads crash on NULLs, but expand/contract completes cleanly in 200/200 runs.",
+"A direct ALTER TABLE locks the table and drops over 200 writes, premature reads crash on NULLs, but expand/contract completes cleanly in 200/200 runs.",
     "High-throughput tables cannot tolerate exclusive table locks or out-of-order code releases; schema changes must be broken into backward-compatible phases.",
     "Slide between the monolithic rename, premature read release, and expand/contract to see how decoupling DB migrations from code deployments avoids downtime.",
     [{ slug: "the-mutex-call", relation: "builds on" }],
@@ -721,6 +721,13 @@ export const learningGuides: Record<string, LearningGuide> = {
     "In an asynchronous network, an isolated node cannot distinguish network lag from peer crashes; without majority quorum and fencing tokens, concurrent split-brain writes permanently destroy data.",
     "Slide between uncoordinated dual writes, global write freezing, and majority quorum with fencing to observe how consensus and fencing tokens guarantee zero write loss.",
     [{ slug: "the-mutex-call", relation: "builds on" }],
+  ),
+  "three-way-merge": guide(
+    "How does git integrate divergent branches without misattributing changes or guessing intent?",
+    "With both branches moved past base, git found their lowest common ancestor and created a two-parent merge commit (growing four commits to five), while an undiverged trunk simply slid its pointer in a zero-commit fast-forward.",
+    "A two-way diff between branch tips cannot distinguish additions from deletions; only a three-way diff against the merge base attributes each edit to the branch that introduced it and flags true collisions as conflicts.",
+    "Step through the diverged merge to see the two-parent commit join c4 and c3, then contrast it with the fast-forward run where no merge commit is created.",
+    [{ slug: "merge-vs-rebase", relation: "builds on" }],
   ),
 };
 

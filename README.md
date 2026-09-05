@@ -49,11 +49,11 @@ An interactive system-design learning site. Not articles — every concept is a 
 
 ### Track 05 — Version Control & Delivery
 
-7 lessons across 2 modules, about 1h 22m end to end.
+8 lessons across 2 modules, about 1h 34m end to end.
 
 | Module | Lessons |
 |---|---|
-| **Shaping History** | Merge vs Rebase · Fast-Forward · Cherry-Pick and Revert · Reset |
+| **Shaping History** | Merge vs Rebase · Fast-Forward · Cherry-Pick and Revert · Reset · Three-Way Merge & Conflicts |
 | **Shipping It** | Canary Releases · Blue-Green Deploys · Feature Flags |
 
 ### Track 06 — Networking & the Web
