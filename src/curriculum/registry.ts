@@ -1118,7 +1118,7 @@ export const curriculum: Curriculum = {
               moduleSlug: "property-testing",
               title: "Property Shrinking",
               tagline:
-                "TODO: one line that states the tension, not the topic.",
+                "A raw counterexample proves the invariant broke but drowns the bug in noise — shrinking strips accidental data until only the root cause remains.",
               difficulty: "intermediate",
               estimatedMinutes: 12,
               prerequisites: ["async-race"],

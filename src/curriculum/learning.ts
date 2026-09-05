@@ -797,10 +797,10 @@ export const learningGuides: Record<string, LearningGuide> = {
     [{ slug: "conditional-requests", relation: "builds on" }],
   ),
   "property-shrinking": guide(
-    "TODO: the question this lesson answers?",
-    "TODO: what changed, in one sentence.",
-    "TODO: why it matters.",
-    "TODO: what to try next.",
+    "How does property-based testing isolate the minimal failing input from a noisy, randomized counterexample?",
+    "A three-phase shrinker bisects large chunks, prunes non-essential elements one by one, and decrements scalar values towards the boundary until only the root cause remains.",
+    "A 10-element random array with dozens of irrelevant integers obscures whether a bug stems from order, size, or a specific value; shrinking reduces it to a single boundary case (like [50]), turning hours of triage into an instant fix.",
+    "Explore Fast-Forward Merges in Version Control to see how Git advances branch heads without merge commits when history has not diverged.",
     [{ slug: "async-race", relation: "builds on" }],
   ),
   "coupling-metrics": guide(

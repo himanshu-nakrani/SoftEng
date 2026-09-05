@@ -1,0 +1,20 @@
+{
+  "lesson": "caching-and-security/tls-handshake",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "requests": 172
+      },
+      "packets": 11,
+      "nextPacketId": 173,
+      "nodes": {
+        "client": "healthy",
+        "server": "healthy"
+      }
+    }
+  ]
+}

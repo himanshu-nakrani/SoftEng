@@ -1,7 +1,7 @@
 "use client";
 
 import { SectionAlgoFigure } from "@/components/lesson/SectionAlgoFigure";
-import { ThreadsView } from "@/engine/algo/views/ThreadsView";
+import { ArrayView } from "@/engine/algo/views/ArrayView";
 import { propertyShrinkingAlgo } from "./property-shrinking";
 
 /**
@@ -13,8 +13,8 @@ export function PropertyShrinkingFigure() {
   return (
     <SectionAlgoFigure
       def={propertyShrinkingAlgo}
-      view={ThreadsView}
-      description="TODO: what a reader should watch for, in one or two sentences. This is the figure's accessible description."
+      view={ArrayView}
+      description="Property-based testing shrinking pipeline: step through bisection, element deletion, and scalar decrementing to watch a 10-element random counterexample reduce to the minimal failing input [50]."
     />
   );
 }
