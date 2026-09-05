@@ -10,6 +10,7 @@ import { threadPoolSizingAlgo } from "@/lessons/on-call/thread-pool-sizing";
 import { circuitBreakerHysteresisAlgo } from "@/lessons/on-call/circuit-breaker-hysteresis";
 import { zeroDowntimeMigrationAlgo } from "@/lessons/on-call/zero-downtime-migration";
 import { splitBrainPartitionAlgo } from "@/lessons/resilience-engineering/split-brain-partition";
+import { memoryLeakTriageAlgo } from "@/lessons/resilience-engineering/memory-leak-triage";
 
 /**
  * Track 11's prose states numbers MEASURED from real sub-runs — "correct in 54
@@ -169,6 +170,35 @@ describe("zero-downtime-migration — schema migration under continuous traffic"
     expect(chosen(zeroDowntimeMigrationAlgo, 0).option.id).toBe("alter-table");
     expect(chosen(zeroDowntimeMigrationAlgo, 1).option.id).toBe("premature-read");
     expect(chosen(zeroDowntimeMigrationAlgo, 2).option.id).toBe("expand-contract");
+  });
+});
+
+describe("memory-leak-triage — triage action and drain sequence under memory exhaustion", () => {
+  it("restarting all pods drops 350 to 500 requests and fails SLA in all 200 runs", () => {
+    const restart = optionById(memoryLeakTriageAlgo, "restart-all");
+    expect(restart.outcome.value).toBe(0);
+    expect(restart.outcome.outOf).toBe(200);
+    expect(restart.outcome.headline).toBe("dropped requests ranged 350 to 500 — held in 0/200 runs");
+  });
+
+  it("waiting for OOM-kill drops 180 to 260 requests with resets across all 200 runs", () => {
+    const oom = optionById(memoryLeakTriageAlgo, "wait-oom");
+    expect(oom.outcome.value).toBe(0);
+    expect(oom.outcome.outOf).toBe(200);
+    expect(oom.outcome.headline).toBe("dropped requests ranged 180 to 260 — held in 0/200 runs");
+  });
+
+  it("rolling graceful drain holds SLA with 0 dropped requests in all 200 runs", () => {
+    const drain = optionById(memoryLeakTriageAlgo, "rolling-drain");
+    expect(drain.outcome.value).toBe(200);
+    expect(drain.outcome.outOf).toBe(200);
+    expect(drain.outcome.headline).toBe("dropped requests held 0 — held in 200/200 runs");
+  });
+
+  it("the slider selects each triage option and mutates the chosen outcome", () => {
+    expect(chosen(memoryLeakTriageAlgo, 0).option.id).toBe("restart-all");
+    expect(chosen(memoryLeakTriageAlgo, 1).option.id).toBe("wait-oom");
+    expect(chosen(memoryLeakTriageAlgo, 2).option.id).toBe("rolling-drain");
   });
 });
 
