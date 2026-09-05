@@ -715,6 +715,13 @@ export const learningGuides: Record<string, LearningGuide> = {
     "Slide between the monolithic rename, premature read release, and expand/contract to see how decoupling DB migrations from code deployments avoids downtime.",
     [{ slug: "the-mutex-call", relation: "builds on" }],
   ),
+  "async-race": guide(
+    "Why does an asynchronous test pass on a fast development machine but intermittently fail in CI?",
+    "Replacing an arbitrary sleep with condition awaiting eliminates the timing window, turning a 50% flake rate into 100% deterministic passes.",
+    "A fixed sleep is a wager on thread scheduling and container load; when CI throttles CPU, the sleep expires before background work finishes. Synchronizing on actual state conditions removes the race while allowing fast runs to proceed without artificial delay.",
+    "Run the sleep figure at seed 42 to observe the early assertion failure, then switch to the awaiting figure and confirm that 100% of orders pass.",
+    [{ slug: "flaky-tests", relation: "builds on" }],
+  ),
 };
 
 export function getLearningGuide(slug: string): LearningGuide {
