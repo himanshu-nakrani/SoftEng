@@ -4,7 +4,7 @@
    syslab design tokens.
 
    Two palettes, one grammar. Dark (default) is mineral gray with an oxidized
-   teal accent. Light, via prefers-color-scheme, is pale cool paper with a
+   teal accent. Light (`html[data-theme="light"]`) is pale cool paper with a
    deep indigo accent. SVG viz and UI share these variables — packet colors,
    node strokes, meter fills, and overlay hues must reference tokens, never
    hard-coded colors.
@@ -109,39 +109,39 @@ body {
   scrollbar-color: var(--color-border-bright) transparent;
 }
 
-/* pale cool paper (theme 1) — OS light. Same token names, inverted grounds. */
-@media (prefers-color-scheme: light) {
-  html {
-    color-scheme: light;
-  }
-  :root {
-    --color-bg: #e7ecf0;
-    --color-surface: #f4f7f9;
-    --color-raised: #ffffff;
-    --color-overlay: #dce3e8;
-    --color-border: #c5ced4;
-    --color-border-bright: #9aa8b0;
-    --color-fg: #1a2328;
-    --color-fg-muted: #3e4c54;
-    --color-fg-faint: #4e5c64;
-    --color-accent: #2c4a6e;
-    --color-accent-dim: color-mix(in oklab, #2c4a6e 12%, transparent);
+/* pale cool paper (theme 1). Boot script sets data-theme from storage or OS. */
+.theme-sun { display: block; }
+.theme-moon { display: none; }
+html[data-theme="light"] .theme-sun { display: none; }
+html[data-theme="light"] .theme-moon { display: block; }
 
-    /* Accessible high-contrast glow tokens for light mode (>= 4.5:1 on light surfaces) */
-    --color-glow-amber: #8a5806;
-    --color-glow-orange: #a34509;
-    --color-glow-cyan: #0a687d;
-    --color-glow-violet: #6938ab;
-    --color-glow-green: #1d6e38;
-    --color-glow-red: #a82020;
+html[data-theme="light"] {
+  color-scheme: light;
+  --color-bg: #e7ecf0;
+  --color-surface: #f4f7f9;
+  --color-raised: #ffffff;
+  --color-overlay: #dce3e8;
+  --color-border: #c5ced4;
+  --color-border-bright: #9aa8b0;
+  --color-fg: #1a2328;
+  --color-fg-muted: #3e4c54;
+  --color-fg-faint: #4e5c64;
+  --color-accent: #2c4a6e;
+  --color-accent-dim: color-mix(in oklab, #2c4a6e 12%, transparent);
 
-    --color-glow-amber-dim: color-mix(in oklab, #8a5806 12%, transparent);
-    --color-glow-orange-dim: color-mix(in oklab, #a34509 12%, transparent);
-    --color-glow-cyan-dim: color-mix(in oklab, #0a687d 12%, transparent);
-    --color-glow-violet-dim: color-mix(in oklab, #6938ab 12%, transparent);
-    --color-glow-green-dim: color-mix(in oklab, #1d6e38 12%, transparent);
-    --color-glow-red-dim: color-mix(in oklab, #a82020 12%, transparent);
-  }
+  --color-glow-amber: #8a5806;
+  --color-glow-orange: #a34509;
+  --color-glow-cyan: #0a687d;
+  --color-glow-violet: #6938ab;
+  --color-glow-green: #1d6e38;
+  --color-glow-red: #a82020;
+
+  --color-glow-amber-dim: color-mix(in oklab, #8a5806 12%, transparent);
+  --color-glow-orange-dim: color-mix(in oklab, #a34509 12%, transparent);
+  --color-glow-cyan-dim: color-mix(in oklab, #0a687d 12%, transparent);
+  --color-glow-violet-dim: color-mix(in oklab, #6938ab 12%, transparent);
+  --color-glow-green-dim: color-mix(in oklab, #1d6e38 12%, transparent);
+  --color-glow-red-dim: color-mix(in oklab, #a82020 12%, transparent);
 }
 
 /* ---------------------------------------------------------------------------

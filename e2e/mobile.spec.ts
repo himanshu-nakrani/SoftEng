@@ -183,16 +183,12 @@ test.describe("mobile nav drawer", () => {
     const targetLink = drawer.getByRole("link", { name: TARGET.title });
     await expect(targetLink).toBeVisible();
     await expect(targetLink).toHaveAttribute("href", TARGET.route);
-    // Two levels of escape from a lesson, both registry-derived: this track's
-    // map (named by the track, not a generic "Learning path"), and the
-    // curriculum index above it.
-    await expect(
-      drawer.getByRole("link", { name: firstTrack.title }),
-    ).toBeVisible();
+    await expect(drawer.getByText(firstTrack.title, { exact: true })).toBeVisible();
     await expect(drawer.getByRole("link", { name: "All tracks" })).toBeVisible();
+    await expect(drawer.getByRole("link", { name: "Track map" })).toBeVisible();
 
-    // The drawer footer carries the storage disclosure. Appearance follows
-    // prefers-color-scheme (pale paper in light, mineral gray in dark).
+    // The drawer footer carries the storage disclosure. Appearance is a
+    // header toggle (storage, else prefers-color-scheme).
     await expect(
       drawer.getByText("saved locally · no account needed"),
     ).toBeVisible();

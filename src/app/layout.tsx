@@ -13,6 +13,8 @@ import {
   IBM_Plex_Mono,
   IBM_Plex_Sans,
 } from "next/font/google";
+import { THEME_BOOT } from "@/lib/theme";
+import Script from "next/script";
 import "./globals.css";
 
 /**
@@ -124,10 +126,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${bricolage.variable} ${plexSans.variable} ${plexMono.variable} font-sans antialiased`}
       >
+        <Script
+          id="syslab-theme"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: THEME_BOOT }}
+        />
         {/* Keyboard-only escape hatch past the nav; invisible until focused. */}
         <a
           href="#main"

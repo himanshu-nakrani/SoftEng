@@ -289,7 +289,7 @@ Three archetypes in a row have collapsed into archetype B. The pattern to apply 
 
 ### Design system
 
-The governing direction is still scientific-plate composition (hairlines, mono marginalia, hierarchy by luminance) but the palette is dual: **mineral gray** in dark (`--color-accent` oxidized teal `#8fbfb6`) and **pale cool paper** in light (indigo `#2c4a6e`), switched by `prefers-color-scheme`. Tokens live in `@theme` in `src/app/globals.css`. `--color-glow-orange` is the warning/degraded hue; cyan is info/misses; red means capacity loss/faults, not policy refusals. Track identity uses `glow-amber/violet/…`, not `--color-accent`. SVG viz and UI share the same variables — never hard-coded colors.
+The governing direction is still scientific-plate composition (hairlines, mono marginalia, hierarchy by luminance) but the palette is dual: **mineral gray** in dark (`--color-accent` oxidized teal `#8fbfb6`) and **pale cool paper** in light (indigo `#2c4a6e`), switched by `html[data-theme]` (header/sidebar toggle; first visit follows `prefers-color-scheme`). Tokens live in `@theme` in `src/app/globals.css`. `--color-glow-orange` is the warning/degraded hue; cyan is info/misses; red means capacity loss/faults, not policy refusals. Track identity uses `glow-amber/violet/…`, not `--color-accent`. SVG viz and UI share the same variables — never hard-coded colors.
 
 Conventions that keep it coherent (violating them is how the drift this branch fixed crept back in):
 

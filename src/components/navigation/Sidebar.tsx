@@ -3,6 +3,7 @@
 import { CommandPalette } from "@/components/navigation/CommandPalette";
 import { SidebarTree } from "@/components/navigation/SidebarTree";
 import { Wordmark } from "@/components/navigation/SiteChrome";
+import { ThemeToggle } from "@/components/navigation/ThemeToggle";
 import { firstTrack, trackFromPathname, trackLabel } from "@/lib/curriculum";
 import { usePathname } from "next/navigation";
 
@@ -37,9 +38,12 @@ export function Sidebar() {
 
       <SidebarTree />
 
-      <p className="mt-auto border-t border-border px-2.5 pt-4 font-mono text-[9px] tracking-widest text-fg-faint uppercase">
-        saved locally · no account needed
-      </p>
+      <div className="mt-auto flex items-center gap-2 border-t border-border px-2.5 pt-4">
+        <ThemeToggle />
+        <p className="font-mono text-[9px] tracking-widest text-fg-faint uppercase">
+          saved locally · no account needed
+        </p>
+      </div>
     </aside>
   );
 }

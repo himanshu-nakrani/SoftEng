@@ -1,3 +1,4 @@
+import { ThemeToggle } from "@/components/navigation/ThemeToggle";
 import { cn } from "@/lib/cn";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -64,6 +65,7 @@ export function SiteHeader({
       <Wordmark />
       <nav aria-label="Site" className="flex items-center gap-5">
         {nav}
+        <ThemeToggle />
       </nav>
     </header>
   );

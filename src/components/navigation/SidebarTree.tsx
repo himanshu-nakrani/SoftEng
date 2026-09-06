@@ -1,7 +1,7 @@
 "use client";
 
 import { ProgressRing } from "@/components/navigation/ProgressRing";
-import type { LessonMeta, Module } from "@/curriculum/types";
+import type { LessonMeta, Module, Track } from "@/curriculum/types";
 import type { LearningActivity } from "@/hooks/use-lesson-progress";
 import { useLessonProgress } from "@/hooks/use-lesson-progress";
 import { cn } from "@/lib/cn";
@@ -11,11 +11,13 @@ import {
   firstTrack,
   lessonPath,
   trackFromPathname,
+  tracks,
   trackPath,
 } from "@/lib/curriculum";
-import { Library, ListChecks, Map as MapIcon } from "lucide-react";
+import { ChevronRight, Library, ListChecks } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 /** Shared row geometry for every navigable line in the tree. */
 const ROW =
@@ -84,71 +86,67 @@ function SidebarLesson({
   );
 }
 
-/**
- * The learn-area navigation body: a link back to the curriculum index, then
- * every module → lesson row of the ACTIVE track with its progress ring.
- * Registry-driven (nothing hardcoded) and shared verbatim by the desktop
- * `Sidebar` and the mobile drawer, so the two can never drift.
- *
- * Scoped to one track deliberately: a flat tree over every track would be
- * hundreds of rows deep and would imply the curriculum is one long course.
- * On the index itself (no track in the URL) it falls back to the first track
- * so the tree is never empty.
- *
- * Renders a fragment: the parent owns the column layout (both callers are
- * `flex flex-col gap-1`).
- *
- * @param onNavigate fired when any link is activated — the drawer uses it to
- *   close itself even when the click targets the page already showing.
- */
-export function SidebarTree({ onNavigate }: { onNavigate?: () => void }) {
-  const pathname = usePathname();
-  const track = trackFromPathname(pathname) ?? firstTrack;
+function TrackBranch({
+  track,
+  pathname,
+  open,
+  onOpenChange,
+  onNavigate,
+}: {
+  track: Track;
+  pathname: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onNavigate?: () => void;
+}) {
   const mapHref = trackPath(track);
   const onMap = pathname === mapHref;
 
   return (
-    <>
-      {/* Two levels up, in order: this track's map, then every track. The
-          index row is quiet because it is an escape hatch, not the primary
-          move — with one track it is nearly redundant, with eleven it is how
-          you leave. */}
+    <details
+      className="group mb-1"
+      open={open}
+      onToggle={(event) => {
+        onOpenChange((event.currentTarget as HTMLDetailsElement).open);
+      }}
+    >
+      <summary
+        className={cn(
+          ROW,
+          "cursor-pointer list-none [&::-webkit-details-marker]:hidden",
+          open ? "text-fg" : "text-fg-muted hover:bg-surface/80 hover:text-fg",
+        )}
+      >
+        <ChevronRight
+          className="size-3.5 shrink-0 transition-transform group-open:rotate-90"
+          strokeWidth={1.75}
+        />
+        <span className="min-w-0 truncate">{track.title}</span>
+      </summary>
+
       <Link
         href={mapHref}
         aria-current={onMap ? "page" : undefined}
         onClick={onNavigate}
         className={cn(
           ROW,
+          "mt-0.5 pl-6",
           onMap
             ? "sidebar-active-row bg-raised/90 text-fg"
-            : "text-fg-muted hover:translate-x-px hover:bg-surface/80 hover:text-fg",
+            : "text-fg-faint hover:translate-x-px hover:bg-surface/80 hover:text-fg-muted",
         )}
       >
-        <MapIcon className="size-4" strokeWidth={1.75} />
-        {track.title}
-      </Link>
-
-      <Link
-        href="/learn"
-        aria-current={pathname === "/learn" ? "page" : undefined}
-        onClick={onNavigate}
-        className={cn(
-          ROW,
-          "mb-3 text-fg-faint hover:translate-x-px hover:bg-surface/80 hover:text-fg-muted",
-        )}
-      >
-        <Library className="size-4" strokeWidth={1.75} />
-        All tracks
+        Track map
       </Link>
 
       {track.modules.map((module) => (
         <nav
           key={module.slug}
-          className="sidebar-module mb-4"
+          className="sidebar-module mb-3 mt-2"
           aria-label={module.title}
           style={{ ["--module-accent" as string]: accentCssVar[accentOf(module)] }}
         >
-          <p className="tech-label mb-1.5 pl-4">{module.title}</p>
+          <p className="tech-label mb-1.5 pl-6">{module.title}</p>
           <ul className="flex flex-col gap-0.5">
             {module.lessons.map((lesson) => (
               <SidebarLesson
@@ -162,12 +160,58 @@ export function SidebarTree({ onNavigate }: { onNavigate?: () => void }) {
           </ul>
         </nav>
       ))}
+    </details>
+  );
+}
 
-      {/* Tree footer: the track-wide practice deck. Below the modules because
-          it belongs to none of them, behind a hairline so it reads as a
-          different kind of destination. No `aria-current` — /review lives
-          outside this layout, so this row can never be the active page while
-          the tree is on screen. */}
+/**
+ * Every track as a disclosure. The active track starts open; others stay
+ * shut so eleven tracks do not dump hundreds of rows. Shared by the desktop
+ * sidebar and the mobile drawer.
+ */
+export function SidebarTree({ onNavigate }: { onNavigate?: () => void }) {
+  const pathname = usePathname();
+  const current = trackFromPathname(pathname) ?? firstTrack;
+  const [open, setOpen] = useState(() => new Set([current.slug]));
+  const [seen, setSeen] = useState(current.slug);
+  if (current.slug !== seen) {
+    setSeen(current.slug);
+    setOpen((prev) => new Set(prev).add(current.slug));
+  }
+
+  return (
+    <>
+      <Link
+        href="/learn"
+        aria-current={pathname === "/learn" ? "page" : undefined}
+        onClick={onNavigate}
+        className={cn(
+          ROW,
+          "mb-2 text-fg-faint hover:translate-x-px hover:bg-surface/80 hover:text-fg-muted",
+        )}
+      >
+        <Library className="size-4" strokeWidth={1.75} />
+        All tracks
+      </Link>
+
+      {tracks.map((track) => (
+        <TrackBranch
+          key={track.slug}
+          track={track}
+          pathname={pathname}
+          open={open.has(track.slug)}
+          onOpenChange={(nextOpen) => {
+            setOpen((prev) => {
+              const next = new Set(prev);
+              if (nextOpen) next.add(track.slug);
+              else next.delete(track.slug);
+              return next;
+            });
+          }}
+          onNavigate={onNavigate}
+        />
+      ))}
+
       <div className="mt-1 border-t border-border pt-2">
         <Link
           href="/review"
