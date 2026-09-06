@@ -111,7 +111,6 @@ export function isPackageTableState(state: unknown): state is PackageTableState 
   return Boolean(
     state &&
       typeof state === "object" &&
-      ("packages" in (state as Record<string, unknown>) ||
-        (state as Record<string, unknown>).kind === "package-metrics"),
+      (state as Record<string, unknown>).kind === "package-metrics",
   );
 }

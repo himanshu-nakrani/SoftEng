@@ -322,6 +322,7 @@ function PackageMetricsView({ state }: { state: PackageTableState }) {
             >
               {pkg.ce}
             </text>
+            {/* Instability I */}
             <text
               x={290}
               y={y + 20}
@@ -334,23 +335,27 @@ function PackageMetricsView({ state }: { state: PackageTableState }) {
               }
               style={{ font: "600 12px var(--font-plex-mono)" }}
             >
-              {pkg.i.toFixed(2)}
+              {pkg.i?.toFixed(2) ?? "—"}
             </text>
+
+            {/* Abstractness A */}
             <text
               x={430}
               y={y + 20}
               fill={pkg.a > 0 ? "var(--color-glow-green)" : "var(--color-fg-muted)"}
               style={{ font: "600 12px var(--font-plex-mono)" }}
             >
-              {pkg.a.toFixed(2)}
+              {pkg.a?.toFixed(2) ?? "—"}
             </text>
+
+            {/* Distance D */}
             <text
               x={560}
               y={y + 20}
               fill={dColour}
               style={{ font: "700 12px var(--font-plex-mono)" }}
             >
-              {pkg.d.toFixed(2)}
+              {pkg.d?.toFixed(2) ?? "—"}
             </text>
             <rect
               x={672}
@@ -401,7 +406,7 @@ function packageAriaLabel(state: PackageTableState): string {
   const pkgs = state.packages
     .map(
       (p) =>
-        `${p.name}: Ca=${p.ca}, Ce=${p.ce}, I=${p.i.toFixed(2)}, A=${p.a.toFixed(2)}, D=${p.d.toFixed(2)}${p.zone ? ` (${p.zone})` : ""}`,
+        `${p.name}: Ca=${p.ca}, Ce=${p.ce}, I=${p.i?.toFixed(2) ?? "—"}, A=${p.a?.toFixed(2) ?? "—"}, D=${p.d?.toFixed(2) ?? "—"}${p.zone ? ` (${p.zone})` : ""}`,
     )
     .join("; ");
   return `Package metrics table. ${pkgs}. ${state.caption ?? ""}`;
