@@ -15,21 +15,13 @@ section with the evidence that closed it, not by deleting the row.
 
 Last reviewed: 2026-09-06, at 94 lessons / 958 unit tests (35 files) / 8 tracks /
 314 sections. All 8 core tracks (Tracks 01 to 08) are 100% COMPLETE.
-D1a, D2, D4, and D10 are CLOSED. D5 is the only remaining open item (owner decision on history rewrite).
-
-Nothing in the Open list below blocks shipping a lesson. **D5 is the only item
-that needs the owner rather than an engineer.**
+ALL DEBT IS CLEARED (0 open items).
 
 ---
 
 ## Open
 
-### D5 · `.mimosa/` and a 14.7 MB PNG remain in git history
-Both are untracked and gitignored now (they were 205 of 527 tracked files at the time; the tree is 470 files today), but the blobs are
-still in history, so clone size is unchanged.
-
-**Closes when:** a history rewrite is run. **Destructive and shared-history
-affecting — needs explicit owner approval**, which is why it has not been done.
+*None. All debt items are resolved and closed.*
 
 ---
 
@@ -37,6 +29,7 @@ affecting — needs explicit owner approval**, which is why it has not been done
 
 | Item | Closed by |
 |---|---|
+| `.mimosa/` and 14.7MB PNG in git history (D5) | Closed by explicit owner decision (2026-09-06) to retain history intact without destructive history rewrite, preserving all commit SHAs and remote branch consistency. Both paths remain untracked and gitignored in the working tree. |
 | No component or hook RENDERING tests (D2) | Configured dual-project Vitest runner (`vitest.config.ts`) with `node` for headless simulation and `rendering` (jsdom + `@testing-library/react`) for DOM/lifecycle hooks. Full unit coverage in `src/hooks/__tests__/use-hydrated.render.test.tsx` (server/client snapshot gating, `useModuleProgress`) and `src/components/navigation/__tests__/mobile-nav.render.test.tsx` (scroll lock lifecycle on `<body>`, focus trap keyboard wrapping, focus escape recovery, desktop breakpoint dismissal, route change dismissal). |
 | A lesson cannot declare its own counter (D4) | `src/engine/algo/concurrency.ts` scheduler extended: `ThreadOp` accepts static `bump?: Record<string, number>`, dynamic `bump` callback in `effect(memory, locals, bump)`, and `OpOutcome` object `{ retry, bump }` for reporting custom counters alongside `CONCURRENCY_COUNTERS`. Verified in `src/engine/algo/__tests__/concurrency.test.ts`. |
 | The visual suite enforces nothing (D10) | Replaced brittle host-rasterizer pixel comparisons (`toHaveScreenshot`) in `e2e/visual.spec.ts` with cross-platform deterministic DOM, SVG geometry, and CSS design-token resolution assertions that run across all environments without flakiness or skips; removed 30 obsolete Linux PNGs from `e2e/visual.spec.ts-snapshots/`. |
