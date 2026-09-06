@@ -1369,7 +1369,7 @@ export const curriculum: Curriculum = {
               moduleSlug: "web-requests",
               title: "DNS Resolution",
               tagline:
-                "TODO: one line that states the tension, not the topic.",
+                "Names give humans readable identity, but every lookup costs round trips to servers you don't control; caching hides the delay until a record changes and stale caches misroute your traffic.",
               difficulty: "foundational",
               estimatedMinutes: 12,
               prerequisites: [],
@@ -1386,7 +1386,7 @@ export const curriculum: Curriculum = {
               moduleSlug: "web-requests",
               title: "The TCP Handshake",
               tagline:
-                "TODO: one line that states the tension, not the topic.",
+                "Reliable packet delivery requires agreement before a single byte of data can flow; three packets cross the world to establish state that packet loss and latency immediately test.",
               difficulty: "foundational",
               estimatedMinutes: 12,
               prerequisites: ["dns-resolution"],
@@ -1403,7 +1403,7 @@ export const curriculum: Curriculum = {
               moduleSlug: "web-requests",
               title: "HTTP Request & Response",
               tagline:
-                "TODO: one line that states the tension, not the topic.",
+                "A simple request-response model is intuitive, but opening a fresh TCP connection for every asset spends more time in handshakes than transferring content.",
               difficulty: "foundational",
               estimatedMinutes: 12,
               prerequisites: ["tcp-handshake"],
@@ -1420,7 +1420,7 @@ export const curriculum: Curriculum = {
               moduleSlug: "web-requests",
               title: "Keep-Alive & Connection Reuse",
               tagline:
-                "TODO: one line that states the tension, not the topic.",
+                "Tearing down connections after each request wastes CPU and latency on repeated handshakes; keeping them alive amortizes setup across requests until idle pools exhaust socket limits.",
               difficulty: "intermediate",
               estimatedMinutes: 12,
               prerequisites: ["http-request-response"],
@@ -1566,7 +1566,7 @@ export const curriculum: Curriculum = {
               moduleSlug: "refactoring",
               title: "Extract Function",
               tagline:
-                "TODO: one line that states the tension, not the topic.",
+                "A long method hides distinct responsibilities in a single block of code; extracting focused functions reduces cyclomatic complexity while preserving total decision points.",
               difficulty: "intermediate",
               estimatedMinutes: 12,
               prerequisites: [],
@@ -1583,7 +1583,7 @@ export const curriculum: Curriculum = {
               moduleSlug: "refactoring",
               title: "Inline & Rename",
               tagline:
-                "TODO: one line that states the tension, not the topic.",
+                "Premature indirection obscures logic behind layers of trivial helpers; inlining unnecessary abstractions and renaming intention-revealing names restores clarity.",
               difficulty: "intermediate",
               estimatedMinutes: 11,
               prerequisites: ["extract-function"],
@@ -1600,7 +1600,7 @@ export const curriculum: Curriculum = {
               moduleSlug: "refactoring",
               title: "Duplicated Logic",
               tagline:
-                "TODO: one line that states the tension, not the topic.",
+                "Copy-paste programming feels fast right now, but every duplicated branch multiplies future maintenance burden and creates subtle drift between copies.",
               difficulty: "intermediate",
               estimatedMinutes: 12,
               prerequisites: ["extract-function"],
@@ -1718,7 +1718,7 @@ export const curriculum: Curriculum = {
               moduleSlug: "architecture-boundaries",
               title: "Dependency Inversion & Clean Architecture",
               tagline:
-                "TODO: one line that states the tension, not the topic.",
+                "Directly importing databases and external services couples domain business rules to third-party APIs; inverting dependencies through ports insulates business core logic behind clean interfaces.",
               difficulty: "intermediate",
               estimatedMinutes: 12,
               prerequisites: ["cyclic-dependencies"],
@@ -1769,7 +1769,7 @@ export const curriculum: Curriculum = {
               moduleSlug: "on-call",
               title: "The Mutex Call",
               tagline:
-                "TODO: one line that states the tension, not the topic.",
+                "A critical race condition corrupts balances under high load; wrapping shared state in a coarse mutex guarantees safety but collapses throughput down to a single thread.",
               difficulty: "intermediate",
               estimatedMinutes: 12,
               prerequisites: [],
@@ -1786,7 +1786,7 @@ export const curriculum: Curriculum = {
               moduleSlug: "on-call",
               title: "Retry or Back Off",
               tagline:
-                "TODO: one line that states the tension, not the topic.",
+                "Immediate retries look like resilience to individual clients, but thousands of concurrent retries amplify transient blips into catastrophic self-inflicted DDoS storms.",
               difficulty: "intermediate",
               estimatedMinutes: 12,
               prerequisites: ["the-mutex-call"],
