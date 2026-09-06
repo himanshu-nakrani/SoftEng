@@ -42,58 +42,43 @@ function SidebarLesson({
 }) {
   const progress = useLessonProgress(lesson);
   const href = lessonPath(lesson);
-  const soon = lesson.status === "coming-soon";
 
-  const row = (
-    <span
-      className={cn(
-        ROW,
-        active
-          ? "sidebar-active-row bg-raised/90 text-fg"
-          : soon
-            ? "text-fg-faint"
-            : "text-fg-muted hover:translate-x-px hover:bg-surface/80 hover:text-fg",
-      )}
-    >
-      <ProgressRing
-        size={16}
-        fraction={progress.fraction}
-        state={progress.state}
-        accent={accentOf(module)}
-      />
-      <span className="truncate">{lesson.title}</span>
-      {!soon && progress.activity !== "untouched" && (
-        <span
-          className={cn(
-            "ml-auto shrink-0 font-mono text-[9px] tracking-widest uppercase",
-            progress.activity === "mastered"
-              ? "text-accent"
-              : "text-fg-faint",
-          )}
-        >
-          {progress.activity === "mastered" ? "mastered" : activityLabel[progress.activity]}
-        </span>
-      )}
-      {soon && (
-        <span className="ml-auto font-mono text-[9px] tracking-widest text-fg-faint uppercase">
-          soon
-        </span>
-      )}
-    </span>
-  );
-
-  return soon ? (
-    <li>{row}</li>
-  ) : (
+  return (
     <li>
-      {/* aria-current so the active lesson is announced, not just tinted. */}
       <Link
         href={href}
         aria-current={active ? "page" : undefined}
         aria-label={`${lesson.title} — ${activityLabel[progress.activity]}`}
         onClick={onNavigate}
       >
-        {row}
+        <span
+          className={cn(
+            ROW,
+            active
+              ? "sidebar-active-row bg-raised/90 text-fg"
+              : "text-fg-muted hover:translate-x-px hover:bg-surface/80 hover:text-fg",
+          )}
+        >
+          <ProgressRing
+            size={16}
+            fraction={progress.fraction}
+            state={progress.state}
+            accent={accentOf(module)}
+          />
+          <span className="truncate">{lesson.title}</span>
+          {progress.activity !== "untouched" && (
+            <span
+              className={cn(
+                "ml-auto shrink-0 font-mono text-[9px] tracking-widest uppercase",
+                progress.activity === "mastered"
+                  ? "text-accent"
+                  : "text-fg-faint",
+              )}
+            >
+              {progress.activity === "mastered" ? "mastered" : activityLabel[progress.activity]}
+            </span>
+          )}
+        </span>
       </Link>
     </li>
   );

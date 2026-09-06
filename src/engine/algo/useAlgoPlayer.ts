@@ -5,7 +5,6 @@ import { buildAlgoSteps } from "./build";
 import type { AlgoDef, AlgoStep } from "./types";
 
 export interface AlgoControls {
-  toggle: () => void;
   play: () => void;
   pause: () => void;
   stepForward: () => void;
@@ -100,14 +99,6 @@ export function useAlgoPlayer<S, I>(
     speed,
     atEnd: index >= steps.length - 1,
     controls: {
-      toggle: () => {
-        engage();
-        setPlaying((p) => (index >= steps.length - 1 && !p ? p : !p));
-        if (index >= steps.length - 1) {
-          setIndex(0);
-          setPlaying(true);
-        }
-      },
       play: () => {
         engage();
         setPlaying(true);

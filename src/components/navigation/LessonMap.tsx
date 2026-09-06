@@ -257,17 +257,9 @@ function MapNode({
   index: number;
 }) {
   const progress = useLessonProgress(lesson);
-  const soon = lesson.status === "coming-soon";
 
   const row = (
-    <div
-      className={cn(
-        "flex-1 rounded-sm border border-transparent px-4 py-3.5 transition-all",
-        soon
-          ? "opacity-40"
-          : "group-hover:border-border-bright group-hover:bg-surface/60",
-      )}
-    >
+    <div className="flex-1 rounded-sm border border-transparent px-4 py-3.5 transition-all group-hover:border-border-bright group-hover:bg-surface/60">
       <div className="mb-1 flex items-baseline gap-2.5">
         <span className="tech-num text-[11px] text-fg-faint">
           {String(index).padStart(2, "0")}
@@ -275,12 +267,7 @@ function MapNode({
         <h3 className="font-display text-base font-semibold">
           {lesson.title}
         </h3>
-        {soon && (
-          <span className="font-mono text-[9px] tracking-widest text-fg-faint uppercase">
-            coming soon
-          </span>
-        )}
-        {!soon && progress.activity !== "untouched" && (
+        {progress.activity !== "untouched" ? (
           <span
             className={cn(
               "ml-auto font-mono text-[9px] tracking-widest uppercase",
@@ -289,8 +276,7 @@ function MapNode({
           >
             {activityLabel[progress.activity]}
           </span>
-        )}
-        {!soon && progress.activity === "untouched" && (
+        ) : (
           <ArrowRight className="ml-auto size-3.5 shrink-0 text-fg-faint opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
         )}
       </div>
@@ -326,13 +312,9 @@ function MapNode({
         />
         <div className="mt-2 w-px flex-1 bg-border" />
       </div>
-      {soon ? (
-        <div className="flex flex-1">{row}</div>
-      ) : (
-        <Link href={lessonPath(lesson)} className="group flex flex-1">
-          {row}
-        </Link>
-      )}
+      <Link href={lessonPath(lesson)} className="group flex flex-1">
+        {row}
+      </Link>
     </li>
   );
 }

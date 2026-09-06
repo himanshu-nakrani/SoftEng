@@ -145,14 +145,6 @@ export function NextLessonCard() {
     // `next` is undefined only at a TRACK boundary now, so this card is about
     // the track the reader is actually in, not the whole curriculum.
     <EndOfTrackCard trackSlug={trackOfLesson(meta).slug} />
-  ) : next.status === "coming-soon" ? (
-    <div className="rounded-xl border border-border bg-surface px-5 py-4 opacity-60">
-      <p className="tech-label mb-1 flex items-center gap-1.5">
-        <Sparkles className="size-3" />
-        next up — coming soon
-      </p>
-      <p className="font-display text-lg font-semibold">{next.title}</p>
-    </div>
   ) : (
     <Link href={lessonPath(next)} className="group block">
       <GlowCard className="flex items-center gap-4 px-5 py-4">
@@ -172,7 +164,7 @@ export function NextLessonCard() {
     // row from sm up. The `mt-16` that each branch used to carry lives here now
     // so both halves share one top edge.
     <div className="mt-16 flex flex-col-reverse gap-3 sm:flex-row sm:items-stretch">
-      {prev?.status === "available" && <PrevLessonLink lesson={prev} />}
+      {prev && <PrevLessonLink lesson={prev} />}
       <div className="min-w-0 flex-1">{forward}</div>
     </div>
   );

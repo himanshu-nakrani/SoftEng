@@ -18,8 +18,7 @@ export const firstTrack: Track = curriculum.tracks[0];
  *
  * DANGER: this is a cross-track flattening. It is correct for global indexes
  * (sitemap, the review deck, the test matrix) and WRONG for anything a learner
- * reads as "my progress" or "my sidebar" — those must be scoped with
- * `modulesOfTrack`, or a second track silently dilutes the denominator.
+ * reads as "my progress" or "my sidebar" — those must use `track.modules`.
  */
 export const modules: Module[] = tracks.flatMap((t) => t.modules);
 
@@ -59,11 +58,6 @@ export function trackOf(module: Module): Track {
 
 export function trackOfLesson(lesson: LessonMeta): Track {
   return trackByModuleSlug.get(lesson.moduleSlug)!;
-}
-
-/** Modules belonging to one track — the track-scoped form of `modules`. */
-export function modulesOfTrack(track: Track): Module[] {
-  return track.modules;
 }
 
 /** Lessons of one track in curriculum order — the scoped form of `allLessons`. */
