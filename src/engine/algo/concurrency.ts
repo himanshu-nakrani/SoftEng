@@ -34,8 +34,17 @@ export type Memory = Record<string, number>;
  * does NOT advance. That is the honest shape of a compare-and-swap: whether it
  * succeeds depends on what other threads did in between, so the number of
  * attempts is unbounded by nature. Anything else advances normally.
+ *
+ * An object outcome `{ retry?: boolean; bump?: Record<string, number> }`
+ * additionally allows reporting custom counter increments.
  */
-export type OpOutcome = void | "retry";
+export type OpOutcome =
+  | void
+  | "retry"
+  | {
+      retry?: boolean;
+      bump?: Record<string, number>;
+    };
 
 /** One indivisible operation. Granularity is the author's choice — and the lesson. */
 export interface ThreadOp {
@@ -43,6 +52,11 @@ export interface ThreadOp {
   label: string;
   /** Active pseudocode line, if the def ships code. */
   codeLine?: number;
+  /**
+   * Static counter increments reported every time this op executes.
+   * e.g. { lineTransfers: 1, cacheMisses: 1 }
+   */
+  bump?: Record<string, number>;
   /**
    * Acquire or release a named lock. An acquire on a lock held by ANOTHER
    * thread blocks this thread instead of executing; a thread may re-acquire a
@@ -59,8 +73,15 @@ export interface ThreadOp {
     label: string;
     ready: (memory: Memory, locals: Locals) => boolean;
   };
-  /** Mutate shared memory and/or this thread's locals. Runs atomically. */
-  effect?: (memory: Memory, locals: Locals) => OpOutcome;
+  /**
+   * Mutate shared memory and/or this thread's locals. Runs atomically.
+   * May optionally accept a `bump(key, by?)` callback to report dynamic counter increments.
+   */
+  effect?: (
+    memory: Memory,
+    locals: Locals,
+    bump: (key: string, by?: number) => void,
+  ) => OpOutcome;
 }
 
 export interface Thread {
@@ -243,16 +264,40 @@ export function interleave(
       locks[op.lock.name] =
         op.lock.action === "acquire" ? chosen.thread.id : null;
     }
-    const outcome = op.effect?.(memory, chosen.locals);
+
+    if (op.bump) {
+      for (const [key, count] of Object.entries(op.bump)) {
+        rec.bump(key, count);
+      }
+    }
+
+    const opBump = (key: string, by = 1) => {
+      rec.bump(key, by);
+    };
+
+    const outcome = op.effect?.(memory, chosen.locals, opBump);
+    let isRetry = false;
     if (outcome === "retry") {
-      // pc stays put: the op ran, did not succeed, and will run again.
+      isRetry = true;
       rec.bump(CONCURRENCY_COUNTERS.retries);
-    } else {
+    } else if (outcome && typeof outcome === "object") {
+      if (outcome.retry) {
+        isRetry = true;
+        rec.bump(CONCURRENCY_COUNTERS.retries);
+      }
+      if (outcome.bump) {
+        for (const [key, count] of Object.entries(outcome.bump)) {
+          rec.bump(key, count);
+        }
+      }
+    }
+
+    if (!isRetry) {
       chosen.pc += 1;
     }
 
     active = chosen.thread.id;
-    ranOp = outcome === "retry" ? `${op.label} (retry)` : op.label;
+    ranOp = isRetry ? `${op.label} (retry)` : op.label;
     rec.bump(CONCURRENCY_COUNTERS.steps);
     rec.record({
       codeLine: op.codeLine,

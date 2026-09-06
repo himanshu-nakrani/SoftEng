@@ -12,15 +12,35 @@ export default defineConfig({
     },
   },
   test: {
-    environment: "node",
-    pool: "forks",
-    include: ["src/**/__tests__/**/*.test.ts"],
-    /**
-     * The per-lesson invariant tests drive thousands of sim ticks; the slowest
-     * (`observability/slos-error-budgets`) sits around 2.5s on an idle laptop
-     * and has crossed vitest's 5s default on a loaded machine. CI runners are
-     * slower and shared, so the default turns a slow test into a false failure.
-     */
-    testTimeout: 20_000,
+    projects: [
+      {
+        resolve: {
+          alias: {
+            "@": fileURLToPath(new URL("./src", import.meta.url)),
+          },
+        },
+        test: {
+          name: "node",
+          environment: "node",
+          pool: "forks",
+          include: ["src/**/__tests__/**/*.test.ts"],
+          exclude: ["src/**/__tests__/**/*.render.test.{ts,tsx}"],
+          testTimeout: 20_000,
+        },
+      },
+      {
+        resolve: {
+          alias: {
+            "@": fileURLToPath(new URL("./src", import.meta.url)),
+          },
+        },
+        test: {
+          name: "rendering",
+          environment: "jsdom",
+          include: ["src/**/__tests__/**/*.render.test.{ts,tsx}"],
+          testTimeout: 20_000,
+        },
+      },
+    ],
   },
 });
