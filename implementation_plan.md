@@ -189,7 +189,7 @@ these numbers as the current display order.
 | 04 | Testing & Verification (`testing`) | D + C + B | ~9 | **complete — 9 shipped, 3 modules** |
 | 05 | Version Control & Delivery (`version-control`) | E + A | 8 | **complete — 8 shipped, 2 modules** |
 | 06 | Networking & the Web (`networking`) | A + B | 10 | **complete — 10 shipped, 3 modules** |
-| 07 | Software Design & Architecture (`software-design`) | F on B | ~10 | **open — 8 shipped, 2 modules complete (2 remaining to ~10)** |
+| 07 | Software Design & Architecture (`software-design`) | F + B | 10 | **complete — 10 shipped, 3 modules** |
 | 08 | Engineering Practice (`engineering-practice`) | G on B | 8 | **complete — 8 shipped, 2 modules** |
 | — | Security Engineering | A + B + D | ~12 | not started |
 | — | Languages & Runtimes | B | ~12 | not started |
@@ -290,12 +290,9 @@ The TCP Handshake, HTTP Request & Response, Keep-Alive & Connection Reuse), `htt
     certificate validation, and session key derivation. Demonstrates 1-RTT full
     handshake vs 0-RTT session resumption with replay attack trade-offs.
 
-#### Track 07 · Software Design & Architecture (~5 lessons remaining to ~10)
+#### Track 07 · Software Design & Architecture (**complete — 10 shipped across 3 modules**)
 
-Currently 5 lessons in `refactoring` (**complete module** on `algo/refactor.ts`:
-Extract Function, Duplicated Logic, Inline & Rename, Extract Class, Replace Conditional
-with Polymorphism). To reach ~10 lessons, expand beyond function/class refactoring into
-modularity and architecture boundaries:
+Track complete across refactoring AST transforms, package modularity metrics, and architectural boundaries:
 
 - Module 1: `refactoring` (**5 shipped — module complete**):
   - **Extract Function** (shipped)
@@ -307,11 +304,9 @@ modularity and architecture boundaries:
   - **Afferent & Efferent Coupling ($C_a, C_e$)** (shipped — incoming vs outgoing dependency counts across 4 packages, total coupling drops 12 → 8 while sum(Ca) = sum(Ce) holds)
   - **Instability & Abstractness ($I, A$)** (shipped — Martin's Main Sequence, Zone of Pain D=1.0 drops to D=0.5 via interface extraction)
   - **Cyclic Dependencies & the Acyclic Dependencies Principle (ADP)** (shipped — circular cycle detected with Tarjan DFS, broken via DIP to produce valid topological release order)
-- Module 3: `architecture-boundaries` (2 lessons on Archetype B + G):
-  - **Dependency Inversion & Ports/Adapters**: decoupling domain business entities
-    from infrastructure drivers (DB/HTTP) using abstract ports.
-  - **The Strangler Fig Pattern**: routing traffic between a legacy monolith and an
-    extracted microservice, migrating endpoints incrementally with zero downtime.
+- Module 3: `architecture-boundaries` (**2 shipped — module complete** on Archetype B, `views/TableView.tsx`):
+  - **Dependency Inversion & Ports/Adapters** (shipped — decoupling domain business entities from infrastructure drivers using abstract ports, domain fan-out drops 2 → 0)
+  - **The Strangler Fig Pattern** (shipped — routing traffic between a legacy monolith and microservices via facade proxy, incremental cutover completes with 0 downtime)
 
 #### Track 08 · Engineering Practice (**complete — 8 shipped across 2 modules**)
 
