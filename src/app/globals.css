@@ -1,24 +1,30 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
-   syslab design tokens — dark, technical, refined.
-   Warm graphite surfaces, phosphor-amber primary, hairline borders, glow accents.
-   These CSS variables are shared verbatim by UI *and* SVG visualizations so
-   the whole site speaks one visual language.
+   syslab design tokens.
+
+   Two palettes, one grammar. Dark (default) is mineral gray with an oxidized
+   teal accent. Light, via prefers-color-scheme, is pale cool paper with a
+   deep indigo accent. SVG viz and UI share these variables — packet colors,
+   node strokes, meter fills, and overlay hues must reference tokens, never
+   hard-coded colors.
+
+   Hex is the source; OG/PWA copies in src/lib/og.tsx, icon.svg, and the
+   manifest must stay in sync.
 --------------------------------------------------------------------------- */
 
 @theme {
-  /* surfaces — warm graphite, night-shift control room */
-  --color-bg: oklch(13.5% 0.01 70);
-  --color-surface: oklch(16.5% 0.012 70);
-  --color-raised: oklch(20% 0.014 70);
-  --color-overlay: oklch(23% 0.016 70);
+  /* surfaces — mineral shade (theme 4). Overridden for light below. */
+  --color-bg: #1c1f21;
+  --color-surface: #232628;
+  --color-raised: #2a2e30;
+  --color-overlay: #323638;
 
   /* hairlines */
-  --color-border: oklch(27% 0.016 70);
-  --color-border-bright: oklch(36% 0.02 70);
+  --color-border: #34383a;
+  --color-border-bright: #4a5254;
 
-  /* text — warm off-whites. The quiet-text LADDER is a contract:
+  /* text — the quiet-text LADDER is a contract:
      - fg        the sentence itself (prose, active states)
      - fg-muted  support voice — captions, inactive controls, secondary prose
      - fg-faint  marginalia — stamps, timestamps, units, footers. ALWAYS as
@@ -27,35 +33,33 @@
                  (/50, /70, /80) never do; they composite below threshold and
                  are banned for text. Borders and decorative marks may still
                  use alpha. */
-  --color-fg: oklch(93% 0.008 80);
-  --color-fg-muted: oklch(66% 0.014 75);
-  --color-fg-faint: oklch(60% 0.014 75);
+  --color-fg: #e4e6e5;
+  --color-fg-muted: #a3aaa8;
+  --color-fg-faint: #9aa19f;
 
-  /* Radius grammar (plate geometry): near-square PLATES (cards, figure
-     shells, overlays — usually CornerTicks-framed) vs machined CONTROLS
-     (`rounded-md`, buttons/inputs/segments, left at Tailwind's 6px default).
-     Circles keep `rounded-full` (pips, rings, toggles). No other radius
-     values exist; don't reintroduce them. */
-  --radius-sm: 2px;
-  --radius-lg: 2px;
-  --radius-xl: 2px;
-  --radius: 2px;
+  /* Radius grammar: plates/chips/asides at 8px; controls stay rounded-md
+     (6px); circles keep rounded-full. */
+  --radius-sm: 8px;
+  --radius-lg: 8px;
+  --radius-xl: 8px;
+  --radius: 8px;
 
-  /* PRIMARY — phosphor amber: CTAs, request packets, rings, outlined type */
-  --color-accent: oklch(80% 0.15 80);
-  --color-accent-dim: oklch(80% 0.15 80 / 12%);
+  /* PRIMARY — oxidized teal in dark, indigo in light */
+  --color-accent: #8fbfb6;
+  --color-accent-dim: color-mix(in oklab, #8fbfb6 14%, transparent);
 
-  /* semantic glow accents (glow-amber === accent; orange is the WARNING
-     hue so degraded states never impersonate the brand color) */
-  --color-glow-amber: oklch(80% 0.15 80);
+  /* semantic glow accents for simulation data. Orange is the WARNING hue
+     so degraded states never impersonate the brand color. Cyan is info.
+     Red means capacity loss/faults, not policy refusals. Track identity
+     still maps through glow-amber/violet/… — not through --color-accent. */
+  --color-glow-amber: #d4a84b;
   --color-glow-orange: oklch(72% 0.16 50);
-  --color-glow-cyan: oklch(80% 0.11 210); /* demoted: info, misses */
+  --color-glow-cyan: oklch(80% 0.11 210);
   --color-glow-violet: oklch(74% 0.14 300);
   --color-glow-green: oklch(80% 0.15 150);
   --color-glow-red: oklch(66% 0.19 28);
 
-  /* dimmed accent surfaces (chips, badges, meter tracks) */
-  --color-glow-amber-dim: oklch(80% 0.15 80 / 12%);
+  --color-glow-amber-dim: color-mix(in oklab, #d4a84b 12%, transparent);
   --color-glow-orange-dim: oklch(72% 0.16 50 / 12%);
   --color-glow-cyan-dim: oklch(80% 0.11 210 / 12%);
   --color-glow-violet-dim: oklch(74% 0.14 300 / 12%);
@@ -77,9 +81,6 @@
 
 html {
   scroll-behavior: smooth;
-  /* The site is dark-only, so tell the UA: native controls (scrollbars, range
-     inputs, form widgets, the canvas behind the page) render dark chrome
-     instead of light. */
   color-scheme: dark;
 }
 
@@ -92,14 +93,14 @@ body {
 }
 
 ::selection {
-  background: oklch(80% 0.15 80 / 25%);
+  background: color-mix(in oklab, var(--color-accent) 28%, transparent);
   color: var(--color-fg);
 }
 
 :focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
-  border-radius: 2px;
+  border-radius: 8px;
 }
 
 /* thin dark scrollbars */
@@ -108,16 +109,39 @@ body {
   scrollbar-color: var(--color-border-bright) transparent;
 }
 
-/* film grain — kills flat digital surfaces; sits above everything, inert */
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  pointer-events: none;
-  opacity: 0.05;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 180px 180px;
+/* pale cool paper (theme 1) — OS light. Same token names, inverted grounds. */
+@media (prefers-color-scheme: light) {
+  html {
+    color-scheme: light;
+  }
+  :root {
+    --color-bg: #e7ecf0;
+    --color-surface: #f4f7f9;
+    --color-raised: #ffffff;
+    --color-overlay: #dce3e8;
+    --color-border: #c5ced4;
+    --color-border-bright: #9aa8b0;
+    --color-fg: #1a2328;
+    --color-fg-muted: #3e4c54;
+    --color-fg-faint: #4e5c64;
+    --color-accent: #2c4a6e;
+    --color-accent-dim: color-mix(in oklab, #2c4a6e 12%, transparent);
+
+    /* Accessible high-contrast glow tokens for light mode (>= 4.5:1 on light surfaces) */
+    --color-glow-amber: #8a5806;
+    --color-glow-orange: #a34509;
+    --color-glow-cyan: #0a687d;
+    --color-glow-violet: #6938ab;
+    --color-glow-green: #1d6e38;
+    --color-glow-red: #a82020;
+
+    --color-glow-amber-dim: color-mix(in oklab, #8a5806 12%, transparent);
+    --color-glow-orange-dim: color-mix(in oklab, #a34509 12%, transparent);
+    --color-glow-cyan-dim: color-mix(in oklab, #0a687d 12%, transparent);
+    --color-glow-violet-dim: color-mix(in oklab, #6938ab 12%, transparent);
+    --color-glow-green-dim: color-mix(in oklab, #1d6e38 12%, transparent);
+    --color-glow-red-dim: color-mix(in oklab, #a82020 12%, transparent);
+  }
 }
 
 /* ---------------------------------------------------------------------------
@@ -126,10 +150,7 @@ body::after {
 
 /* dot-grid backdrop — hero, lesson map */
 .dot-grid {
-  background-image: radial-gradient(
-    oklch(36% 0.02 70 / 55%) 1px,
-    transparent 1px
-  );
+  background-image: radial-gradient(var(--color-border) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
@@ -140,9 +161,7 @@ body::after {
 
 /* accent glow ring for cards / nodes */
 .glow-ring {
-  box-shadow:
-    0 0 0 1px var(--glow-color, var(--color-accent)),
-    0 0 24px -6px var(--glow-color, var(--color-accent));
+  box-shadow: 0 0 0 1px var(--glow-color, var(--color-accent));
 }
 
 /* soft ambient glow blob (position absolutely behind content) */
@@ -152,7 +171,7 @@ body::after {
     var(--glow-color, var(--color-accent)) 0%,
     transparent 70%
   );
-  opacity: 0.13;
+  opacity: 0.07;
   filter: blur(40px);
 }
 
@@ -219,7 +238,7 @@ body::after {
 
      FILLED TRACK: ControlPanel sets `--fill` inline (value/min/max as a
      percentage); the gradient below paints the travelled side of the track
-     amber. Scoped to `.sim-slider` so sliders without the inline var (the
+     accent. Scoped to `.sim-slider` so sliders without the inline var (the
      landing vignette) keep their plain track.
   ------------------------------------------------------------------------- */
   .sim-slider,
@@ -265,9 +284,7 @@ body::after {
     border: none;
     border-radius: 50%;
     background: var(--color-accent);
-    box-shadow:
-      0 0 0 1px var(--color-bg),
-      0 0 8px -1px var(--color-accent);
+    box-shadow: 0 0 0 1px var(--color-bg);
     transition:
       transform 120ms var(--ease-out-soft),
       box-shadow 120ms linear;
@@ -282,9 +299,7 @@ body::after {
     border: none;
     border-radius: 50%;
     background: var(--color-accent);
-    box-shadow:
-      0 0 0 1px var(--color-bg),
-      0 0 8px -1px var(--color-accent);
+    box-shadow: 0 0 0 1px var(--color-bg);
     transition:
       transform 120ms var(--ease-out-soft),
       box-shadow 120ms linear;
@@ -397,7 +412,7 @@ input[type="range"].accent-accent:focus-visible {
 }
 
 /* ---------------------------------------------------------------------------
-   Release-D feature hooks — phosphor equivalents.
+   Release-D feature hooks — token-based equivalents.
 
    The learning journal, causal workbench and reading-mode features arrive
    with a few semantic class names. These definitions keep them on the token
@@ -409,7 +424,7 @@ input[type="range"].accent-accent:focus-visible {
 @layer components {
   /* learning surfaces (LearningSummary / ReflectionCard / LearningConnections) */
   .surface-card {
-    border-radius: 2px;
+    border-radius: 8px;
   }
 
   /* landing manifest rows: ledger hairlines + quiet hover wash */
@@ -434,11 +449,11 @@ input[type="range"].accent-accent:focus-visible {
     background: transparent;
   }
 
-  /* the meter a workbench focus is about — one amber outline, nothing more */
+  /* the meter a workbench focus is about — one accent outline, nothing more */
   .causal-meter-focus {
     outline: 1px solid var(--color-accent);
     outline-offset: 4px;
-    border-radius: 2px;
+    border-radius: 8px;
   }
 }
 

@@ -10,7 +10,7 @@ const widths = {
 
 export type SiteWidth = keyof typeof widths;
 
-/** The wordmark: display voice, one phosphor pip, one link home. */
+/** The wordmark: display voice, one accent pip, one link home. */
 export function Wordmark({
   className,
   onClick,

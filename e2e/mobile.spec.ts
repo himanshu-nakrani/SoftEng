@@ -191,9 +191,8 @@ test.describe("mobile nav drawer", () => {
     ).toBeVisible();
     await expect(drawer.getByRole("link", { name: "All tracks" })).toBeVisible();
 
-    // The drawer footer carries the storage disclosure. (The appearance
-    // panel that used to live here went out with the light-theme system;
-    // syslab is dark-only phosphor again, so there is nothing to customize.)
+    // The drawer footer carries the storage disclosure. Appearance follows
+    // prefers-color-scheme (pale paper in light, mineral gray in dark).
     await expect(
       drawer.getByText("saved locally · no account needed"),
     ).toBeVisible();

@@ -110,10 +110,13 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  // --color-bg oklch(13.5% 0.01 70) as sRGB. One value across the manifest,
-  // the favicon and here, so browser chrome, PWA splash and the app agree.
-  themeColor: "#0b0805",
-  colorScheme: "dark",
+  // Dark mineral / light paper. Browser chrome follows the OS; the PWA
+  // splash and favicon stay on the dark pair (one asset).
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#e7ecf0" },
+    { media: "(prefers-color-scheme: dark)", color: "#1c1f21" },
+  ],
+  colorScheme: "light dark",
 };
 
 export default function RootLayout({
@@ -122,7 +125,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <body
         className={`${bricolage.variable} ${plexSans.variable} ${plexMono.variable} font-sans antialiased`}
       >

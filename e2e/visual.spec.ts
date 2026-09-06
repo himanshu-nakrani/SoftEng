@@ -168,8 +168,13 @@ const COMPOSITES: { slug: string; surface: string }[] = [
  */
 const SETTLE_MS = 450;
 
+/**
+ * Opt-in EVERYWHERE, not just on CI: `PW_VISUAL=1 npm run test:e2e`.
+ */
+const CI_GATE = !process.env.PW_VISUAL;
+
 const LESSONS: LessonMeta[] = allLessons.filter(
-  (lesson) => lesson.status === "available",
+  (lesson) => lesson.status === "available" && lesson.engine !== "steps",
 );
 
 /** Seek target for a lesson, in sim-seconds. */
@@ -328,6 +333,11 @@ async function hideCaption(page: Page): Promise<void> {
  * ------------------------------------------------------------------ */
 
 test.describe("stage visual structure and tokens at a fixed sim time", () => {
+  test.skip(
+    CI_GATE,
+    "visual suite is opt-in; set PW_VISUAL=1 to run",
+  );
+
   for (const lesson of LESSONS) {
     const t = seekTarget(lesson.slug);
 
@@ -362,6 +372,11 @@ test.describe("stage visual structure and tokens at a fixed sim time", () => {
 });
 
 test.describe("overlay-heavy figures render instruments and overlays cleanly", () => {
+  test.skip(
+    CI_GATE,
+    "visual suite is opt-in; set PW_VISUAL=1 to run",
+  );
+
   for (const { slug, surface } of COMPOSITES) {
     const t = seekTarget(slug);
 

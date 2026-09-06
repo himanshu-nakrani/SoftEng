@@ -20,19 +20,19 @@ export const dynamic = "force-static";
 const size = { width: 1200, height: 630 };
 
 /**
- * Inlined tokens — Satori has no CSS custom properties. Derived by converting
- * the `@theme` oklch values in globals.css to sRGB, not eyeballed:
- *   --color-raised oklch(20% 0.014 70) → #1a150f  (lifted, so faint text reads)
- *   --color-accent oklch(80% 0.15 80)  → #f0b135
- *   --color-fg     oklch(93% 0.008 80) → #ebe7e2
- *   --color-fg-faint oklch(60% 0.014 75) → #857f77
+ * Inlined tokens — Satori has no CSS custom properties. Dark mineral
+ * (theme 4), matching `@theme` in globals.css:
+ *   --color-raised #2a2e30
+ *   --color-accent #8fbfb6
+ *   --color-fg     #e4e6e5
+ *   --color-fg-faint #9aa19f
  *
  * Keep in sync with src/lib/og.tsx, src/app/icon.svg and manifest.webmanifest.
  */
-const BG = "#1a150f";
-const ACCENT = "#f0b135";
-const FG = "#ebe7e2";
-const FAINT = "#857f77";
+const BG = "#2a2e30";
+const ACCENT = "#8fbfb6";
+const FG = "#e4e6e5";
+const FAINT = "#9aa19f";
 
 export function GET() {
   const live = allLessons.filter((l) => l.status === "available").length;
