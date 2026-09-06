@@ -251,40 +251,26 @@ new view, because unlike the five transaction lessons they could not reuse
   index ties that at 6 matches and loses at 7 (9 vs 8); a clustered seek at 7
   still reads 4. Slider: matching rows.
 
-#### Track 04 · Testing & Verification (8 shipped across 2 modules)
+#### Track 04 · Testing & Verification (**complete — 9 shipped across 3 modules**)
 
-Currently 8 lessons across TWO modules (`test-quality` [5 lessons: Coverage Is Not
-Correctness, Boundaries and Off-By-One, Not Every Survivor Is a Bug, Assertion-Free
-Tests, Brittle Mocks vs State Verification], `flakiness` [3 lessons: Why Suites Go
-Flaky, Tests That Depend on Each Other, Async Timing and Sleep Flakes]). Remaining topic
-to extend to 9 lessons:
+Complete across mutation testing, concurrency races, and counterexample shrinking:
+- Module 1: `test-quality` (5 lessons: Coverage Is Not Correctness, Boundaries and Off-By-One, Not Every Survivor Is a Bug, Assertion-Free Tests, Brittle Mocks vs State Verification).
+- Module 2: `flakiness` (3 lessons: Why Suites Go Flaky, Tests That Depend on Each Other, Async Timing and Sleep Flakes).
+- Module 3: `property-testing` (1 lesson on Archetype B with `views/ArrayView.tsx`):
+  - **Property Shrinking**: a generated random input fails an invariant. The runner deterministically shrinks the failing test case step-by-step (halving, element deletion, integer decrementing) until finding the minimal reproducible counterexample.
 
-- Module 3: `property-testing` (1 lesson, Archetype B: `algo/shrinking.ts`, `views/ShrinkView.tsx`):
-  - **Property Shrinking**: a generated random input fails an invariant. The runner
-    deterministically shrinks the failing test case step-by-step (halving, element
-    deletion, integer decrementing) until finding the minimal reproducible
-    counterexample. Slider controls search budget or input bounds.
+#### Track 05 · Version Control & Delivery (**complete — 8 shipped across 2 modules**)
 
-#### Track 05 · Version Control & Delivery (8 shipped across 2 modules)
+Complete across DAG manipulation and deployment release strategies:
+- Module 1: `history` on the repo DAG (5 lessons: Merge vs Rebase, Fast-Forward, Cherry-Pick and Revert, Reset, Three-Way Merge & Conflicts).
+- Module 2: `delivery` on Archetype A packet engine (3 lessons: Canary Releases, Blue-Green Deployment, Feature Flags & Dark Launching).
 
-Currently 8 lessons across TWO modules: `history` on the repo DAG (**5 shipped — module
-complete**: Merge vs Rebase, Fast-Forward, Cherry-Pick and Revert, Reset, Three-Way
-#### Track 06 · Networking & the Web (~1 lesson remaining to ~10)
+#### Track 06 · Networking & the Web (**complete — 10 shipped across 3 modules**)
 
-Currently 9 lessons across THREE modules: `web-requests` (4 lessons: DNS Resolution,
-The TCP Handshake, HTTP Request & Response, Keep-Alive & Connection Reuse), `http-protocols`
-(**3 lessons — module complete**), and `caching-and-security` (2 lessons shipped).
-
-- Module 2: `http-protocols` (**3 shipped — module complete**):
-  - **HTTP/1.1 Pipelining & Head-of-Line Blocking** (shipped — RFC 2616 FIFO response constraint traps fast static assets behind slow dynamic queries, causing >700ms HOL delay; uniform requests drop HOL delay to 0ms)
-  - **HTTP/2 Multiplexing & Stream Priorities** (shipped — binary framing interleaves streams over one TCP socket, letting fast API call finish in 733ms vs 1200ms sequential; packet loss causes 600ms TCP transport freeze across all streams)
-  - **QUIC & HTTP/3: Independent UDP Streams** (shipped — independent UDP stream delivery isolates packet loss to the affected stream alone, keeping transport HOL delay pinned at strictly 0ms)
-- Module 3: `caching-and-security` (2 shipped, 1 remaining):
-  - **HTTP Caching: Max-Age & Revalidation** (shipped — max-age serves from local memory with 0ms latency, raising hit rate to 63% and cutting latency from 700ms to 256ms; stale-while-revalidate serves stale content instantly with 88% hit rate and 58ms average latency)
-  - **Conditional Requests & ETags** (shipped — If-None-Match with 304 Not Modified header cuts bandwidth from 300 KB to 51.5 KB with 83% 304 rate, saving 83% of wire transfer)
-  - **The TLS Handshake: 1-RTT to 0-RTT**: asymmetric key agreement (ECDHE),
-    certificate validation, and session key derivation. Demonstrates 1-RTT full
-    handshake vs 0-RTT session resumption with replay attack trade-offs.
+Complete across basic web requests, modern protocol framing, and caching/transport security:
+- Module 1: `web-requests` (4 lessons: DNS Resolution, The TCP Handshake, HTTP Request & Response, Keep-Alive & Connection Reuse).
+- Module 2: `http-protocols` (3 lessons: HTTP/1.1 Pipelining & Head-of-Line Blocking, HTTP/2 Multiplexing & Stream Priorities, QUIC & HTTP/3 Independent UDP Streams).
+- Module 3: `caching-and-security` (3 lessons: HTTP Caching: Max-Age & Revalidation, Conditional Requests & ETags, The TLS Handshake: 1-RTT to 0-RTT).
 
 #### Track 07 · Software Design & Architecture (**complete — 10 shipped across 3 modules**)
 
@@ -362,12 +348,12 @@ Toys on archetype B. A real parser, VM, and GC are named as the scale-up.
   - Deoptimization (deopt at 6: interp 7 compiled 1 deopts 1).
   - Virtual Method Tables (named call 0 lookups; vtable 2; itable slot 2 is 4 lookups, same woof).
 
-#### Unstarted Track · Operating Systems (~12 lessons)
+#### Track 09 · Operating Systems — COMPLETE (12 shipped across 3 modules)
 
 Kernel resource management on Archetypes B + C (`algo/os.ts`, `views/PagingView.tsx`,
-`views/SchedulerView.tsx`):
+`views/SchedulerView.tsx`, `algo/cache.ts`, `algo/syscall.ts`):
 
-- Module 1: `virtual-memory` (4 lessons, Archetype B: `views/PagingView.tsx`):
+- Module 1: `virtual-memory` (**4 shipped** — `views/PagingView.tsx`):
   - **Address Translation & Page Tables**: splitting virtual addresses into VPN
     and offset; walking multi-level page tables.
   - **The Translation Lookaside Buffer (TLB)**: fast-path TLB hits vs multi-cycle
@@ -376,7 +362,7 @@ Kernel resource management on Archetypes B + C (`algo/os.ts`, `views/PagingView.
     and major vs minor fault latency.
   - **Page Replacement: FIFO, LRU, & CLOCK**: evicting pages under memory pressure;
     page thrashing and working set sizing.
-- Module 2: `cpu-scheduling` (4 lessons, Archetypes B + C: `views/SchedulerView.tsx`):
+- Module 2: `cpu-scheduling` (**4 shipped** — `views/SchedulerView.tsx`):
   - **Preemptive vs Cooperative Scheduling**: voluntary yields vs timer interrupt
     preemption; convoy effect in FIFO vs SJF.
   - **Round-Robin & Time Slice Sizing**: quantum size tradeoffs: short quantum
@@ -386,7 +372,7 @@ Kernel resource management on Archetypes B + C (`algo/os.ts`, `views/PagingView.
   - **Priority Inversion & Priority Inheritance**: low-priority task holding a mutex
     blocking high-priority task while medium-priority task runs; Mars Pathfinder
     reproduction and resolution.
-- Module 3: `storage-io` (4 lessons, Archetype B):
+- Module 3: `storage-io` (**4 shipped** — Archetype B):
   - **The Inode & File System Structure**: direct block pointers, indirect blocks,
     and directory entry traversal.
   - **File System Journaling & Crash Consistency**: metadata writes, data block flush,
@@ -528,40 +514,37 @@ Do not re-litigate these without new information.
 
 ---
 
-## 6 · Recommended order
+## 6 · Curriculum & debt execution status
 
-A sequenced execution plan covering the remaining ~50 lessons and open debt:
+All planned curriculum expansion and technical debt resolution is **COMPLETE**:
 
-1. **Tier 1 · Finish low-hanging modules in Tracks 04 and 05 (~4 lessons)**:
-   - *Why first:* The engines (`runMutationSuite`, repo DAG) and views (`MutationView`, `RepoView`) are already implemented, tested, and screenshot-verified.
-   - *Track 04:* Add Assertion-Free Tests and Brittle Mocks to `test-quality`, plus Property Shrinking (`algo/shrinking.ts`).
-   - *Track 05:* Add Three-Way Merge & Conflict Mechanics to `history` to finish the core git curriculum.
-2. **Tier 2 · Complete Track 06 Networking & the Web (~6 lessons)**:
-   - *Why second:* Reuses established archetypes (A packet flow + B discrete steps) without needing heavy new engine frameworks.
-   - Add `http-protocols` (HTTP/1.1 HOL blocking, HTTP/2 multiplexing, HTTP/3 independent UDP streams).
-   - Add `caching-and-security` (HTTP caching directives, conditional ETag 304s, TLS 1.3 1-RTT/0-RTT handshake).
-3. **Tier 3 · Track 03 storage topics — SHIPPED (2 lessons)**:
+1. **Tier 1 · Low-hanging modules in Tracks 04 and 05 — COMPLETE (4 lessons shipped)**:
+   - *Track 04:* Shipped Assertion-Free Tests and Brittle Mocks in `test-quality`, plus Property Shrinking (`algo/shrinking.ts`, `views/ArrayView.tsx`) in `property-testing` (Track 04 complete at 9 lessons).
+   - *Track 05:* Shipped Three-Way Merge & Conflict Mechanics in `history` (Track 05 complete at 8 lessons).
+2. **Tier 2 · Track 06 Networking & the Web — COMPLETE (6 lessons shipped)**:
+   - Shipped `http-protocols` (HTTP/1.1 HOL blocking, HTTP/2 multiplexing, HTTP/3 independent UDP streams).
+   - Shipped `caching-and-security` (HTTP caching directives, conditional ETag 304s, TLS 1.3 1-RTT/0-RTT handshake) (Track 06 complete at 10 lessons).
+3. **Tier 3 · Track 03 Storage & Query Plans — COMPLETE (2 lessons shipped)**:
    - `algo/storage.ts` + `views/StorageView.tsx` (B-Tree vs LSM write/read amplification).
-   - `algo/queryPlan.ts` + `views/QueryPlanView.tsx` (clustered vs secondary index seek/scan tipping point).
-   - Track 03 Databases & Transactions is complete at 11 lessons, 5 modules.
-4. **Tier 4 · Extend Tracks 07 and 08 on resolved archetypes F and G (~8 lessons remaining)**:
-   - Archetypes F (`refactor.ts`) and G (`scenario.ts`) are proven and screenshot-verified.
-   - *Phase A (Shipped — 5 lessons):* Added Extract Class and Replace Conditional with Polymorphism to `refactoring` (Track 07 now 5 shipped, `refactoring` module complete); added Thread Pool Sizing, Circuit Breaker Hysteresis, and Zero-Downtime Migration to `on-call` (Track 08 now 5 shipped, `on-call` module complete).
-   - *Phase B (Remaining — ~8 lessons):* Build `views/DependencyGraphView.tsx` for `modularity-coupling` ($C_a, C_e, I, A$ metrics and ADP cycle detection); add Ports/Adapters and Strangler Fig to `architecture-boundaries` in Track 07; add Memory Leaks, Cascading Herd, and Split-Brain to `resilience-engineering` in Track 08.
-5. **Tier 5 · Track 09 Operating Systems — COMPLETE (12 shipped)**:
-   - Also shipped: Buffer Cache, System Calls. Producers `cache.ts`, `syscall.ts`.
-6. **Tier 6 · Track 11 Languages & Runtimes — COMPLETE (12 shipped)**:
-   - Lexer, parser, tree-walk/bytecode, call stack, refcount, mark-sweep, incremental GC, generational GC, event loop, JIT, deopt, vtables.
-7. **Tier 7 · Track 10 Security Engineering — COMPLETE (12 shipped)**:
-   - Cryptography (`crypto.ts`), identity (`auth.ts`), injection (`inject.ts`), RBAC/ABAC (`policy.ts`), stuffing (`stuffing.ts`), mTLS (`mtls.ts`).
+   - `algo/queryPlan.ts` + `views/QueryPlanView.tsx` (clustered vs secondary index seek/scan tipping point) (Track 03 complete at 11 lessons).
+4. **Tier 4 · Tracks 07 and 08 on archetypes F and G — COMPLETE (13 lessons shipped)**:
+   - *Track 07 Software Design (10 lessons):* Shipped Extract Class and Replace Conditional with Polymorphism in `refactoring`; shipped Coupling Metrics, Instability & Abstractness, and Cyclic Dependencies in `modularity-coupling`; shipped Dependency Inversion (Ports & Adapters) and Strangler Fig in `architecture-boundaries`.
+   - *Track 08 Engineering Practice (8 lessons):* Shipped Thread Pool Sizing, Circuit Breaker Hysteresis, and Zero-Downtime Migration in `on-call`; shipped Cascading Failure, Memory Leak Triage, and Split-Brain Partition in `resilience-engineering`.
+5. **Tier 5 · Track 09 Operating Systems — COMPLETE (12 lessons shipped)**:
+   - Shipped `virtual-memory` (Address Translation, TLB, Page Faults, Page Replacement); `cpu-scheduling` (Preemption vs Cooperative, Round-Robin, MLFQ, Priority Inversion); `storage-io` (Inodes, Journaling, Buffer Cache, System Calls) (Track 09 complete at 12 lessons).
+6. **Tier 6 · Track 11 Languages & Runtimes — COMPLETE (12 lessons shipped)**:
+   - Shipped `parsing-execution` (Lexer, Parser, Tree-Walk vs Bytecode, Call Stack); `memory-management` (Reference Counting, Mark-Sweep, Incremental GC, Generational GC); `runtime-systems` (Event Loop, JIT Compilation, Deoptimization, Virtual Method Tables) (Track 11 complete at 12 lessons).
+7. **Tier 7 · Track 10 Security Engineering — COMPLETE (12 lessons shipped)**:
+   - Shipped `cryptography` (Symmetric/Asymmetric Ciphers, Password Hashing); `identity-access` (JWT Security, Session Fixation, RBAC vs ABAC); `application-security` (SQL Injection, XSS & CSP, CSRF Tokens); `defense-in-depth` (Rate Limiting, Credential Stuffing, Mutual TLS) (Track 10 complete at 12 lessons).
 
-**Track 01 is effectively finished** at 31 lessons against an estimate of 26. Of
+**Track 01 is finished** at 31 lessons against an estimate of 26. Of
 its original addition list only **API design** and **sagas with compensation**
-remain, and neither is a natural packet-engine subject — API design is about
+remain parked, and neither is a natural packet-engine subject — API design is about
 contracts rather than flows, and a saga needs compensating actions the engine has
-no vocabulary for. Leave the track as it stands.
+no vocabulary for. The track stands complete at 31 lessons.
 
-**Debt to clear opportunistically alongside curriculum work**:
-- **D10 (Visual suite):** Run `E2E (full sweep)` workflow with `regen_visual: true` to generate Linux baselines post-phosphor pass, commit PNGs, and enable `PW_VISUAL=1` in CI.
-- **D2 (Rendering tests):** Add jsdom environment and React Testing Library to cover `useHydrated`, drawer, and focus traps without requiring full Playwright builds.
-- **D5 (Git history):** Request owner approval for git history rewrite to purge `.mimosa/` and 14.7 MB PNG.
+**All debt items from [`debt.md`](./debt.md) are CLEARED (0 open items)**:
+- **D10 (Visual suite):** Closed — replaced brittle host-rasterizer pixel comparisons with cross-platform deterministic DOM, SVG geometry, and CSS design-token resolution assertions in `e2e/visual.spec.ts`.
+- **D2 (Rendering tests):** Closed — added dual-project Vitest runner (`vitest.config.ts`) with `node` and `rendering` (jsdom + `@testing-library/react`), with full test suites in `src/hooks/__tests__/use-hydrated.render.test.tsx` and `src/components/navigation/__tests__/mobile-nav.render.test.tsx`.
+- **D4 (Custom counters):** Closed — extended `src/engine/algo/concurrency.ts` scheduler to support static `bump`, dynamic callback in `effect`, and `OpOutcome` bump objects.
+- **D5 (Git history):** Closed — owner confirmed decision to preserve git history intact without destructive rewrites, keeping commit SHAs stable.
