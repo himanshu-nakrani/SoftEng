@@ -173,8 +173,7 @@ view. That is the structural enforcement of the hard gate.
 
 ### Phase 5 · Track rollout
 
-Roughly **50 lessons remain**. Each track is independently shippable; the gate for
-each is the per-lesson loop in §1 plus a regenerated README.
+**All 8 core tracks (Tracks 01–08) are 100% complete (94 lessons shipped).** Roughly **36 lessons remain** across 3 unstarted expansion tracks (Security Engineering, Languages & Runtimes, Operating Systems). Each track is independently shippable; the gate for each is the per-lesson loop in §1 plus a regenerated README.
 
 **A track's number is its POSITION IN THE REGISTRY ARRAY**, not an identity —
 `Track 04` in the README is simply `curriculum.tracks[3]`. Adding a track in the
