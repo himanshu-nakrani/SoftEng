@@ -7,7 +7,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 const description =
-  "Why syslab is a simulator instead of an article: you predict what a system will do, then watch it prove you right or wrong.";
+  "Why syslab is a lab instead of an article: you predict what a system will do, then watch a seeded simulation prove you right or wrong.";
 
 export const metadata: Metadata = {
   title: "About",
@@ -42,45 +42,49 @@ export default function AboutPage() {
 
         <div className="flex flex-col gap-5 leading-relaxed text-fg-muted">
           <p>
-            Most system design material is prose about diagrams: load
+            Most material about systems is prose about diagrams: load
             balancing explained in eight paragraphs, a static picture, a
             bullet list of trade-offs. You can read all of it and still have
             no feel for <em className="text-fg">why</em> a queue explodes, or
-            what a health-check window costs you.
+            what a health-check window costs you. The same gap shows up in a
+            WAL, a scheduler, a lexer.
           </p>
           <p>
-            syslab inverts that. Every lesson is built around a running
-            simulation — request packets you can watch, parameters you can
-            drag, servers you can kill. The prose exists to frame what
-            you&apos;re seeing, not the other way around. You{" "}
+            syslab inverts that. Every lesson is a running simulation —
+            packets you can watch, interleavings you can step, parameters you
+            can drag, servers you can kill. The prose frames what you&apos;re
+            seeing, not the other way around. You{" "}
             <em className="text-fg">predict</em> what a system will do, then
-            the simulation proves you right or wrong on screen.
+            the model proves you right or wrong on screen.
+          </p>
+          <p>
+            The curriculum is eleven tracks: system design, concurrency,
+            databases, testing, delivery, networking, software design,
+            on-call practice, operating systems, security, and language
+            runtimes. The name is the method — a lab you break — not a claim
+            that every lesson is distributed systems.
           </p>
           <p>
             The simulations are deliberately believable rather than
-            academically precise — no queueing theory, just honest dynamics:
-            bounded queues, probabilistic arrivals, service capacity, failure
-            and recovery. Enough to build correct intuition; never so much
-            that the model gets in the way.
-          </p>
-          <p>
-            Every run is deterministic. Restart a lesson and the same seed
-            replays the exact same traffic — so when a prediction quiz tells
-            you the error burst is coming, you can rewind and watch it land
-            the same way twice.
+            academically precise. Enough dynamics to build correct intuition;
+            never so much that the model gets in the way. Every run is
+            deterministic: restart a lesson and the same seed replays the
+            same trace, so a prediction you got wrong can be rewound and
+            watched twice.
           </p>
         </div>
 
         <h2 className="font-display mt-12 mb-4 text-xl font-bold">Colophon</h2>
         <p className="text-sm leading-relaxed text-fg-muted">
-          Built with Next.js, React, Tailwind, and Motion. The simulation
-          engine is hand-rolled SVG — a fixed-timestep loop, a pool of 128
-          packet dots, and seeded randomness. Progress lives entirely in your
-          browser&apos;s localStorage; there is no account and no server.
+          Built with Next.js, React, Tailwind, and Motion. Two engines, both
+          seeded: a fixed-timestep packet loop (128 pooled dots) and a
+          discrete-step player that can walk backward. Progress lives in
+          your browser&apos;s localStorage; there is no account and no
+          server.
         </p>
 
         <Link href="/learn" className={buttonClasses("primary", "md", "mt-12")}>
-          Start the track
+          Open the curriculum
           <ArrowRight className="size-4" />
         </Link>
       </main>

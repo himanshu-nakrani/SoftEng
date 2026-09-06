@@ -83,10 +83,9 @@ export const metadata: Metadata = {
   keywords: [
     "system design",
     "distributed systems",
+    "operating systems",
+    "concurrency",
     "interactive simulation",
-    "scalability",
-    "caching",
-    "load balancing",
     "learn by doing",
   ],
   category: "education",

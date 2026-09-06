@@ -21,7 +21,7 @@ export const siteName = "syslab";
 export const siteTitle = "syslab — learn systems by breaking them";
 
 export const siteDescription =
-  "Interactive system design lessons. Watch requests flow, drag the sliders, kill the servers — learn how large-scale systems actually behave.";
+  "Interactive lessons, not articles. Every concept is a running simulation you can drive, break, and replay — load balancers, logs, schedulers, parsers. Predict, then watch the same seeded run prove you right or wrong.";
 
 /** Absolute URL for a root-relative route (`/learn/<track>/scaling/client-server`). */
 export function absoluteUrl(path: string): string {

@@ -1,7 +1,7 @@
 {
   "name": "syslab — learn systems by breaking them",
   "short_name": "syslab",
-  "description": "Interactive system design lessons. Watch requests flow, drag the sliders, kill the servers — learn how large-scale systems actually behave.",
+  "description": "Interactive lessons, not articles. Every concept is a running simulation you can drive, break, and replay — load balancers, logs, schedulers, parsers. Predict, then watch the same seeded run prove you right or wrong.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

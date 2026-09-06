@@ -129,8 +129,8 @@ export default function Home() {
             </h1>
             <p className="mb-8 max-w-md leading-relaxed text-fg-muted">
               Not another wall of text. Every concept is a running simulation —
-              drag the sliders, watch the packets, kill the servers, and build
-              the intuition articles can&apos;t give you.
+              drag the sliders, step the trace, break the model, and build the
+              intuition articles can&apos;t give you.
             </p>
             <div className="mb-10 flex flex-wrap items-center gap-3">
               <ContinueCta />

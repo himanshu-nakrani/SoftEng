@@ -2,7 +2,9 @@
 
 **Learn systems by breaking them.**
 
-An interactive system-design learning site. Not articles — every concept is a running simulation: request packets you can watch, parameters you can drag, servers you can kill. Predict what a system will do, then watch the deterministic simulation prove you right or wrong.
+Not articles. Every concept is a running simulation you can drive, break, and replay — request packets, thread interleavings, write-ahead logs, parsers. Predict what happens, then watch the same seeded run prove you right or wrong.
+
+Eleven tracks, from system design through operating systems, security, and language runtimes. No account; progress stays in the browser.
 
 ## Curriculum
 
@@ -123,7 +125,7 @@ An interactive system-design learning site. Not articles — every concept is a 
 
 Nothing is locked; start anywhere.
 
-Each lesson follows the same arc: **observe** (narrated autoplay) → **manipulate** (live sliders) → **predict** (the sim pauses, asks, then resumes to prove the answer) → **break** (click servers to kill them).
+Each lesson follows the same arc: **observe** (narrated autoplay) → **manipulate** (live sliders or a step list) → **predict** (the run pauses, asks, then proves the answer) → **break** (kill a node, reseat an interleaving, crash before the fsync).
 
 Beyond the lessons: `/review` is a practice deck over every prediction checkpoint that deep-links back into the exact second of the sim that answers it, and `/playground` runs any lesson's simulation on its own.
 
