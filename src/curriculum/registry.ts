@@ -1655,6 +1655,48 @@ export const curriculum: Curriculum = {
             },
           ],
         },
+        {
+          slug: "architecture-boundaries",
+          title: "Architecture Boundaries",
+          description:
+            "Isolating domain logic from volatile drivers and migrating legacy monoliths safely without big-bang releases.",
+          lessons: [
+            {
+              slug: "dependency-inversion",
+              moduleSlug: "architecture-boundaries",
+              title: "Dependency Inversion & Clean Architecture",
+              tagline:
+                "TODO: one line that states the tension, not the topic.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["cyclic-dependencies"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "concrete-coupling", title: "Coupling domain to infrastructure", kind: "concept" },
+                { id: "ports-and-adapters", title: "Invert dependencies through ports", kind: "interactive" },
+                { id: "boundary-isolation", title: "Independent testability and swappability", kind: "concept" },
+              ],
+            },
+                      {
+              slug: "strangler-fig",
+              moduleSlug: "architecture-boundaries",
+              title: "The Strangler Fig Pattern",
+              tagline:
+                "TODO: one line that states the tension, not the topic.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["dependency-inversion"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "monolith-gravity", title: "The risk of big-bang rewrites", kind: "concept" },
+                { id: "interceptor-routing", title: "Route traffic via facade proxy", kind: "interactive" },
+                { id: "complete-cutover", title: "Decommissioning the legacy core", kind: "concept" },
+              ],
+            },
+          ],
+        },
       ],
     },
     {

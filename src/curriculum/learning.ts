@@ -827,6 +827,20 @@ export const learningGuides: Record<string, LearningGuide> = {
     "Step forward to see Tarjan's cycle detection flag the back-edge, then watch topological sort compute the linear build sequence [Billing, Users, Orders].",
     [{ slug: "instability-abstractness", relation: "builds on" }],
   ),
+  "dependency-inversion": guide(
+    "TODO: the question this lesson answers?",
+    "TODO: what changed, in one sentence.",
+    "TODO: why it matters.",
+    "TODO: what to try next.",
+    [{ slug: "cyclic-dependencies", relation: "builds on" }],
+  ),
+  "strangler-fig": guide(
+    "TODO: the question this lesson answers?",
+    "TODO: what changed, in one sentence.",
+    "TODO: why it matters.",
+    "TODO: what to try next.",
+    [{ slug: "dependency-inversion", relation: "builds on" }],
+  ),
 };
 
 export function getLearningGuide(slug: string): LearningGuide {

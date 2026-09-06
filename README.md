@@ -69,12 +69,13 @@ An interactive system-design learning site. Not articles — every concept is a 
 
 ### Track 07 — Software Design & Architecture
 
-8 lessons across 2 modules, about 1h 35m end to end.
+10 lessons across 3 modules, about 1h 59m end to end.
 
 | Module | Lessons |
 |---|---|
 | **Refactoring by the Numbers** | Extract Function · Inline & Rename · Duplicated Logic · Extract Class · Replace Conditional with Polymorphism |
 | **Modularity & Coupling** | Afferent & Efferent Coupling · Instability & Abstractness · Cyclic Dependencies & ADP |
+| **Architecture Boundaries** | Dependency Inversion & Clean Architecture · The Strangler Fig Pattern |
 
 ### Track 08 — Engineering Practice
 
