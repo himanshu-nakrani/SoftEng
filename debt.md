@@ -13,8 +13,8 @@ Closed items stay listed, briefly, so the same ground is not rediscovered.
 an unlisted problem is an unnoticed one. Close an item by moving it to the bottom
 section with the evidence that closed it, not by deleting the row.
 
-Last reviewed: 2026-09-06, at 94 lessons / 958 unit tests (35 files) / 8 tracks /
-314 sections. All 8 core tracks (Tracks 01 to 08) are 100% COMPLETE.
+Last reviewed: 2026-09-06, at 132 lessons / 1495 unit tests (95 files) / 11 tracks /
+430 sections. Tracks 01–11 complete. Parked: Track 01 API design / sagas.
 ALL DEBT IS CLEARED (0 open items).
 
 ---

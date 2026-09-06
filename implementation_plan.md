@@ -9,15 +9,12 @@ and invariants; this document is only *what is done, what is left, and what has
 already been decided*. Open debt lives in [`debt.md`](./debt.md).
 
 **State verified 2026-09-06**, by running the gate rather than recalling:
-87 lessons · 293 sections · **8 tracks** · 863 unit tests (26 files) · 47 quizzes ·
+132 lessons · 430 sections · **11 tracks** · 1495 unit tests (95 files) · 47 quizzes ·
 clean static export, 26 legacy redirect stubs. `npm run check` green.
 
-Track 06 (`networking`, 9 lessons across 3 modules) completed its `http-protocols` module
-(3 lessons: HTTP/1.1 Pipelining, HTTP/2 Multiplexing, QUIC & HTTP/3) and added 2 lessons to
-`caching-and-security` (HTTP Caching & Revalidation, Conditional Requests & ETags). Track 08
-(`engineering-practice`, 8 lessons across `on-call` and `resilience-engineering`) is complete.
-Track 05 (`version-control`, 8 lessons) finished its core `history` module. Track 04 (`testing`, 8 lessons)
-and Track 07 (`software-design`, 5 lessons) have complete first modules.
+Tracks 01–11 are complete. Parsing, GC, the event loop, JIT/deopt, and vtables
+shipped on `parser.ts` / `runtime.ts` / `gc.ts` / `eventloop.ts` / `jit.ts` /
+`vtable.ts`. Parked: Track 01 API design / sagas.
 
 **Every number in this document was re-checked against the repository on the date
 above.** If you change the curriculum, the honest way to update them is to run the
@@ -86,7 +83,7 @@ in order, every time:
 | 2 | Engine archetypes | A–E done; **F and G now RESOLVED — both BUILD** (see §3), archetypes shipped as `refactor.ts` + `scenario.ts` |
 | 3 | Authoring pipeline | **Done** |
 | 4 | CI + weight budget | **Done** (OG consolidation deferred with a measurement) |
-| 5 | Track rollout | 8 of 11 tracks; 72 lessons of ~120 |
+| 5 | Track rollout | 11 of 11 tracks **complete**; 132 lessons |
 
 ### Foundations in place
 
@@ -101,12 +98,14 @@ in order, every time:
   omitted means flow.
 - **C, D, E, F and G are not engines.** Thread interleaving, the mutation harness,
   the repo DAG, the refactor workbench and the branching scenario are all state
-  shapes on archetype B. Nine step producers exist: `concurrency.ts`,
-  `mutation.ts`, `repo.ts`, `transactions.ts`, `wal.ts`, `mvcc.ts`, `refactor.ts`
+  shapes on archetype B. Thirteen step producers exist: `concurrency.ts`,
+  `mutation.ts`, `repo.ts`, `transactions.ts`, `wal.ts`, `mvcc.ts`, `storage.ts`,
+  `queryPlan.ts`, `paging.ts`, `scheduler.ts`, `refactor.ts`
   (F — computes cyclomatic complexity and fan-out from a toy AST), and
   `scenario.ts` (G — drives a real sub-run per option and measures the outcome).
-- Nine views: `ArrayView`, `ThreadsView`, `MutationView`, `RepoView`, `TableView`,
-  `WalView`, `VersionsView`, `RefactorView`, `ScenarioView`.
+- Thirteen views: `ArrayView`, `ThreadsView`, `MutationView`, `RepoView`, `TableView`,
+  `WalView`, `VersionsView`, `StorageView`, `QueryPlanView`, `PagingView`,
+  `SchedulerView`, `RefactorView`, `ScenarioView`.
 - `check-curriculum.mts` enforces route parity both ways, track integrity, globally
   unique module slugs, `AlgoDef` shape, code-panel width, prerequisite ordering,
   quiz-id uniqueness, and the README table.
@@ -173,7 +172,7 @@ view. That is the structural enforcement of the hard gate.
 
 ### Phase 5 · Track rollout
 
-**All 8 core tracks (Tracks 01–08) are 100% complete (94 lessons shipped).** Roughly **36 lessons remain** across 3 unstarted expansion tracks (Security Engineering, Languages & Runtimes, Operating Systems). Each track is independently shippable; the gate for each is the per-lesson loop in §1 plus a regenerated README.
+**Tracks 01–11 are complete.** **132 lessons shipped.** Parked: Track 01 API design / sagas (neither is a natural packet-engine subject). Each track is independently shippable; the gate for each is the per-lesson loop in §1 plus a regenerated README.
 
 **A track's number is its POSITION IN THE REGISTRY ARRAY**, not an identity —
 `Track 04` in the README is simply `curriculum.tracks[3]`. Adding a track in the
@@ -184,15 +183,15 @@ these numbers as the current display order.
 |---|---|---|---|---|
 | 01 | System Design Fundamentals (`system-design-fundamentals`) | A | 26 | 31 shipped — **effectively finished** (see §6) |
 | 02 | Concurrency (`concurrency`) | C on B | 9 | **complete** |
-| 03 | Databases & Transactions (`databases`) | B | ~10 | **complete — 9 shipped, 3 modules** |
+| 03 | Databases & Transactions (`databases`) | B | ~10 | **complete — 11 shipped, 5 modules** |
 | 04 | Testing & Verification (`testing`) | D + C + B | ~9 | **complete — 9 shipped, 3 modules** |
 | 05 | Version Control & Delivery (`version-control`) | E + A | 8 | **complete — 8 shipped, 2 modules** |
 | 06 | Networking & the Web (`networking`) | A + B | 10 | **complete — 10 shipped, 3 modules** |
 | 07 | Software Design & Architecture (`software-design`) | F + B | 10 | **complete — 10 shipped, 3 modules** |
 | 08 | Engineering Practice (`engineering-practice`) | G on B | 8 | **complete — 8 shipped, 2 modules** |
-| — | Security Engineering | A + B + D | ~12 | not started |
-| — | Languages & Runtimes | B | ~12 | not started |
-| — | Operating Systems | B + C | ~12 | not started |
+| 09 | Operating Systems (`operating-systems`) | B | ~12 | **complete — 12 shipped, 3 modules** |
+| 10 | Security Engineering (`security`) | B | ~12 | **complete — 12 shipped, 4 modules** |
+| 11 | Languages & Runtimes (`languages`) | B | ~12 | **complete — 12 shipped, 3 modules** |
 
 **Estimates are ~30% lower than originally planned, deliberately.** Track 02 was
 projected at ~14 and came in at 9, because nine covered the subject without
@@ -233,26 +232,24 @@ things the transaction lessons never needed: a `size` slider used as something
 other than a size (the crash point), and a state contract whose subject is what
 survives losing power rather than what a transaction can see.
 
-The `mvcc` module is **open at one lesson**: **MVCC** shipped, on its own new
+The `mvcc` module is **complete at one lesson**: **MVCC** shipped, on its own new
 view (`algo/mvcc.ts`, `views/VersionsView.tsx`) — row version chains that open
 the "snapshot" black box the isolation lessons rely on. It is deliberately an
 isolated view rather than a change to `runTransactions`, so it did not disturb
 the five isolation lessons that depend on that model.
 
-**The remaining topics each need a new view built from scratch** — unlike the five
-transaction lessons, which all reused `runTransactions` and `TableView`. Budget
-accordingly:
+The `storage` and `indexing` modules are **complete** — each one lesson, each a
+new view, because unlike the five transaction lessons they could not reuse
+`TableView`:
 
-- **B-tree vs LSM** (`storage` module, Archetype B: `algo/storage.ts`, `views/StorageView.tsx`):
-  contrasts in-place page updates with append-only memtables and SSTables. Models
-  write amplification (small updates rewriting full pages vs compaction write cost)
-  and read amplification (single root-to-leaf traversal vs multi-SSTable bloom
-  filter checks). Slider: write-to-read ratio or dataset growth. Counters:
-  `page_reads`, `page_writes`, `compactions`, `bloom_misses`.
-- **Indexes & Query Plans** (`indexing` module, Archetype B: `algo/query_plan.ts`,
-  `views/QueryPlanView.tsx`): clustered index vs secondary index lookup. Models
-  table scan vs index seek, showing the tipping point where a secondary index lookup
-  becomes more expensive than a full scan due to random I/O bookmark lookups.
+- **B-tree vs LSM** (`storage`, `algo/storage.ts`, `views/StorageView.tsx`):
+  eight keys rewrite eight B-tree leaves (24 page reads); the same eight keys
+  cost an LSM two flushes, three page reads, and four bloom misses. At twelve
+  keys the LSM's first compaction makes page writes 4. Slider: keys written.
+- **Indexes & Query Plans** (`indexing`, `algo/queryPlan.ts`,
+  `views/QueryPlanView.tsx`): a scan always reads 8 heap pages; a secondary
+  index ties that at 6 matches and loses at 7 (9 vs 8); a clustered seek at 7
+  still reads 4. Slider: matching rows.
 
 #### Track 04 · Testing & Verification (8 shipped across 2 modules)
 
@@ -323,71 +320,47 @@ rendered by `views/ScenarioView.tsx`):
   - **Memory Leak & Buffer Bloat Triage** (shipped — pod cordoning and rolling drain prevents dropped connections and captures heap profile in 200/200 runs)
   - **Split-Brain & Network Partitions** (shipped — majority quorum with monotonic fencing token prevents split-brain write collision in 200/200 runs)
 
-#### Unstarted Track · Security Engineering (~12 lessons)
+#### Track 10 · Security Engineering — COMPLETE (12 shipped)
 
-Security concepts modeled as deterministic state machines and packet flows:
+Toys on archetype B. Real hashes, JWS, S256, SQL parsers, browsers, and X.509
+are named as the scale-up, not simulated.
 
-- Module 1: `cryptography` (3 lessons, Archetype B: `algo/crypto.ts`, `views/CryptoView.tsx`):
-  - **Hash Functions & Preimage Resistance**: avalanche effect, collision resistance,
-    and computational work factor (SHA-256 vs Argon2/bcrypt).
-  - **Diffie-Hellman Key Exchange**: modular exponentiation ($g^a \bmod p$); deriving
-    shared secrets over an insecure public channel.
-  - **Digital Signatures & Asymmetric Auth**: public/private key pairs, signing
-    digests, and tamper detection.
-- Module 2: `identity-access` (3 lessons, Archetype B / A):
-  - **Session Hijacking & Cookie Hardening**: cookie flags (`HttpOnly`, `Secure`,
-    `SameSite=Strict/Lax`); session fixation and token rotation.
-  - **JWT Anatomy & Validation Pitfalls**: header tampering, the `none` algorithm
-    vulnerability, expiry checks, and revocation blocklists.
-  - **OAuth 2.0 & OIDC Authorization Code Flow**: redirect URIs, authorization code
-    exchange, and PKCE (Proof Key for Code Exchange).
-- Module 3: `application-security` (3 lessons, Archetype D + B: `views/SecurityASTView.tsx`):
-  - **SQL Injection & AST Parameterization**: string concatenation altering the AST
-    vs parameterized queries treating input strictly as literal leaves.
-  - **Cross-Site Scripting (XSS) & Contextual Encoding**: injected `<script>`
-    payloads in HTML vs DOM contexts; sanitizer rules.
-  - **Server-Side Request Forgery (SSRF)**: cloud metadata endpoints (`169.254.169.254`),
-    DNS rebinding, and IP allowlist validation.
-- Module 4: `defense-in-depth` (3 lessons, Archetype A + B):
-  - **RBAC vs ABAC Policy Evaluation**: role hierarchies vs attribute rule
-    evaluation; horizontal/vertical privilege escalation.
-  - **Rate Limiting & Credential Stuffing Defense**: IP vs username token buckets,
-    progressive backoff, CAPTCHA escalation.
-  - **mTLS & Zero-Trust Service Identity**: mutual certificate verification between
-    microservices; eliminating perimeter-only trust.
+- Module 1: `cryptography` (**3 shipped** — `algo/crypto.ts`, `CryptoView`):
+  - Hash Functions (`mix8(42)=23`, flip bit 0 moves 6/8), Diffie-Hellman (`p=23`
+    shared 12), Digital Signatures (toy RSA `n=55`, sig 25, tamper rejects).
+- Module 2: `identity-access` (**3 shipped** — `algo/auth.ts`, `AuthView`):
+  - Session Cookies (S7; flags 0 stolen 0 csrf 0; HttpOnly/Secure off stolen 1;
+    SameSite=None csrf 1), JWT Pitfalls (naive accepts none/expired/tampered;
+    strict accepts only sig 56 unexpired), OAuth & PKCE (intercept C9 without
+    PKCE stolen 1 issued 0; with challenge 77 rejected 1 issued 1).
+- Module 3: `application-security` (**3 shipped** — `algo/inject.ts`, `InjectView`):
+  - SQL Injection (concat `7 OR 1=1` → 3 rows; bind as literal → 0), XSS (raw
+    `<script>` scripts 1; encoded text), SSRF (open metadata leaked 1; allowlist
+    blocked 1).
+- Module 4: `defense-in-depth` (**3 shipped** — `policy.ts`, `stuffing.ts`, `mtls.ts`):
+  - RBAC vs ABAC (mallory escalation 1 vs deny), Credential Stuffing (attempt 5
+    succeeds without a limit and under an IP cap of 3; username cap 3 blocks 3),
+    mTLS (perimeter connects with no cert; mTLS rejects missing and other-ca).
 
-#### Unstarted Track · Languages & Runtimes (~12 lessons)
+#### Track 11 · Languages & Runtimes — COMPLETE (12 shipped)
 
-Execution and memory models on Archetype B (`algo/runtime.ts`, `views/RuntimeView.tsx`,
-`views/GcView.tsx`):
+Toys on archetype B. A real parser, VM, and GC are named as the scale-up.
 
-- Module 1: `parsing-execution` (4 lessons, Archetype B):
-  - **Lexical Analysis & Token Streams**: scanning source code into discrete token
-    streams; handling delimiters, keywords, and string literals.
-  - **Recursive Descent Parsing & Precedence**: parsing tokens into an abstract
-    syntax tree using operator precedence climbing.
-  - **Tree-Walking Interpreter vs Bytecode VM**: direct AST node traversal vs
-    linear bytecode instruction dispatch (stack VM).
-  - **The Call Stack & Stack Frames**: activation frames, local variable offsets,
-    return pointers, and stack overflow under unbounded recursion.
-- Module 2: `memory-management` (4 lessons, Archetype B: `views/GcView.tsx`):
-  - **Reference Counting & Cycle Traps**: bumping ref counts on assignment, immediate
-    deallocation on zero; cyclic references leaking memory.
-  - **Mark-and-Sweep Garbage Collection**: root set traversal (registers, stack,
-    globals), mark bit propagation, and sweeping unvisited heap allocations.
-  - **Stop-the-World vs Incremental GC**: pacing GC collection phases to bound
-    stop-the-world pause latency vs mutator throughput.
-  - **Generational GC & Write Barriers**: young vs old generation; weak generational
-    hypothesis; card tables and write barrier tracking.
-- Module 3: `runtime-systems` (4 lessons, Archetype B):
-  - **The Event Loop & Task Queues**: execution order of call stack, macrotasks
-    (timers, I/O), and microtasks (promises); microtask queue starvation.
-  - **JIT Profiling & Tiered Compilation**: interpreter execution profiling hot loops;
-    compiling to optimized native code via inline caches.
-  - **Deoptimization Bailouts**: speculative type assumptions violated by polymorphic
-    inputs; deoptimizing back to interpreted bytecode.
-  - **Virtual Method Tables (Vtables)**: static dispatch vs dynamic dispatch through
-    class vtable pointers; interface lookup overhead.
+- Module 1: `parsing-execution` (**4 shipped** — `lexer.ts`, `parser.ts`, `runtime.ts`):
+  - Lexical Analysis (`let n=2` is 4 tokens 1 skipped; `letn=2` is ident letn).
+  - Recursive Descent (flat `1+2*3` is 9; prec is 7).
+  - Tree Walk vs Bytecode (both 7; walk visits 5; bytecode stack max 3).
+  - Call Stack (`f(3)` is 6 at depth 4; `f(4)` overflows cap 4).
+- Module 2: `memory-management` (**4 shipped** — `gc.ts`, `GcView`):
+  - Reference Counting (A→B frees 2; A↔B leaks 2).
+  - Mark-and-Sweep (unrooted cycle still swept 2).
+  - Incremental GC (STW pause 4; budget 1 pause 1, 4 slices).
+  - Generational GC (old→young without a barrier loses Y1; a dirty card holds it).
+- Module 3: `runtime-systems` (**4 shipped** — `eventloop.ts`, `jit.ts`, `vtable.ts`):
+  - Event Loop (log `1,4,2,3`; nested micro `1,3,A,B,2`).
+  - JIT Compilation (hot 4; 8 iters: interp 4 compiled 4).
+  - Deoptimization (deopt at 6: interp 7 compiled 1 deopts 1).
+  - Virtual Method Tables (named call 0 lookups; vtable 2; itable slot 2 is 4 lookups, same woof).
 
 #### Unstarted Track · Operating Systems (~12 lessons)
 
@@ -567,29 +540,20 @@ A sequenced execution plan covering the remaining ~50 lessons and open debt:
    - *Why second:* Reuses established archetypes (A packet flow + B discrete steps) without needing heavy new engine frameworks.
    - Add `http-protocols` (HTTP/1.1 HOL blocking, HTTP/2 multiplexing, HTTP/3 independent UDP streams).
    - Add `caching-and-security` (HTTP caching directives, conditional ETag 304s, TLS 1.3 1-RTT/0-RTT handshake).
-3. **Tier 3 · Build bespoke views for Track 03 storage topics (~2 lessons)**:
-   - Implement `algo/storage.ts` + `views/StorageView.tsx` (B-Tree vs LSM write/read amplification).
-   - Implement `algo/query_plan.ts` + `views/QueryPlanView.tsx` (clustered vs secondary index seek/scan tipping point).
-   - This completes Track 03 Databases & Transactions at ~11 lessons.
+3. **Tier 3 · Track 03 storage topics — SHIPPED (2 lessons)**:
+   - `algo/storage.ts` + `views/StorageView.tsx` (B-Tree vs LSM write/read amplification).
+   - `algo/queryPlan.ts` + `views/QueryPlanView.tsx` (clustered vs secondary index seek/scan tipping point).
+   - Track 03 Databases & Transactions is complete at 11 lessons, 5 modules.
 4. **Tier 4 · Extend Tracks 07 and 08 on resolved archetypes F and G (~8 lessons remaining)**:
    - Archetypes F (`refactor.ts`) and G (`scenario.ts`) are proven and screenshot-verified.
    - *Phase A (Shipped — 5 lessons):* Added Extract Class and Replace Conditional with Polymorphism to `refactoring` (Track 07 now 5 shipped, `refactoring` module complete); added Thread Pool Sizing, Circuit Breaker Hysteresis, and Zero-Downtime Migration to `on-call` (Track 08 now 5 shipped, `on-call` module complete).
    - *Phase B (Remaining — ~8 lessons):* Build `views/DependencyGraphView.tsx` for `modularity-coupling` ($C_a, C_e, I, A$ metrics and ADP cycle detection); add Ports/Adapters and Strangler Fig to `architecture-boundaries` in Track 07; add Memory Leaks, Cascading Herd, and Split-Brain to `resilience-engineering` in Track 08.
-5. **Tier 5 · Open Track 11 Operating Systems (~12 lessons)**:
-   - Highly mechanical and natural fit for Archetype B discrete steps and C scheduler.
-   - Build `views/PagingView.tsx` (Virtual Memory: page tables, TLB hits/misses, page faults, LRU/CLOCK).
-   - Build `views/SchedulerView.tsx` (CPU Scheduling: Round-Robin quantum sizing, MLFQ aging, Mars Pathfinder priority inversion).
-   - Build file system journaling and syscall context-switch lessons.
-6. **Tier 6 · Open Track 10 Languages & Runtimes (~12 lessons)**:
-   - Pure discrete steps on Archetype B.
-   - Build `views/RuntimeView.tsx` (call stack frames, bytecode execution vs AST walking).
-   - Build `views/GcView.tsx` (Reference counting cycles, Mark-and-Sweep, stop-the-world pauses, Generational write barriers).
-   - Build runtime systems lessons (event loop microtasks, JIT inline cache profiling and deopt traps).
-7. **Tier 7 · Open Track 09 Security Engineering (~12 lessons)**:
-   - Builds on Archetypes B, A, and D.
-   - Build `views/CryptoView.tsx` (preimage resistance, Diffie-Hellman modular math, asymmetric signatures).
-   - Build `views/SecurityASTView.tsx` (SQL injection AST leaf vs operator mutation, XSS context sanitization, SSRF metadata bypass).
-   - Add identity lessons (cookies/SameSite, JWT validation flaws, OAuth2 PKCE) and defensive architecture (RBAC/ABAC, mTLS zero-trust).
+5. **Tier 5 · Track 09 Operating Systems — COMPLETE (12 shipped)**:
+   - Also shipped: Buffer Cache, System Calls. Producers `cache.ts`, `syscall.ts`.
+6. **Tier 6 · Track 11 Languages & Runtimes — COMPLETE (12 shipped)**:
+   - Lexer, parser, tree-walk/bytecode, call stack, refcount, mark-sweep, incremental GC, generational GC, event loop, JIT, deopt, vtables.
+7. **Tier 7 · Track 10 Security Engineering — COMPLETE (12 shipped)**:
+   - Cryptography (`crypto.ts`), identity (`auth.ts`), injection (`inject.ts`), RBAC/ABAC (`policy.ts`), stuffing (`stuffing.ts`), mTLS (`mtls.ts`).
 
 **Track 01 is effectively finished** at 31 lessons against an estimate of 26. Of
 its original addition list only **API design** and **sagas with compensation**

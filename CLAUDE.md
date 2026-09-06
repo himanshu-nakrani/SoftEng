@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**syslab** — an interactive system-design learning site. Every lesson is built around a running simulation (animated request packets, live sliders, killable servers) rather than prose. Next.js 16 App Router + React 19 + TypeScript, Tailwind CSS v4, `motion` (import from `"motion/react"`, NOT legacy `framer-motion` — lint-enforced), zustand. Static export (`output: "export"`) — no server, no accounts; progress lives in localStorage. Eight tracks: **01 System Design Fundamentals** (31 lessons, complete) on the packet engine; and on the discrete-step engine **02 Concurrency** (9, complete), **03 Databases & Transactions** (9, complete — transactions, durability, mvcc), **04 Testing & Verification** (9, complete — test-quality, flakiness, property-testing with `ArrayView`), **05 Version Control & Delivery** (8, complete — history on archetype E plus delivery on archetype A), **06 Networking & the Web** (10, complete — web-requests, http-protocols, caching-and-security), **07 Software Design & Architecture** (10, complete — refactoring, modularity-coupling, architecture-boundaries), and **08 Engineering Practice** (8, complete — on-call, resilience-engineering on archetype G). A track's NUMBER is its position in the registry array, not an identity — refer to tracks by slug in code. Beyond lessons: `/review` (a practice deck over every prediction checkpoint, deep-linking `?t=<sim-second>` into lessons via the transport scrubber — practice answers never write to the store; deck ordering is confidence-aware via the learning journal in `src/stores/journal.ts`), lesson-page reading mode + reflection surfaces (the causal workbench: `engine/components/CausalWorkbench.tsx`, `LessonUiContext`), a per-figure caption transcript whose rows seek, a ⌘K command palette (`components/navigation/CommandPalette.tsx`, registry-derived, portaled to `document.body` because rendering inside the sidebar put it in that element's stacking context), and a hand-rolled service worker (`public/sw.js`) making visited lessons work offline.
+**syslab** — an interactive system-design learning site. Every lesson is built around a running simulation (animated request packets, live sliders, killable servers) rather than prose. Next.js 16 App Router + React 19 + TypeScript, Tailwind CSS v4, `motion` (import from `"motion/react"`, NOT legacy `framer-motion` — lint-enforced), zustand. Static export (`output: "export"`) — no server, no accounts; progress lives in localStorage. Eleven tracks: **01 System Design Fundamentals** (31 lessons, complete) on the packet engine; and on the discrete-step engine **02 Concurrency** (9, complete), **03 Databases & Transactions** (11, complete — transactions, durability, mvcc, storage, indexing), **04 Testing & Verification** (9, complete — test-quality, flakiness, property-testing with `ArrayView`), **05 Version Control & Delivery** (8, complete — history on archetype E plus delivery on archetype A), **06 Networking & the Web** (10, complete — web-requests, http-protocols, caching-and-security), **07 Software Design & Architecture** (10, complete — refactoring, modularity-coupling, architecture-boundaries), **08 Engineering Practice** (8, complete — on-call, resilience-engineering on archetype G), **09 Operating Systems** (12, complete — virtual-memory, cpu-scheduling, storage-io), **10 Security Engineering** (12, complete — cryptography, identity-access, application-security, defense-in-depth), and **11 Languages & Runtimes** (12, complete — parsing-execution, memory-management, runtime-systems). A track's NUMBER is its position in the registry array, not an identity — refer to tracks by slug in code. Beyond lessons: `/review` (a practice deck over every prediction checkpoint, deep-linking `?t=<sim-second>` into lessons via the transport scrubber — practice answers never write to the store; deck ordering is confidence-aware via the learning journal in `src/stores/journal.ts`), lesson-page reading mode + reflection surfaces (the causal workbench: `engine/components/CausalWorkbench.tsx`, `LessonUiContext`), a per-figure caption transcript whose rows seek, a ⌘K command palette (`components/navigation/CommandPalette.tsx`, registry-derived, portaled to `document.body` because rendering inside the sidebar put it in that element's stacking context), and a hand-rolled service worker (`public/sw.js`) making visited lessons work offline.
 
 ## Commands
 
@@ -12,14 +12,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run build` — static export to `out/`. Honors optional `BASE_PATH` (project-site hosting) and `NEXT_PUBLIC_SITE_URL` (canonical origin for metadata/sitemap).
 - `npm run check` — `tsc --noEmit && eslint . && npx tsx scripts/check-curriculum.mts && vitest run`. Run before considering any change done.
   - The curriculum check also pins README's lesson table to the registry. After adding a lesson or track: `npx tsx scripts/check-curriculum.mts --write-readme` regenerates the fenced `CURRICULUM` block; without it the check fails with the first differing line.
-- `npm run test` — vitest (two projects: node environment for headless sim tests, jsdom project for rendering tests; 35 files, 958 tests). The packet engine: invariant suite (determinism, packet cap, topology integrity, meter coverage, quiz semantics for every FLOW lesson) + golden-run regression + seek/workbench. Archetype B: `src/engine/algo/__tests__/` per producer. Lesson PROSE: `src/lessons/__tests__/*-claims.test.ts`. Pure app logic: the progress store and progress math. Component & hook rendering: `src/hooks/__tests__/` and `src/components/navigation/__tests__/`.
+- `npm run test` — vitest (two projects: node environment for headless sim tests, jsdom project for rendering tests; 95 files, 1495 tests). The packet engine: invariant suite (determinism, packet cap, topology integrity, meter coverage, quiz semantics for every FLOW lesson) + golden-run regression + seek/workbench. Archetype B: `src/engine/algo/__tests__/` per producer. Lesson PROSE: `src/lessons/__tests__/*-claims.test.ts`. Pure app logic: the progress store and progress math. Component & hook rendering: `src/hooks/__tests__/` and `src/components/navigation/__tests__/`.
   - Goldens live in `src/lessons/__tests__/goldens/`; a missing golden bootstraps on first run. After a DELIBERATE behavior change: `UPDATE_GOLDENS=1 npx vitest run`, then eyeball the diff.
   - A new FLOW lesson needs one line in `SIM_BY_KEY` in `src/engine/__tests__/harness.ts` — the matrix guard fails loudly if you forget. `engine: "steps"` lessons are excluded by the harness and must NOT be added there.
 - `npm run test:e2e` — Playwright over the built export: desktop smoke (registry-derived routes, zero console/hydration errors, sim drive, reduced-motion), mobile (drawer, fullscreen no-remount, overflow, touch targets), axe (wcag2a/aa on the sampled routes; both former findings are FIXED and enforced — faint-text contrast via the token ladder, interactive-stage semantics via labelled `role="group"` stages), and visual regression (`e2e/visual.spec.ts` — stage visual structure, geometry, and design-token resolution across seeked moments on all platforms). Needs `npm run build` first.
   - **Routes are SAMPLED**: `e2e/_selection.ts` picks one lesson per module on a pull request (an axe scan costs ~5s per lesson). `E2E_FULL=1 npx playwright test` sweeps every lesson — that is what the nightly runs.
   - If port 4173 is occupied, set `E2E_PORT=<free port>` — otherwise Playwright's `reuseExistingServer` tests the wrong app.
   - `PW_CHROMIUM_PATH=<binary>` overrides the browser, but should not be needed: run `npx playwright install chromium` to fetch the build the pinned `@playwright/test` expects.
-- `npm run monitor:routes` — checks the DEPLOYED site (91 routes derived from the registry — statics, track landings, every lesson, and the 26 legacy stubs — plus content markers). The only thing that tests what Pages actually serves; `ci.yml` only tests a local export.
+- `npm run monitor:routes` — checks the DEPLOYED site (routes derived from the registry — statics, track landings, every lesson, and the 26 legacy stubs — plus content markers). The only thing that tests what Pages actually serves; `ci.yml` only tests a local export.
 - Three workflows:
   - `ci.yml` — audit (`npm audit --audit-level=high`) → check → build → **sampled** e2e, on every push/PR. Pushes to `main` deploy to Pages with `BASE_PATH=/SoftEng`.
   - `e2e-full.yml` — nightly full sweep (`E2E_FULL=1`), plus a `regen_visual` input that regenerates visual baselines in CI's own image and uploads them for review.
@@ -206,6 +206,60 @@ bought with 3 page writes spent while nothing was wrong. Grouped, three
 transactions cost ONE force instead of three for the same six log records, and T1
 is answered five crash points later — latency traded for throughput, with
 correctness unchanged at every crash point.
+
+### Storage engines (`algo/storage.ts`, `views/StorageView.tsx`)
+
+Track 03's third producer that is not an interleaving: a fixed sequence of writes
+and reads over a B-tree or an LSM. The size slider is how many keys are written
+(4–12). A B-tree write rewrites a whole leaf (height 2 paid every time); an LSM
+write appends to a memtable of 4 and flushes, compacting at 3 SSTables. Measured
+at 8 keys: B-tree 8 page writes / 24 page reads; LSM 2 page writes / 3 page reads
+/ 4 bloom misses. At 12 keys the LSM's first compaction makes page writes 4 and
+page reads 6. Pinned in `storage-claims.test.ts`.
+
+### Query plans (`algo/queryPlan.ts`, `views/QueryPlanView.tsx`)
+
+An 8-page heap, three access paths. A scan always reads 8 pages. A secondary
+index seeks (2) then bookmarks once per match. A clustered index seeks then reads
+`ceil(matches / 4)` contiguous pages. The secondary path ties the scan at 6
+matches (8 pages) and loses at 7 (9 vs 8); clustered at 7 still reads 4. Pinned
+in `indexing-claims.test.ts`.
+
+### Paging (`algo/paging.ts`, `views/PagingView.tsx`)
+
+Track 09's first producer. VPN 0–15, two-level walk (directory then table), `walks` bumps by 2 per translation that misses the TLB. Optional fully-associative FIFO TLB, demand paging, FIFO/LRU/CLOCK replacement. Measured: identity `[0,4,8]` → 6 table refs; TLB of 4 on `[0,0,0]` → 1 miss 2 hits; FIFO vs LRU on `[0,1,2,0,3]` with 3 frames evict 0 vs 1. Pinned in the virtual-memory claim tests.
+
+### CPU scheduling (`algo/scheduler.ts`, `views/SchedulerView.tsx`)
+
+Cooperative FIFO vs preemptive quantum. Convoy A=8, B=2, C=2: cooperative waits B=8 C=10; quantum 1 waits B=3 with 4 preemptions; quantum 8 is the convoy again. `switchCost` charges waste on later dispatches (quantum 1 with cost 1: waste 6, B waits 7). `policy: "mlfq"` is three queues, quanta 1/2/4; a full slice demotes. `waitTime(state, id)` is `finishedAt - burst`. Pinned in the cpu-scheduling claim tests.
+
+### Priority inversion (`algo/priority.ts`, `views/PriorityView.tsx`)
+
+Low holds a lock, High needs it, Medium does not. Without inheritance High waits 9 (Medium ran over Low); with inheritance High waits 5 and Medium waits 7. Pinned in `priority-inversion-claims.test.ts`.
+
+### Inodes and FS journaling (`algo/inode.ts`, `algo/journal.ts`)
+
+An inode has 4 direct pointers plus one indirect block of 4. Size 4: 0 pointer reads; size 5: 1. Journaling is WAL's ordering rule on metadata: unordered crash after the data write orphans block 0; a journal force before the inode write recovers it. Pinned in `inode-claims.test.ts` and `fs-journaling-claims.test.ts`.
+
+### Buffer cache and syscalls (`algo/cache.ts`, `algo/syscall.ts`)
+
+Write-back crash after two dirty writes loses both (disk still 0); fsync or write-through loses nothing. Eight one-byte writes trap 8 times; one eight-byte write traps once. Pinned in `buffer-cache-claims.test.ts` and `syscalls-claims.test.ts`.
+
+### Cryptography (`algo/crypto.ts`, `views/CryptoView.tsx`)
+
+Toys, on purpose: `mix8` is 8-bit (flip bit 0 of 42 moves 6/8 output bits); DH uses `p=23, g=5` (a=6,b=7 shared secret 12); signatures are RSA `n=55` (message 5 verifies, tampered 6 rejects). Real hashes and moduli are named as the scale-up, not simulated. Pinned in the cryptography claim tests.
+
+### Identity, injection, policy (`algo/auth.ts`, `inject.ts`, `policy.ts`, `stuffing.ts`, `mtls.ts`)
+
+Session cookie `S7`: flags 0 stolen 0 csrf 0; HttpOnly off or Secure off stolen 1; SameSite=None csrf 1. JWT `now=10`: naive accepts alg=none / exp=5 / tampered sub; strict accepts only the signed unexpired token (sig 56). OAuth code `C9`: without PKCE intercept stolen 1 issued 0; with challenge 77 rejected 1 issued 1 stolen 0. SQLi: concat `7 OR 1=1` is 3 rows; bind it as a literal is 0. XSS: raw `<script>` scripts 1; encoded stays text. SSRF: open fetch of `169.254.169.254` leaked 1; allowlist blocked 1. RBAC mallory writes doc1 (escalation 1); ABAC denies her. Stuffing: six guesses, password on attempt 5; no limit and IP cap 3 stolen 1; username cap 3 blocked 3 stolen 0. Perimeter connects with no client cert; mTLS rejects missing and other-ca. Pinned in the identity-access, application-security, and defense-in-depth claim tests.
+
+### Lexer (`algo/lexer.ts`, `views/LexerView.tsx`)
+
+Four sources. `let n=2` is 4 tokens 1 skipped; `let n = 2` is the same four with 3 skipped; `let 'n=2'` is 2 tokens (the string is one chip); `letn=2` is ident `letn`, not the keyword (3 tokens 0 skipped). Pinned in `lexical-analysis-claims.test.ts`.
+
+### Parser, runtime, GC, event loop, JIT
+
+`parser.ts`: flat `1+2*3` is 9; prec is 7. `runtime.ts`: both machines get 7 for `1+2*3` (walk visits 5, bytecode ops 5 stack max 3); `f(3)` returns 6 at depth 4, `f(4)` overflows cap 4. `gc.ts`: refcount A↔B leaks 2; mark-sweep still sweeps an unrooted cycle; STW pause 4 vs incremental budget 1 pause 1; old→young without a barrier loses Y1. Event loop log `1,4,2,3`; nested micro `1,3,A,B,2`. JIT hot 4: 8 iters are interp 4 compiled 4; deopt at 6 is interp 7 compiled 1 deopts 1. Vtables: a named call is 0 lookups; a class vtable is 2; an itable with speak at slot 2 is 4 scans/lookups, same woof. Pinned in the languages claim tests.
 
 ### Archetypes D and E — also step lists (`algo/mutation.ts`, `algo/repo.ts`)
 

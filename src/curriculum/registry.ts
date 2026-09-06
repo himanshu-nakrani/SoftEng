@@ -939,6 +939,58 @@ export const curriculum: Curriculum = {
             },
           ],
         },
+        {
+          slug: "storage",
+          title: "Storage Engines",
+          description:
+            "How a write becomes bytes on disk — and what that costs a later read.",
+          lessons: [
+            {
+              slug: "btree-vs-lsm",
+              moduleSlug: "storage",
+              title: "B-Tree vs LSM",
+              tagline:
+                "Eight keys rewrote eight B-tree leaves. The same eight keys cost the LSM two flushes.",
+              difficulty: "advanced",
+              estimatedMinutes: 13,
+              prerequisites: ["write-ahead-logging"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "pages-in-place", title: "Rewriting the page", kind: "concept" },
+                { id: "btree", title: "In-place updates", kind: "interactive" },
+                { id: "lsm", title: "Append then flush", kind: "interactive" },
+                { id: "amplification", title: "What the counts mean", kind: "concept" },
+              ],
+            },
+          ],
+        },
+        {
+          slug: "indexing",
+          title: "Indexes & Query Plans",
+          description:
+            "The path a query takes through the heap, and when that path costs more than reading everything.",
+          lessons: [
+            {
+              slug: "index-vs-scan",
+              moduleSlug: "indexing",
+              title: "Indexes and Query Plans",
+              tagline:
+                "From seven matching rows, looking each one up costs more than reading every page.",
+              difficulty: "advanced",
+              estimatedMinutes: 13,
+              prerequisites: ["btree-vs-lsm"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "access-path", title: "Which pages a query touches", kind: "concept" },
+                { id: "secondary", title: "The bookmark trap", kind: "interactive" },
+                { id: "scan", title: "Reading every page", kind: "interactive" },
+                { id: "tipping-point", title: "When the scan wins", kind: "concept" },
+              ],
+            },
+          ],
+        },
       ],
     },
     {
@@ -1854,6 +1906,725 @@ export const curriculum: Curriculum = {
                 { id: "partition-split", title: "The network partition", kind: "concept" },
                 { id: "quorum-choice", title: "Choose partition behavior", kind: "interactive" },
                 { id: "fencing-tokens", title: "Majority quorum and fencing", kind: "concept" },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      slug: "operating-systems",
+      title: "Operating Systems",
+      description:
+        "How a kernel turns a virtual address into a byte, and a thread into a scheduled CPU — counted, not narrated.",
+      accent: "red",
+      modules: [
+        {
+          slug: "virtual-memory",
+          title: "Virtual Memory",
+          description:
+            "Page tables, the TLB, faults, and what gets thrown out when frames run out.",
+          lessons: [
+            {
+              slug: "address-translation",
+              moduleSlug: "virtual-memory",
+              title: "Address Translation",
+              tagline:
+                "Three translations walk six table entries. Two levels make the walk longer so the tables can be smaller.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: [],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "vpn-and-offset", title: "Splitting the address", kind: "concept" },
+                { id: "walk-the-tables", title: "Walk the page tables", kind: "interactive" },
+                { id: "why-two-levels", title: "Why the walk is two steps", kind: "concept" },
+              ],
+            },
+                      {
+              slug: "tlb",
+              moduleSlug: "virtual-memory",
+              title: "The TLB",
+              tagline:
+                "Eight translations of one page: 16 table refs without a TLB, 2 with one — a hit is not a cheaper walk.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["address-translation"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "the-walk-is-slow", title: "A walk is several memory refs", kind: "concept" },
+                { id: "tlb-hits", title: "Hits skip the walk", kind: "interactive" },
+                { id: "flush-on-switch", title: "A switch empties it", kind: "concept" },
+              ],
+            },
+                      {
+              slug: "page-faults",
+              moduleSlug: "virtual-memory",
+              title: "Page Faults and Demand Paging",
+              tagline:
+                "Two unique pages cost two faults and two disk reads; repeating the first page costs neither.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["tlb"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "not-present", title: "A PTE can be invalid", kind: "concept" },
+                { id: "first-touch", title: "Fault then load", kind: "interactive" },
+                { id: "major-vs-minor", title: "Disk or just the tables", kind: "concept" },
+              ],
+            },
+                      {
+              slug: "page-replacement",
+              moduleSlug: "virtual-memory",
+              title: "Page Replacement",
+              tagline:
+                "Three frames, pages 0,1,2,0,3: FIFO evicts 0 even though you just used it; LRU evicts 1.",
+              difficulty: "advanced",
+              estimatedMinutes: 13,
+              prerequisites: ["page-faults"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "no-free-frame", title: "Every frame is full", kind: "concept" },
+                { id: "fifo-vs-lru", title: "Who gets evicted", kind: "interactive" },
+                { id: "clock", title: "Referenced bits", kind: "interactive" },
+              ],
+            },
+          ],
+        },
+        {
+          slug: "cpu-scheduling",
+          title: "CPU Scheduling",
+          description:
+            "Who runs next, and whether a timer is allowed to interrupt them.",
+          lessons: [
+            {
+              slug: "preemptive-scheduling",
+              moduleSlug: "cpu-scheduling",
+              title: "Preemptive vs Cooperative Scheduling",
+              tagline:
+                "Cooperative FIFO: B waits 8 behind a burst of 8. A quantum of 1 cuts that wait to 3; a quantum of 8 is cooperative again.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: [],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "the-convoy", title: "A long burst at the head", kind: "concept" },
+                { id: "cooperative", title: "Run to completion", kind: "interactive" },
+                { id: "preemptive", title: "The timer fires", kind: "interactive" },
+              ],
+            },
+                      {
+              slug: "round-robin",
+              moduleSlug: "cpu-scheduling",
+              title: "Round-Robin and Time Slices",
+              tagline:
+                "The 1-step quantum that cut B's wait to 3 now wastes 6 on switches, so B waits 7. Stretch it to 2 and B waits 3.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["preemptive-scheduling"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "the-slice", title: "A quantum is a budget", kind: "concept" },
+                { id: "short-slice", title: "Many switches", kind: "interactive" },
+                { id: "long-slice", title: "Waste versus waiting", kind: "concept" },
+              ],
+            },
+                      {
+              slug: "mlfq",
+              moduleSlug: "cpu-scheduling",
+              title: "Multi-Level Feedback Queues",
+              tagline:
+                "SHORT stays in Q0 and finishes at 2; LONG is demoted twice and finishes at 9 in Q2. Aging is the only way back up.",
+              difficulty: "advanced",
+              estimatedMinutes: 13,
+              prerequisites: ["round-robin"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "several-queues", title: "Not one quantum", kind: "concept" },
+                { id: "demotion", title: "A long job sinks", kind: "interactive" },
+                { id: "aging", title: "Starvation has a timer", kind: "concept" },
+              ],
+            },
+                      {
+              slug: "priority-inversion",
+              moduleSlug: "cpu-scheduling",
+              title: "Priority Inversion",
+              tagline:
+                "Without inheritance High waits 9: Medium ran over the lock holder. Donate Low High's priority and High waits 5.",
+              difficulty: "advanced",
+              estimatedMinutes: 13,
+              prerequisites: ["preemptive-scheduling"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "the-lock", title: "High waits on Low", kind: "concept" },
+                { id: "inverted", title: "Medium runs over Low", kind: "interactive" },
+                { id: "inherit", title: "Donate the priority", kind: "interactive" },
+              ],
+            },
+          ],
+        },
+        {
+          slug: "storage-io",
+          title: "Storage and System Calls",
+          description:
+            "How a file becomes blocks, and how a crash between those writes is survived.",
+          lessons: [
+            {
+              slug: "inode",
+              moduleSlug: "storage-io",
+              title: "The Inode",
+              tagline:
+                "Four blocks fit in the inode: 0 pointer reads. The fifth block costs one extra pointer read; eight blocks cost four.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["address-translation"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "pointers", title: "A file is a list of blocks", kind: "concept" },
+                { id: "direct", title: "Four direct pointers", kind: "interactive" },
+                { id: "indirect", title: "One extra read", kind: "interactive" },
+              ],
+            },
+                      {
+              slug: "fs-journaling",
+              moduleSlug: "storage-io",
+              title: "File System Journaling",
+              tagline:
+                "Crash after the data write leaves block 0 on disk with an empty inode. Force the journal first, and recovery names the block anyway.",
+              difficulty: "advanced",
+              estimatedMinutes: 13,
+              prerequisites: ["inode"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "the-gap", title: "Data then inode", kind: "concept" },
+                { id: "unordered", title: "Crash between writes", kind: "interactive" },
+                { id: "journaled", title: "Force the log first", kind: "interactive" },
+              ],
+            },
+                      {
+              slug: "buffer-cache",
+              moduleSlug: "storage-io",
+              title: "The Buffer Cache",
+              tagline:
+                "Write-back crash after two writes: lost 2, disk still 0. After fsync, or write-through at that crash: lost 0 and two disk writes.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["fs-journaling"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "dirty-pages", title: "A write hits RAM first", kind: "concept" },
+                { id: "write-back", title: "Crash before fsync", kind: "interactive" },
+                { id: "write-through", title: "Every write is a disk write", kind: "interactive" },
+              ],
+            },
+                      {
+              slug: "syscalls",
+              moduleSlug: "storage-io",
+              title: "System Calls",
+              tagline:
+                "Eight one-byte writes trap eight times. One eight-byte write traps once — same 8 bytes, seven fewer mode switches.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["buffer-cache"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "the-trap", title: "User cannot talk to devices", kind: "concept" },
+                { id: "one-byte", title: "Eight traps", kind: "interactive" },
+                { id: "batched", title: "One trap", kind: "interactive" },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      slug: "security",
+      title: "Security Engineering",
+      description:
+        "What a hash hides, what a key exchange agrees, and what a signature refuses — counted on tiny machines, not asserted.",
+      accent: "violet",
+      modules: [
+        {
+          slug: "cryptography",
+          title: "Cryptography",
+          description:
+            "Hashes, Diffie-Hellman, and signatures, small enough to step through.",
+          lessons: [
+            {
+              slug: "hash-functions",
+              moduleSlug: "cryptography",
+              title: "Hash Functions",
+              tagline:
+                "42 hashes to 23 in one mix; flipping bit 0 moves 6 of 8 output bits. A preimage is 256 guesses here, 2^256 on SHA-256 — we do not step through them.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: [],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "one-way", title: "Easy forward hard back", kind: "concept" },
+                { id: "avalanche", title: "Flip one bit", kind: "interactive" },
+                { id: "work-factor", title: "Guessing is exponential", kind: "concept" },
+              ],
+            },
+                      {
+              slug: "diffie-hellman",
+              moduleSlug: "cryptography",
+              title: "Diffie-Hellman",
+              tagline:
+                "Alice publishes 8, Bob publishes 17, both land on 12. Eve sees the channel; brute-forcing a is at most 23 trials.",
+              difficulty: "intermediate",
+              estimatedMinutes: 13,
+              prerequisites: ["hash-functions"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "public-channel", title: "Agree without saying the secret", kind: "concept" },
+                { id: "exchange", title: "Two exponentiations", kind: "interactive" },
+                { id: "eve", title: "Seeing A and B is not knowing a", kind: "concept" },
+              ],
+            },
+                      {
+              slug: "digital-signatures",
+              moduleSlug: "cryptography",
+              title: "Digital Signatures",
+              tagline:
+                "Toy RSA n=55: sign 5 with d, get 25; anyone with e recovers 5. Change the message to 6 and verified drops from 1 to 0.",
+              difficulty: "intermediate",
+              estimatedMinutes: 13,
+              prerequisites: ["diffie-hellman"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "private-signs", title: "Anyone can check", kind: "concept" },
+                { id: "sign-verify", title: "Accept the message", kind: "interactive" },
+                { id: "tamper", title: "Reject a change", kind: "interactive" },
+              ],
+            },
+          ],
+        },
+        {
+          slug: "identity-access",
+          title: "Identity & Access",
+          description:
+            "Cookies, tokens, and the redirects that mint them.",
+          lessons: [
+            {
+              slug: "session-cookies",
+              moduleSlug: "identity-access",
+              title: "Session Cookies",
+              tagline:
+                "HttpOnly+Secure+SameSite=Strict keeps S7 put. Turn HttpOnly off and XSS steals it; Secure off and HTTP leaks it; SameSite=None and a cross-site POST sends it.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["digital-signatures"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "the-cookie", title: "The cookie is the session", kind: "concept" },
+                { id: "flags", title: "Three flags", kind: "interactive" },
+                { id: "stolen", title: "What a stolen sid is", kind: "concept" },
+              ],
+            },
+                      {
+              slug: "jwt-pitfalls",
+              moduleSlug: "identity-access",
+              title: "JWT Pitfalls",
+              tagline:
+                "A naive verifier accepts alg=none, an expired exp, and a tampered sub. Strict accepts only the signed unexpired token — verified 1 then 0.",
+              difficulty: "intermediate",
+              estimatedMinutes: 13,
+              prerequisites: ["session-cookies"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "three-parts", title: "Header payload signature", kind: "concept" },
+                { id: "naive", title: "The naive verifier", kind: "interactive" },
+                { id: "strict", title: "The strict verifier", kind: "interactive" },
+              ],
+            },
+                      {
+              slug: "oauth-pkce",
+              moduleSlug: "identity-access",
+              title: "OAuth and PKCE",
+              tagline:
+                "Without PKCE an intercepted C9 becomes T1 (stolen 1, issued 0). With PKCE challenge 77 the attacker is rejected and the client still holds T1.",
+              difficulty: "intermediate",
+              estimatedMinutes: 13,
+              prerequisites: ["jwt-pitfalls"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "the-code", title: "The code is not the token", kind: "concept" },
+                { id: "no-pkce", title: "Intercept without PKCE", kind: "interactive" },
+                { id: "with-pkce", title: "Intercept with PKCE", kind: "interactive" },
+              ],
+            },
+          ],
+        },
+        {
+          slug: "application-security",
+          title: "Application Security",
+          description:
+            "What happens when untrusted input is treated as code.",
+          lessons: [
+            {
+              slug: "sql-injection",
+              moduleSlug: "application-security",
+              title: "SQL Injection",
+              tagline:
+                "Concatenating 7 OR 1=1 adds OR to the AST and returns 3 rows. Binding the same string as a parameter returns 0.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["oauth-pkce"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "concat", title: "Input became syntax", kind: "concept" },
+                { id: "string-concat", title: "OR 1 equals 1", kind: "interactive" },
+                { id: "parameterized", title: "A literal leaf", kind: "interactive" },
+              ],
+            },
+                      {
+              slug: "xss",
+              moduleSlug: "application-security",
+              title: "Cross-Site Scripting",
+              tagline:
+                "Ada is text. Raw <script> becomes a script node (scripts 1). Encode it and it stays text (scripts 0).",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["sql-injection"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "text-or-script", title: "The name is not HTML", kind: "concept" },
+                { id: "raw", title: "A script node", kind: "interactive" },
+                { id: "encoded", title: "Still text", kind: "interactive" },
+              ],
+            },
+                      {
+              slug: "ssrf",
+              moduleSlug: "application-security",
+              title: "Server-Side Request Forgery",
+              tagline:
+                "An open fetch of 169.254.169.254 leaks metadata. The same host against an allowlist of api.example.com is blocked.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["xss"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "the-fetch", title: "The server fetches for you", kind: "concept" },
+                { id: "open", title: "Metadata address", kind: "interactive" },
+                { id: "allowlist", title: "Only the app host", kind: "interactive" },
+              ],
+            },
+          ],
+        },
+        {
+          slug: "defense-in-depth",
+          title: "Defense in Depth",
+          description:
+            "Who may act, how often, and which service is speaking.",
+          lessons: [
+            {
+              slug: "rbac-vs-abac",
+              moduleSlug: "defense-in-depth",
+              title: "RBAC vs ABAC",
+              tagline:
+                "Mallory is an editor, not the owner: RBAC lets her write doc1 (escalation 1). ABAC denies her.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["ssrf"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "the-action", title: "Who may write", kind: "concept" },
+                { id: "rbac", title: "Role is enough", kind: "interactive" },
+                { id: "abac", title: "Owner or admin", kind: "interactive" },
+              ],
+            },
+                      {
+              slug: "credential-stuffing",
+              moduleSlug: "defense-in-depth",
+              title: "Credential Stuffing",
+              tagline:
+                "Six guesses, correct password on attempt 5. No limit and an IP bucket of 3 steal the account; a username bucket of 3 blocks the last three.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["rbac-vs-abac"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "six-guesses", title: "The password is on attempt five", kind: "concept" },
+                { id: "no-limit", title: "No bucket", kind: "interactive" },
+                { id: "user-bucket", title: "Bucket the username", kind: "interactive" },
+              ],
+            },
+                      {
+              slug: "mtls",
+              moduleSlug: "defense-in-depth",
+              title: "Mutual TLS",
+              tagline:
+                "Perimeter connects with no client cert. mTLS connects only when the cert is from this CA — missing or other-ca rejects.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["credential-stuffing"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "who-is-speaking", title: "The network is not a name", kind: "concept" },
+                { id: "perimeter", title: "Anyone on the net", kind: "interactive" },
+                { id: "mutual", title: "The client cert", kind: "interactive" },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      slug: "languages",
+      title: "Languages & Runtimes",
+      description:
+        "How source becomes tokens, then trees, then running code — counted on a tiny scanner first.",
+      accent: "amber",
+      modules: [
+        {
+          slug: "parsing-execution",
+          title: "Parsing & Execution",
+          description:
+            "From characters to tokens, then to trees.",
+          lessons: [
+            {
+              slug: "lexical-analysis",
+              moduleSlug: "parsing-execution",
+              title: "Lexical Analysis",
+              tagline:
+                "let n=2 is four tokens. letn=2 is three: letn is one ident, not the keyword let. A quoted 'n=2' is one string.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: [],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "characters", title: "Source is a string", kind: "concept" },
+                { id: "scan", title: "Four sources", kind: "interactive" },
+                { id: "keywords", title: "let is not a prefix", kind: "concept" },
+              ],
+            },
+                      {
+              slug: "recursive-descent",
+              moduleSlug: "parsing-execution",
+              title: "Recursive Descent",
+              tagline:
+                "Flat left-to-right parses 1+2*3 as 9. Precedence puts * in a tighter production and gets 7.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["lexical-analysis"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "two-ops", title: "Plus and star", kind: "concept" },
+                { id: "flat", title: "Left to right", kind: "interactive" },
+                { id: "prec", title: "Star binds tighter", kind: "interactive" },
+              ],
+            },
+                      {
+              slug: "tree-walk-vs-bytecode",
+              moduleSlug: "parsing-execution",
+              title: "Tree Walk vs Bytecode",
+              tagline:
+                "Both machines get 7 for 1+2*3. The walk visits 5 nodes; bytecode is 5 ops with stack max 3.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["recursive-descent"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "two-machines", title: "Same tree two machines", kind: "concept" },
+                { id: "walk", title: "Visit every node", kind: "interactive" },
+                { id: "bytecode", title: "LOAD MUL ADD", kind: "interactive" },
+              ],
+            },
+                      {
+              slug: "call-stack",
+              moduleSlug: "parsing-execution",
+              title: "The Call Stack",
+              tagline:
+                "f(3) returns 6 at depth 4. f(4) overflows the cap of 4 at f(0) — result is null.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["tree-walk-vs-bytecode"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "frames", title: "One frame per call", kind: "concept" },
+                { id: "recurse", title: "f of n", kind: "interactive" },
+                { id: "overflow", title: "Cap of four", kind: "concept" },
+              ],
+            },
+          ],
+        },
+        {
+          slug: "memory-management",
+          title: "Memory Management",
+          description:
+            "What a collector frees, and what a cycle or a missed pointer keeps.",
+          lessons: [
+            {
+              slug: "reference-counting",
+              moduleSlug: "memory-management",
+              title: "Reference Counting",
+              tagline:
+                "A.p=B then drop both: freed 2. A↔B then drop both: leaked 2 — rc never hits 0.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["call-stack"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "rc", title: "Zero means free", kind: "concept" },
+                { id: "acyclic", title: "A points to B", kind: "interactive" },
+                { id: "cycle", title: "A and B point at each other", kind: "interactive" },
+              ],
+            },
+                      {
+              slug: "mark-and-sweep",
+              moduleSlug: "memory-management",
+              title: "Mark and Sweep",
+              tagline:
+                "Root 0→1 marks 2 and sweeps 2. An unrooted 2↔3 cycle is still swept — unlike refcount.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["reference-counting"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "the-heap", title: "Reachable from a root", kind: "concept" },
+                { id: "collect", title: "Mark then sweep", kind: "interactive" },
+                { id: "cycles", title: "A cycle is still garbage", kind: "concept" },
+              ],
+            },
+                      {
+              slug: "incremental-gc",
+              moduleSlug: "memory-management",
+              title: "Incremental GC",
+              tagline:
+                "Stop-the-world marks 4 in one pause of 4. Budget 1 is four slices, pause 1.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["mark-and-sweep"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "pause", title: "The mutator waits", kind: "concept" },
+                { id: "stw", title: "One pause of four", kind: "interactive" },
+                { id: "sliced", title: "Budget one", kind: "interactive" },
+              ],
+            },
+                      {
+              slug: "generational-gc",
+              moduleSlug: "memory-management",
+              title: "Generational GC",
+              tagline:
+                "O0.p=Y1 with no barrier: minor GC loses Y1. A dirty card keeps it.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["incremental-gc"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "young-old", title: "Most objects die young", kind: "concept" },
+                { id: "no-barrier", title: "Old points to young", kind: "interactive" },
+                { id: "barrier", title: "A dirty card", kind: "interactive" },
+              ],
+            },
+          ],
+        },
+        {
+          slug: "runtime-systems",
+          title: "Runtime Systems",
+          description:
+            "The event loop, the hot path, and the assumption that failed.",
+          lessons: [
+            {
+              slug: "event-loop",
+              moduleSlug: "runtime-systems",
+              title: "The Event Loop",
+              tagline:
+                "Log 1, queue micro 2, queue macro 3, log 4 → 1,4,2,3. A nested micro still beats the timer: 1,3,A,B,2.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["generational-gc"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "three-queues", title: "Sync then micro then macro", kind: "concept" },
+                { id: "classic", title: "One two three four", kind: "interactive" },
+                { id: "nested", title: "A micro queues a micro", kind: "interactive" },
+              ],
+            },
+                      {
+              slug: "jit-compilation",
+              moduleSlug: "runtime-systems",
+              title: "JIT Compilation",
+              tagline:
+                "Hot is 4. Eight iterations: interp 4, compiles 1, compiled 4. Three iterations never compile.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["event-loop"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "hot", title: "Four hits then compile", kind: "concept" },
+                { id: "loop", title: "Eight iterations", kind: "interactive" },
+                { id: "tiers", title: "Interp then compiled", kind: "concept" },
+              ],
+            },
+                      {
+              slug: "deoptimization",
+              moduleSlug: "runtime-systems",
+              title: "Deoptimization",
+              tagline:
+                "Deopt at iter 6 of 8: interp 7, compiled 1, deopts 1. The compile still counted.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["jit-compilation"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "assumption", title: "Compiled for ints", kind: "concept" },
+                { id: "deopt", title: "Iter six is not", kind: "interactive" },
+                { id: "after", title: "The rest is interp", kind: "concept" },
+              ],
+            },
+                      {
+              slug: "vtables",
+              moduleSlug: "runtime-systems",
+              title: "Virtual Method Tables",
+              tagline:
+                "A named call is 0 extra loads. A vtable is 2. An itable with speak at slot 2 is 4 — same woof, more loads.",
+              difficulty: "intermediate",
+              estimatedMinutes: 12,
+              prerequisites: ["deoptimization"],
+              status: "available",
+              engine: "steps",
+              sections: [
+                { id: "named", title: "The call site names it", kind: "concept" },
+                { id: "vtable", title: "Two loads", kind: "interactive" },
+                { id: "itable", title: "Scan until speak", kind: "interactive" },
               ],
             },
           ],

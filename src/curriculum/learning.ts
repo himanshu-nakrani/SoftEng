@@ -841,6 +841,368 @@ export const learningGuides: Record<string, LearningGuide> = {
     "Step through the cutover phases to observe how the routing facade transparently redirects live traffic while maintaining zero downtime across every stage of the migration.",
     [{ slug: "dependency-inversion", relation: "builds on" }],
   ),
+  "btree-vs-lsm": guide(
+    "If a write is durable, how many pages did it actually touch?",
+    "Eight keys rewrote eight B-tree leaves (24 page reads); the same eight keys cost an LSM two flushes, three page reads, and four bloom misses.",
+    "Write amplification is a property of the engine, not of durability: in-place update pays per key, log-structured update pays at flush and compaction, and a later read pays for however many runs you have not merged.",
+    "Compare the page-writes meter at 8, then drag the LSM to 12 and watch the first compaction add two writes that the B-tree never needed.",
+    [
+      { slug: "write-ahead-logging", relation: "builds on" },
+      { slug: "index-vs-scan", relation: "leads to" },
+    ],
+  ),
+  "index-vs-scan": guide(
+    "Does an index always read fewer pages than scanning the table?",
+    "A secondary lookup grows by one heap fetch per match and crosses the scan at seven matching rows (9 pages against a constant 8); a clustered seek at that point still reads 4.",
+    "An index is an access path, not a discount: when the result is a large fraction of the heap, bookmark lookups are a scan with extra work, and the planner's job is to notice the crossing before the query runs.",
+    "Set matching rows to 6 (tied at 8 pages), then 7 (secondary 9, scan 8), then step the clustered figure at 7 and confirm it still reads 4.",
+    [{ slug: "btree-vs-lsm", relation: "builds on" }],
+  ),
+  "address-translation": guide(
+    "Why does translating a virtual page take two memory reads, not one?",
+    "Three translations of VPNs 0, 4 and 8 walk the directory then a table and stop at 6 table refs with 0 faults; the same three pages inside one table still cost 6.",
+    "A two-level page table keeps the directory small and allocates a table only for a used region; the cost is that every translation is two references until a TLB exists.",
+    "Step the default of three, drag to four so every directory slot lights, then to eight: the meter always adds two refs, even when VPN 1 shares a table with VPN 0.",
+    [{ slug: "tlb", relation: "leads to" }],
+  ),
+  "tlb": guide(
+    "Why doesn't every virtual address walk the page tables?",
+    "Eight repeats of VPN 0 cost 16 table refs with no TLB, and 2 with a TLB of 4 — one miss, then seven hits that skip the walk.",
+    "A two-level walk is two memory references on the path of every load; a TLB hit turns that into a cached VPN-to-frame lookup, so locality in the page stream is what keeps the CPU from walking.",
+    "Set repeated accesses to 3 on both figures (6 table refs vs 1 miss, 2 hits, 2 refs), then 8, and confirm the TLB's table refs stay at 2 while the no-TLB figure grows to 16.",
+    [
+      { slug: "address-translation", relation: "builds on" },
+      { slug: "page-faults", relation: "leads to" },
+    ],
+  ),
+  "page-faults": guide(
+    "Why does the first access to a page cost disk, and a later access to the same page not?",
+    "Two unique pages produced two faults and two disk reads; repeating VPN 0 walked the tables and did not fault.",
+    "Demand paging leaves every PTE invalid until first touch, so a process can own a huge address space while RAM holds only the pages it has actually used.",
+    "Drag unique pages to 4 and confirm faults stay equal to disk reads, with evictions still at zero after every frame is full.",
+    [
+      { slug: "tlb", relation: "builds on" },
+      { slug: "page-replacement", relation: "leads to" },
+    ],
+  ),
+  "page-replacement": guide(
+    "When every frame is full, who gets thrown out — and does it matter?",
+    "On accesses 0,1,2,0,3 with three frames, FIFO (and CLOCK) evict VPN 0 to install 3; LRU keeps 0 and evicts 1. Four frames: zero evictions. Two frames: five faults, three evictions, both policies end at 3 and 0.",
+    "Replacement is a policy over a scarce resource. FIFO is simple and can throw out a page you just used; LRU tracks recency and is expensive to implement exactly; CLOCK approximates LRU with a referenced bit, and on a freshly filled set its first victim is FIFO's.",
+    "Leave frames at 3 and compare the FIFO and LRU victims, then drag to 4 (no eviction) and 2 (the re-access of 0 becomes a fault).",
+    [{ slug: "page-faults", relation: "builds on" }],
+  ),
+  "preemptive-scheduling": guide(
+    "Why do two short bursts wait so long when a longer one arrived at the same instant?",
+    "Cooperative FIFO: A waits 0, B waits 8, C waits 10. A timer of quantum 1 cuts those waits to 4, 3 and 4 after four preemptions; quantum 8 is the convoy again.",
+    "A cooperative kernel cannot reclaim the CPU until the occupant yields, so one long burst delays every short request behind it. Interactive systems need a timer so short work is not stuck in a convoy.",
+    "On the preemptive figure, drag quantum from 1 (B waits 3) to 2 (B waits 2) to 8 (B waits 8, same as cooperative).",
+    [
+      { slug: "data-races", relation: "connects to" },
+      { slug: "deadlock", relation: "connects to" },
+    ],
+  ),
+  "round-robin": guide(
+    "Why can a shorter time slice make a short job wait longer?",
+    "With a switch cost of 1, quantum 1 wastes 6 and B waits 7; quantum 2 wastes 3 and B waits 3; quantum 8 wastes 2 and B waits 9.",
+    "Context switches are not free. A timer that fires every step buys responsiveness only if dispatch is cheap; once it costs a unit, extra preemptions inflate the wall that short jobs sit in.",
+    "Leave quantum at 1 (waste 6, B wait 7), then drag to 2 (waste 3, B wait 3) and to 8 (waste 2, B wait 9).",
+    [
+      { slug: "preemptive-scheduling", relation: "builds on" },
+      { slug: "mlfq", relation: "leads to" },
+    ],
+  ),
+  "mlfq": guide(
+    "How does a scheduler prefer short work without knowing the bursts, and what keeps a long job from staying demoted?",
+    "With queues Q0/Q1/Q2 and quanta 1/2/4, SHORT finishes at t=2 in Q0; LONG is demoted twice and finishes at t=9 in Q2. Aging every 4 steps boosts LONG back to Q0 after 4 demotions.",
+    "Interactive work looks short because it yields before a slice ends; CPU-bound work burns the slice and sinks. Without aging that classification never expires, and later interactive arrivals would skip the sunk job.",
+    "Leave aging off and confirm LONG ends in Q2 with 2 demotions, then set age-every to 4 (LONG ends in Q0, 4 demotions) and to 12 (identical to off — the run is only 9 steps).",
+    [
+      { slug: "round-robin", relation: "builds on" },
+      { slug: "preemptive-scheduling", relation: "builds on" },
+    ],
+  ),
+  "priority-inversion": guide(
+    "Why does a high-priority task wait for a medium-priority one that never took the lock it needs?",
+    "Without inheritance High waits 9 (done@11) — Medium ran its burst of 4 over the lock holder. With inheritance High waits 5, Low waits 0, Medium waits 7; one boost, zero preemptions.",
+    "A priority scheduler that does not donate lets Medium run over Low while High is blocked on Low's lock, so the urgent work waits for both. Inheritance makes the holder as urgent as the waiter until the lock is free.",
+    "Step the inverted figure until M preempts L (preemptions 1, H wait 9), then the inherit figure until L's chip reads prio 0→2 and M stays ready (boosts 1, H wait 5).",
+    [
+      { slug: "preemptive-scheduling", relation: "builds on" },
+      { slug: "deadlock", relation: "connects to" },
+    ],
+  ),
+  "inode": guide(
+    "Why does the fifth block of a file cost an extra disk read the first four did not?",
+    "A 4-block file is 4 inode reads, 4 data reads, and 0 pointer reads; the fifth block adds 1 pointer read, and eight blocks add 4.",
+    "An inode is a fixed-size record. Direct pointers name data from inside it; past that range the name lives in a pointer block, and every later data block pays to fetch it.",
+    "Leave file blocks at 4 and confirm pointer reads stay at 0, then drag to 5 (the stamp flips to 1 pointer read) and to 8 (4 pointer reads).",
+    [
+      { slug: "address-translation", relation: "builds on" },
+      { slug: "fs-journaling", relation: "leads to" },
+    ],
+  ),
+  "fs-journaling": guide(
+    "A crash between writing a file's data and writing the inode that names it — what is left on disk, and how does a journal change that?",
+    "Without a journal, crashing after the data write leaves block 0 on disk with an empty inode — an orphan. With one, crashing after the journal force, before the inode write, still recovers: the inode names 0.",
+    "The inode write is a random I/O; the journal force is sequential. WAL's ordering rule applied to metadata: make the name durable in a log before installing it, so a crash in that gap is recoverable rather than a leaked block.",
+    "On the unordered figure, leave the crash at 1 and read the orphan; drag to 2 and watch it vanish. On the journaled figure, start at 3 (recovery names 0), then drag to 2 (unforced record, still an orphan).",
+    [
+      { slug: "inode", relation: "builds on" },
+      { slug: "write-ahead-logging", relation: "connects to" },
+    ],
+  ),
+  "buffer-cache": guide(
+    "A write() already returned success — why can a crash still lose the bytes?",
+    "Write-back crash after two writes loses both (lost 2, disk still 0). After fsync, or write-through at the same crash: lost 0, diskWrites 2.",
+    "The buffer cache acknowledges a write when the page is dirty in RAM. Until fsync those bytes are a loss window. Write-through closes it by paying a disk write on every write().",
+    "On write-back, leave the crash at 2 (lost 2, disk 0), then drag to 3 (lost 0, diskWrites 2). On write-through, crash at 2: lost 0, diskWrites 2.",
+    [
+      { slug: "fs-journaling", relation: "builds on" },
+      { slug: "write-ahead-logging", relation: "connects to" },
+      { slug: "syscalls", relation: "leads to" },
+    ],
+  ),
+  "syscalls": guide(
+    "Why do eight one-byte writes cost eight traps when one eight-byte write moves the same eight bytes?",
+    "Eight calls of 1 byte trap 8 times, copy 8 times, and move 8 bytes; one call of 8 bytes traps once, copies once, and still moves 8 bytes.",
+    "User code cannot talk to devices. Every write() is a mode switch; the bytes are the work, so batching calls is the lever, not making the trap cheaper.",
+    "Leave the one-byte figure at 8 (traps 8, copies 8, bytes 8), then the batched figure at 8 (traps 1, copies 1, bytes 8). Drag both to 1: they agree.",
+    [
+      { slug: "buffer-cache", relation: "builds on" },
+      { slug: "inode", relation: "connects to" },
+    ],
+  ),
+  "hash-functions": guide(
+    "Why is a hash cheap to compute and expensive to invert, and what actually moves when one input bit flips?",
+    "mix8(42) is 23; flipping bit 0 moves 6 of 8 output bits, bit 1 moves 4, bit 2 moves 3, bits 3–5 and 7 move 2, bit 6 moves 4. An 8-bit preimage is 256 guesses.",
+    "A real digest (SHA-256) is the same argument at 256 bits: one-way because a preimage is 2^256 guesses, not because the mixing is mysterious. Avalanche is measured diffusion, not a promised 50%.",
+    "Leave flip bit at 0 and step until the stamp reads 6/8 avalanche; then drag through bits 1–7 and confirm 4, 3, 2, 2, 2, 4, 2 bits moved.",
+    [{ slug: "diffie-hellman", relation: "leads to" }],
+  ),
+  "diffie-hellman": guide(
+    "How do two parties agree on a secret over a channel Eve can read, without ever sending the secret?",
+    "Alice keeps 6 and Bob keeps 7; they publish 8 and 17 and both land on 12. Eve's brute-force bound is 23 trials — p, not a simulated guess loop.",
+    "The channel never carried the exponents. Recovering a from g^a mod p is a discrete log; on a 2048-bit modulus that bound is not 23.",
+    "Leave Alice's secret at 6 (shared 12, 18 multiplies), then drag to 2 (A becomes 2, secret 13) and 10 (A becomes 9, secret 4). B stays 17; both sides still match.",
+    [
+      { slug: "hash-functions", relation: "builds on" },
+      { slug: "digital-signatures", relation: "leads to" },
+    ],
+  ),
+  "digital-signatures": guide(
+    "How can anyone check a signature if they cannot make one?",
+    "Signing with d produces a signature that raising to e recovers; a tampered message makes that check fail, so verified is 1 then 0.",
+    "Authentication does not need a shared secret: the public exponent verifies, the private exponent signs, and a changed message cannot reuse the signature.",
+    "Leave the message at 4 on the honest figure (verified 1, stamp verify ok), then on the tampered figure (verified 0, stamp verify fail). Drag 1 through 16: every honest run accepts and every tampered run rejects.",
+    [
+      { slug: "diffie-hellman", relation: "builds on" },
+      { slug: "hash-functions", relation: "connects to" },
+    ],
+  ),
+  "session-cookies": guide(
+    "Which cookie flag, turned off, lets the session leave the browser?",
+    "Sid S7 with HttpOnly+Secure+SameSite=Strict is stolen 0 csrf 0. HttpOnly off: XSS steals it. Secure off: HTTP leaks it. SameSite=None: a cross-site POST sends it (csrf 1, stolen 0).",
+    "The cookie is the session. Flags are not decoration — each one closes a different door, and the figure counts which door opened.",
+    "Leave flags at 0 (stolen 0, csrf 0, stamp cookie), then 1 (stolen 1, stamp stolen), 2 (stolen 1), and 3 (csrf 1, stamp csrf).",
+    [
+      { slug: "digital-signatures", relation: "builds on" },
+      { slug: "jwt-pitfalls", relation: "leads to" },
+    ],
+  ),
+  "jwt-pitfalls": guide(
+    "What does a verifier actually check, and what happens if it checks nothing?",
+    "Naive accepts all four tokens (verified 1). Strict accepts only the signed unexpired one; alg=none, exp=5 against now=10, and sub=mallory with ada's sig 56 are rejected.",
+    "A JWT is three strings. Trusting the header's alg, skipping exp, or skipping the signature are three different ways to accept a token nobody signed.",
+    "On the naive figure drag 0–3: every run accepts. On the strict figure, 0 accepts and 1–3 reject.",
+    [
+      { slug: "session-cookies", relation: "builds on" },
+      { slug: "oauth-pkce", relation: "leads to" },
+    ],
+  ),
+  "oauth-pkce": guide(
+    "Why is an authorization code not a token, and what does PKCE change when someone steals the code?",
+    "Without PKCE, intercepting C9 issues T1 to the attacker (stolen 1, issued 0). With PKCE challenge 77, the attacker is rejected and the client still holds T1 (rejected 1, issued 1, stolen 0).",
+    "The redirect carried a code, not a session. PKCE binds that code to a verifier the attacker never saw — S256 is the real hash, 77 is the toy.",
+    "Leave intercept at 1 on the no-PKCE figure (stamp stolen, attacker holds T1), then on the PKCE figure (stamp client holds, rejected 1).",
+    [
+      { slug: "jwt-pitfalls", relation: "builds on" },
+      { slug: "sql-injection", relation: "leads to" },
+    ],
+  ),
+  "sql-injection": guide(
+    "When does user input become SQL syntax instead of a value?",
+    "Concatenating 7 OR 1=1 adds an OR node and returns rows 1, 7, and 9 (injected 1, rows 3). Binding the same string as a parameter matches nobody (injected 0, rows 0).",
+    "A query is a tree. Concatenation lets input grow that tree. A parameter is a leaf, even when the string looks like SQL.",
+    "On concat leave payload at 1 (3 rows, stamp 3 rows); on param leave payload at 1 (0 rows, stamp 0 rows). Payload 0 is id=7 either way (1 row).",
+    [
+      { slug: "oauth-pkce", relation: "builds on" },
+      { slug: "xss", relation: "leads to" },
+    ],
+  ),
+  "xss": guide(
+    "When does a name in HTML become a script instead of text?",
+    "Ada is a text node either way (scripts 0). Raw <script> becomes a script node (scripts 1). Encoded, the same payload stays text as &lt;script&gt; (scripts 0).",
+    "The DOM is a tree too. Concatenating into HTML lets input become a script node. Encoding keeps it a text node. This page never runs the payload.",
+    "On raw leave payload at 1 (scripts 1, stamp script); on encode leave payload at 1 (scripts 0, stamp text). Payload 0 is Ada, text, both figures.",
+    [
+      { slug: "sql-injection", relation: "builds on" },
+      { slug: "ssrf", relation: "leads to" },
+    ],
+  ),
+  "ssrf": guide(
+    "What does the server fetch when the caller chooses the host?",
+    "An open fetch of 169.254.169.254 is fetched 1 leaked 1. The same host against an allowlist of api.example.com is blocked 1 leaked 0. api.example.com is fetched either way, leaked 0.",
+    "The server is on a network the browser is not. An open URL is a confused deputy; an allowlist is a host check, not a DNS tutorial.",
+    "On open leave target at 1 (stamp metadata); on allowlist leave target at 1 (stamp blocked). Target 0 fetches api.example.com on both.",
+    [
+      { slug: "xss", relation: "builds on" },
+      { slug: "rbac-vs-abac", relation: "leads to" },
+    ],
+  ),
+  "rbac-vs-abac": guide(
+    "Does the role grant the write, or do the attributes?",
+    "Alice (admin) and bob (owner) are allowed under both. Mallory is an editor who does not own doc1: RBAC allows her (escalation 1), ABAC denies her (allowed 0).",
+    "RBAC answers with a role. ABAC answers with who owns the row. Horizontal escalation is a grant that is not admin and not owner.",
+    "On RBAC drag to mallory (subject 2, stamp escalation); on ABAC the same subject stamps deny. Subjects 0 and 1 allow on both.",
+    [
+      { slug: "ssrf", relation: "builds on" },
+      { slug: "credential-stuffing", relation: "leads to" },
+    ],
+  ),
+  "credential-stuffing": guide(
+    "Which key should the rate-limit bucket be on when guesses rotate addresses?",
+    "Six attempts, correct password on attempt 5. No limit: stolen 1 blocked 0. IP cap 3 with three addresses: still stolen 1. Username cap 3: blocked 3 stolen 0, attempts 4–6 never run the password.",
+    "Stuffing is many passwords against one account. An IP bucket is the wrong key once the attacker has more than one address; the username is the thing being guessed.",
+    "Leave the no-limit figure as-is (stamp stolen, attempt 5 ok). On the user-bucket figure the last three chips read block and stolen stays 0.",
+    [
+      { slug: "rbac-vs-abac", relation: "builds on" },
+      { slug: "mtls", relation: "leads to" },
+    ],
+  ),
+  "mtls": guide(
+    "Did the server authenticate the client, or only the network?",
+    "Perimeter connects with no client cert (connected 1, verified 0). mTLS connects only when the cert is from this CA (size 0: connected 1 verified 1). Missing or other-ca: rejected 1 connected 0.",
+    "Being on the network is not a name. Mutual TLS is the server checking the client's cert the same way the client checks the server's. This is not a CA lesson.",
+    "On perimeter drag to 1 (no cert, stamp connected). On mTLS leave at 0 (connected), then 1 and 2 (stamp reject).",
+    [
+      { slug: "credential-stuffing", relation: "builds on" },
+    ],
+  ),
+  "lexical-analysis": guide(
+    "What does a scanner group, and when is let a keyword rather than the start of an ident?",
+    "let n=2 is kw let, ident n, op =, num 2 (4 tokens, 1 skipped). let n = 2 is the same four with 3 skipped. let 'n=2' is kw plus one string (2 tokens). letn=2 is ident letn, not the keyword (3 tokens, 0 skipped).",
+    "Source is characters. Tokens are the groups the parser will see. A keyword is a whole ident in the reserved set; a string is one token even when it contains operators.",
+    "Leave source at 0 (4 tokens, 1 skipped), then 1 (4 tokens, 3 skipped), 2 (2 tokens, string 'n=2'), 3 (ident letn, 3 tokens).",
+    [{ slug: "recursive-descent", relation: "leads to" }],
+  ),
+  "recursive-descent": guide(
+    "Why is 1+2*3 equal to 7, not 9?",
+    "Flat left-to-right parses 1+2*3 as 9. Precedence puts * in a tighter production and gets 7. (1+2)*3 is 9 either way. 1*2+3 is 5 either way.",
+    "Precedence is which production you call, not a later rewrite of the tree. Parentheses are a different production, counted the same way.",
+    "On flat leave expr at 0 (stamp 9). On prec leave expr at 0 (stamp 7, notes Atom 1/2/3, * → 6, + → 7). Drag both to 2: both 9.",
+    [
+      { slug: "lexical-analysis", relation: "builds on" },
+      { slug: "tree-walk-vs-bytecode", relation: "leads to" },
+    ],
+  ),
+  "tree-walk-vs-bytecode": guide(
+    "Same 1+2*3, two machines — what is different besides the drawing?",
+    "Both yield 7. The walk visits 5 nodes. Bytecode is 5 ops (LOAD 1, LOAD 2, LOAD 3, MUL, ADD) with stack max 3. (1+2)*3 is 9 with stack max 2.",
+    "A tree walk is recursive structure. Bytecode is a linear instruction list plus a stack. The value is the same; the peak stack is not.",
+    "On walk leave expr at 1 (visits 5, stamp 7). On bytecode the last notes are MUL stack [1 6], ADD stack [7], stack max 3. Drag to 2: stack max 2.",
+    [
+      { slug: "recursive-descent", relation: "builds on" },
+      { slug: "call-stack", relation: "leads to" },
+    ],
+  ),
+  "call-stack": guide(
+    "How many frames does f(n) need, and what happens at n=4?",
+    "f(n) = n==0 ? 1 : n * f(n-1). Cap 4. f(3) returns 6 at depth 4, pushes 4, overflow 0. f(4) overflows at f(0), result null, overflow 1.",
+    "Each call is a frame. Unbounded recursion is not an infinite loop — it is a cap you can count. f(0) is the fifth frame and there is no fifth slot.",
+    "Leave n at 3 (stamp 6, depth 4). Drag to 4: Overflow at f(0). cap 4. Then four Unwind notes.",
+    [
+      { slug: "tree-walk-vs-bytecode", relation: "builds on" },
+      { slug: "reference-counting", relation: "leads to" },
+    ],
+  ),
+  "reference-counting": guide(
+    "When does rc hitting 0 free an object, and when does a cycle keep it?",
+    "A.p=B then drop both: freed 2, leaked 0. A.p=B and B.p=A then drop both: freed 0, leaked 2 — rc stays 1.",
+    "A cycle is two objects each holding the last pointer to the other. Dropping the roots is not enough. Mark-sweep is the next lesson because it does not care.",
+    "On the acyclic figure skip to the end (2 freed). On the cycle figure skip to the end (2 leaked).",
+    [
+      { slug: "call-stack", relation: "builds on" },
+      { slug: "mark-and-sweep", relation: "leads to" },
+    ],
+  ),
+  "mark-and-sweep": guide(
+    "Does an unrooted cycle survive mark-sweep the way it survived refcount?",
+    "Root 0→1 marks 2 and sweeps 2. The same heap with an unrooted 2↔3 cycle still marks 2 and sweeps 2. Roots 0 and 2 mark all 4.",
+    "Reachability from a root is the live set. A cycle with no root is garbage. That is the fact refcount could not see.",
+    "Leave size at 0 (2 marked 2 swept). Drag to 1: same counts, the cycle is still swept. Drag to 2: 4 marked 0 swept.",
+    [
+      { slug: "reference-counting", relation: "builds on" },
+      { slug: "incremental-gc", relation: "leads to" },
+    ],
+  ),
+  "incremental-gc": guide(
+    "What is the pause of marking 4 live objects, all at once vs in slices?",
+    "Stop-the-world: one pause of 4, 1 slice. Incremental budget 1: pause 1, 4 slices. Budget 4: pause 4, 1 slice — the same as STW.",
+    "The mutator waits for the current slice, not for the whole heap. The work is the same 4 marks; the pause is the slice.",
+    "On STW skip to the end (pause 4, slices 1). On incremental leave budget at 1 (pause 1, slices 4), then drag to 4.",
+    [
+      { slug: "mark-and-sweep", relation: "builds on" },
+      { slug: "generational-gc", relation: "leads to" },
+    ],
+  ),
+  "generational-gc": guide(
+    "What happens to a young object that only an old object points to?",
+    "O0.p=Y1 with no write barrier: minor GC sweeps Y1, lost 1. With a barrier: card O0, Y1 is marked, lost 0. No old-to-young pointer: Y1 is garbage and swept, lost 0.",
+    "A minor GC only walks young plus dirty cards. The barrier is how an old→young store becomes a card. Without it the young object is live and still dies.",
+    "On no-barrier leave the old-to-young store on (lost Y1). On barrier the same store holds (stamp held, cards 1).",
+    [
+      { slug: "incremental-gc", relation: "builds on" },
+      { slug: "event-loop", relation: "leads to" },
+    ],
+  ),
+  "event-loop": guide(
+    "In what order do sync, micro, and macro actually run?",
+    "Log 1, queue micro 2, queue macro 3, log 4 → 1,4,2,3. A micro that queues micro B still beats the timer: 1,3,A,B,2. Two micros: 1,5,2,3,4.",
+    "The current turn finishes. Then the micro queue drains fully, including work it just queued. Then one macrotask. That is the loop, counted as a log.",
+    "Leave script at 0 (stamp 1,4,2,3). Drag to 2 (stamp 1,3,A,B,2).",
+    [
+      { slug: "generational-gc", relation: "builds on" },
+      { slug: "jit-compilation", relation: "leads to" },
+    ],
+  ),
+  "jit-compilation": guide(
+    "After how many hits does the loop compile, and what are 8 iterations?",
+    "Hot is 4. 3 iterations: interp 3, compiles 0. 4: interp 4, compiles 1, compiled 0. 8: interp 4, compiles 1, compiled 4.",
+    "The interpreter counts hits. At 4 the loop compiles; the remaining iterations run compiled. There is no deopt here — that is the next lesson.",
+    "Leave iters at 8 (4 compiled). Drag to 4 (compiles 1, compiled 0) and 3 (compiles 0).",
+    [
+      { slug: "event-loop", relation: "builds on" },
+      { slug: "deoptimization", relation: "leads to" },
+    ],
+  ),
+  "deoptimization": guide(
+    "What happens when a compiled iteration fails the type assumption?",
+    "8 iterations, deopt at 6: interp 7, compiled 1, deopts 1, compiles 1. At 5 (first compiled iter): interp 8, compiled 0, deopts 1. At 8: interp 5, compiled 3, deopts 1.",
+    "The compile is speculative. One bad iteration falls back; the rest of the loop is interpreted. The compile still counted — it was not free.",
+    "Leave deopt at 6 (interp 7, compiled 1). Drag to 5 and 8.",
+    [
+      { slug: "jit-compilation", relation: "builds on" },
+      { slug: "vtables", relation: "leads to" },
+    ],
+  ),
+  "vtables": guide(
+    "How many loads does a call take when the class is named, when it lives in a vtable, and when speak is an interface iid?",
+    "Static Dog.speak is 0 lookups, woof. A class vtable is 2 lookups (vptr then slot 0); cat is meow, still 2. An itable with speak at slot 2 scans 3 and costs 4 lookups — same woof.",
+    "The call site either is the function, or it follows a pointer into a table, or it scans an itable. The result can be the same. The load count is not.",
+    "Leave static at dog (lookups 0, woof), then the vtable figure at dog (lookups 2). On the itable leave speak slot at 2 (scans 3, lookups 4), then drag to 0 (lookups 2, same as a vtable).",
+    [{ slug: "deoptimization", relation: "builds on" }],
+  ),
 };
 
 export function getLearningGuide(slug: string): LearningGuide {

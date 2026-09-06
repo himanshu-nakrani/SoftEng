@@ -30,13 +30,15 @@ An interactive system-design learning site. Not articles — every concept is a 
 
 ### Track 03 — Databases & Transactions
 
-9 lessons across 3 modules, about 1h 48m end to end.
+11 lessons across 5 modules, about 2h 14m end to end.
 
 | Module | Lessons |
 |---|---|
 | **Transactions** | Dirty Reads and Read Committed · Non-Repeatable Reads · Write Skew · Lost Update · Two-Phase Locking |
 | **Durability & Recovery** | Write-Ahead Logging · Checkpoints · Group Commit |
 | **Multi-Version Concurrency Control** | Multi-Version Reads |
+| **Storage Engines** | B-Tree vs LSM |
+| **Indexes & Query Plans** | Indexes and Query Plans |
 
 ### Track 04 — Testing & Verification
 
@@ -85,6 +87,37 @@ An interactive system-design learning site. Not articles — every concept is a 
 |---|---|
 | **On-Call Decisions** | The Mutex Call · Retry or Back Off · Thread Pool vs Bounded Queue · Circuit Breaker Hysteresis · Zero-Downtime Schema Migration |
 | **Resilience Engineering** | Cascading Failure and Thundering Herd · Memory Leak and Buffer Bloat · Split-Brain and Network Partitions |
+
+### Track 09 — Operating Systems
+
+12 lessons across 3 modules, about 2h 28m end to end.
+
+| Module | Lessons |
+|---|---|
+| **Virtual Memory** | Address Translation · The TLB · Page Faults and Demand Paging · Page Replacement |
+| **CPU Scheduling** | Preemptive vs Cooperative Scheduling · Round-Robin and Time Slices · Multi-Level Feedback Queues · Priority Inversion |
+| **Storage and System Calls** | The Inode · File System Journaling · The Buffer Cache · System Calls |
+
+### Track 10 — Security Engineering
+
+12 lessons across 4 modules, about 2h 28m end to end.
+
+| Module | Lessons |
+|---|---|
+| **Cryptography** | Hash Functions · Diffie-Hellman · Digital Signatures |
+| **Identity & Access** | Session Cookies · JWT Pitfalls · OAuth and PKCE |
+| **Application Security** | SQL Injection · Cross-Site Scripting · Server-Side Request Forgery |
+| **Defense in Depth** | RBAC vs ABAC · Credential Stuffing · Mutual TLS |
+
+### Track 11 — Languages & Runtimes
+
+12 lessons across 3 modules, about 2h 24m end to end.
+
+| Module | Lessons |
+|---|---|
+| **Parsing & Execution** | Lexical Analysis · Recursive Descent · Tree Walk vs Bytecode · The Call Stack |
+| **Memory Management** | Reference Counting · Mark and Sweep · Incremental GC · Generational GC |
+| **Runtime Systems** | The Event Loop · JIT Compilation · Deoptimization · Virtual Method Tables |
 
 <!-- CURRICULUM:END -->
 
