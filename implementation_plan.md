@@ -185,12 +185,12 @@ these numbers as the current display order.
 |---|---|---|---|---|
 | 01 | System Design Fundamentals (`system-design-fundamentals`) | A | 26 | 31 shipped — **effectively finished** (see §6) |
 | 02 | Concurrency (`concurrency`) | C on B | 9 | **complete** |
-| 03 | Databases & Transactions (`databases`) | B | ~10 | **open — 9 shipped, 3 modules** |
-| 04 | Testing & Verification (`testing`) | D + C | ~8 | **open — 8 shipped, 2 modules** |
-| 05 | Version Control & Delivery (`version-control`) | E + A | ~8 | **open — 8 shipped, 2 modules** |
-| 06 | Networking & the Web (`networking`) | A + B | ~10 | **open — 9 shipped, 3 modules** |
-| 07 | Software Design & Architecture (`software-design`) | F on B | ~10 | **open — 5 shipped, 1 module** |
-| 08 | Engineering Practice (`engineering-practice`) | G on B | ~8 | **complete — 8 shipped, 2 modules** |
+| 03 | Databases & Transactions (`databases`) | B | ~10 | **complete — 9 shipped, 3 modules** |
+| 04 | Testing & Verification (`testing`) | D + C + B | ~9 | **complete — 9 shipped, 3 modules** |
+| 05 | Version Control & Delivery (`version-control`) | E + A | 8 | **complete — 8 shipped, 2 modules** |
+| 06 | Networking & the Web (`networking`) | A + B | 10 | **complete — 10 shipped, 3 modules** |
+| 07 | Software Design & Architecture (`software-design`) | F on B | ~10 | **open — 8 shipped, 2 modules complete (2 remaining to ~10)** |
+| 08 | Engineering Practice (`engineering-practice`) | G on B | 8 | **complete — 8 shipped, 2 modules** |
 | — | Security Engineering | A + B + D | ~12 | not started |
 | — | Languages & Runtimes | B | ~12 | not started |
 | — | Operating Systems | B + C | ~12 | not started |
@@ -303,15 +303,10 @@ modularity and architecture boundaries:
   - **Inline & Rename** (shipped)
   - **Extract Class** (shipped — god class decomposed, complexity and fan-out drop, decisions conserved)
   - **Replace Conditional with Polymorphism** (shipped — cascading conditionals refactored to strategy handlers, cc drops to 1)
-- Module 2: `modularity-coupling` (3 lessons on Archetype B, `views/DependencyGraphView.tsx`):
-  - **Afferent & Efferent Coupling ($C_a, C_e$)**: quantifying incoming dependencies
-    ($C_a$) vs outgoing dependencies ($C_e$) across module boundaries as code is reorganized.
-  - **Instability & Abstractness ($I, A$)**: computing Instability $I = C_e / (C_a + C_e)$
-    and plotting against Martin's Main Sequence ($D = |A + I - 1|$). Demonstrates the
-    "Zone of Pain" (concrete and stable) vs "Zone of Uselessness" (abstract and unstable).
-  - **Cyclic Dependencies & the Acyclic Dependencies Principle (ADP)**: circular
-    import cycles ($A \to B \to C \to A$). Topological sort fails on cycle; introducing
-    interface inversion breaks the cycle into a clean DAG.
+- Module 2: `modularity-coupling` (**3 shipped — module complete** on Archetype B, `views/TableView.tsx`):
+  - **Afferent & Efferent Coupling ($C_a, C_e$)** (shipped — incoming vs outgoing dependency counts across 4 packages, total coupling drops 12 → 8 while sum(Ca) = sum(Ce) holds)
+  - **Instability & Abstractness ($I, A$)** (shipped — Martin's Main Sequence, Zone of Pain D=1.0 drops to D=0.5 via interface extraction)
+  - **Cyclic Dependencies & the Acyclic Dependencies Principle (ADP)** (shipped — circular cycle detected with Tarjan DFS, broken via DIP to produce valid topological release order)
 - Module 3: `architecture-boundaries` (2 lessons on Archetype B + G):
   - **Dependency Inversion & Ports/Adapters**: decoupling domain business entities
     from infrastructure drivers (DB/HTTP) using abstract ports.
