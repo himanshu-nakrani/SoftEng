@@ -4,7 +4,7 @@ import { CornerTicks } from "@/components/ui/CornerTicks";
 import { Meter } from "@/components/ui/Meter";
 import { PlateLabel } from "@/components/ui/PlateLabel";
 import { Dices } from "lucide-react";
-import type { ComponentType } from "react";
+import type { ComponentType, CSSProperties } from "react";
 import { useState } from "react";
 import { AlgoTransportBar } from "./AlgoTransportBar";
 import { CodePanel } from "./CodePanel";
@@ -130,6 +130,11 @@ export function AlgoFigure<S, I>({
               value={size}
               onChange={(e) => setSize(Number(e.target.value))}
               className="sim-slider h-1 w-full cursor-pointer appearance-none rounded-full bg-border accent-accent"
+              style={
+                {
+                  "--fill": `${((size - def.size.min) / Math.max(def.size.max - def.size.min, 1)) * 100}%`,
+                } as CSSProperties
+              }
             />
           </label>
         )}

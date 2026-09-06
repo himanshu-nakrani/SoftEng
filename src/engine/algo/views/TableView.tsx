@@ -328,7 +328,7 @@ function PackageMetricsView({ state }: { state: PackageTableState }) {
               y={y + 20}
               fill={
                 pkg.i === 0
-                  ? "var(--color-glow-blue, #38bdf8)"
+                  ? "var(--color-glow-cyan)"
                   : pkg.i === 1
                     ? "var(--color-glow-orange)"
                     : "var(--color-fg)"

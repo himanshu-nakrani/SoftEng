@@ -323,7 +323,7 @@ export function SystemNode({
             x={-9}
             y={2}
             textAnchor="middle"
-            fill="var(--color-glow-amber)"
+            fill="var(--color-accent)"
             style={{ font: "600 9px var(--font-plex-mono)" }}
           >
             {runtime.queueDepth}
