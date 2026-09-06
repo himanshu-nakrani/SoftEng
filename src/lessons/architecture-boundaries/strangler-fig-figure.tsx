@@ -1,7 +1,7 @@
 "use client";
 
 import { SectionAlgoFigure } from "@/components/lesson/SectionAlgoFigure";
-import { ThreadsView } from "@/engine/algo/views/ThreadsView";
+import { TableView } from "@/engine/algo/views/TableView";
 import { stranglerFigAlgo } from "./strangler-fig";
 
 /**
@@ -13,8 +13,8 @@ export function StranglerFigFigure() {
   return (
     <SectionAlgoFigure
       def={stranglerFigAlgo}
-      view={ThreadsView}
-      description="TODO: what a reader should watch for, in one or two sentences. This is the figure's accessible description."
+      view={TableView}
+      description="A four-route monolithic system (/catalog, /orders, /payments, /users) migrating to microservices via the Strangler Fig pattern. Observe the facade proxy redirecting traffic route by route, reducing monolith traffic from 100% to 0% with zero downtime."
     />
   );
 }

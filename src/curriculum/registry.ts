@@ -1683,7 +1683,7 @@ export const curriculum: Curriculum = {
               moduleSlug: "architecture-boundaries",
               title: "The Strangler Fig Pattern",
               tagline:
-                "TODO: one line that states the tension, not the topic.",
+                "A big-bang rewrite bets the company on an all-or-nothing cutover; intercepting traffic behind a routing facade lets you replace monolithic boundaries incrementally with zero downtime.",
               difficulty: "intermediate",
               estimatedMinutes: 12,
               prerequisites: ["dependency-inversion"],

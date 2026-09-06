@@ -835,10 +835,10 @@ export const learningGuides: Record<string, LearningGuide> = {
     [{ slug: "cyclic-dependencies", relation: "builds on" }],
   ),
   "strangler-fig": guide(
-    "TODO: the question this lesson answers?",
-    "TODO: what changed, in one sentence.",
-    "TODO: why it matters.",
-    "TODO: what to try next.",
+    "How can an engineering team migrate a monolithic system to microservices without risking a catastrophic big-bang rewrite or incurring downtime?",
+    "Deploying an interceptor facade proxy in front of the monolith enabled incremental route-by-route migration (/catalog, /orders, /payments, /users), dropping monolith traffic from 100% to 0% with zero downtime.",
+    "Big-bang rewrites compound delivery risk and freeze business innovation; the Strangler Fig pattern delivers continuous business value and immediate feedback by replacing legacy components behind an edge proxy one boundary at a time.",
+    "Step through the cutover phases to observe how the routing facade transparently redirects live traffic while maintaining zero downtime across every stage of the migration.",
     [{ slug: "dependency-inversion", relation: "builds on" }],
   ),
 };
