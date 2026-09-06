@@ -1,7 +1,7 @@
 "use client";
 
 import { SectionAlgoFigure } from "@/components/lesson/SectionAlgoFigure";
-import { ThreadsView } from "@/engine/algo/views/ThreadsView";
+import { TableView } from "@/engine/algo/views/TableView";
 import { dependencyInversionAlgo } from "./dependency-inversion";
 
 /**
@@ -13,8 +13,8 @@ export function DependencyInversionFigure() {
   return (
     <SectionAlgoFigure
       def={dependencyInversionAlgo}
-      view={ThreadsView}
-      description="TODO: what a reader should watch for, in one or two sentences. This is the figure's accessible description."
+      view={TableView}
+      description="Interactive architectural table demonstrating Dependency Inversion: domain fan-out drops from 2 to 0 when port interfaces are extracted, inverting infrastructure dependencies inward and enabling isolated testability."
     />
   );
 }

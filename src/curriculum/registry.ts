@@ -924,7 +924,7 @@ export const curriculum: Curriculum = {
               moduleSlug: "mvcc",
               title: "Multi-Version Reads",
               tagline:
-                "TODO: one line that states the tension, not the topic.",
+                "Layered designs let volatile database and transport drivers dictate domain logic; invert dependencies through ports so business rules own the contracts.",
               difficulty: "advanced",
               estimatedMinutes: 13,
               prerequisites: ["non-repeatable-reads", "lost-update"],

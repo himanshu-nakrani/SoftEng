@@ -828,10 +828,10 @@ export const learningGuides: Record<string, LearningGuide> = {
     [{ slug: "instability-abstractness", relation: "builds on" }],
   ),
   "dependency-inversion": guide(
-    "TODO: the question this lesson answers?",
-    "TODO: what changed, in one sentence.",
-    "TODO: why it matters.",
-    "TODO: what to try next.",
+    "How do you isolate core domain logic from volatile infrastructure drivers without sacrificing integration or runtime performance?",
+    "Domain entities extracted abstract repository and notifier ports, reversing the dependency arrows so concrete infrastructure adapters depend inward on domain contracts.",
+    "Direct coupling to databases and third-party APIs makes domain logic brittle and slows tests to network latencies; inverting dependencies isolates business rules and allows swapping in-memory test doubles.",
+    "Step through the four architectural phases to watch domain fan-out collapse from 2 to 0, then observe how in-memory test doubles achieve full isolation.",
     [{ slug: "cyclic-dependencies", relation: "builds on" }],
   ),
   "strangler-fig": guide(
