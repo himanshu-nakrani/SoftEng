@@ -5,7 +5,7 @@ import { GlowCard } from "@/components/ui/GlowCard";
 import { Kbd } from "@/components/ui/Kbd";
 import { useTrackProgress } from "@/hooks/use-lesson-progress";
 import type { LessonMeta } from "@/curriculum/types";
-import { lessonPath, nextLesson, prevLesson } from "@/lib/curriculum";
+import { lessonPath, nextLesson, prevLesson, trackOfLesson } from "@/lib/curriculum";
 import { useProgress } from "@/stores/progress";
 import {
   ArrowLeft,
@@ -24,8 +24,9 @@ import { useLessonMeta } from "./context";
  * decided by the store measured against the registry's section denominators:
  * celebrate only a genuinely finished track, otherwise name what's left.
  */
-function EndOfTrackCard() {
-  const track = useTrackProgress();
+function EndOfTrackCard({ trackSlug }: { trackSlug: string }) {
+  const track = useTrackProgress(trackSlug);
+  const mapHref = `/learn/${trackSlug}`;
   const resetAll = useProgress((s) => s.resetAll);
   const [confirming, setConfirming] = useState(false);
 
@@ -33,7 +34,7 @@ function EndOfTrackCard() {
 
   if (open > 0) {
     return (
-      <Link href="/learn" className="group block">
+      <Link href={mapHref} className="group block">
         <GlowCard className="flex items-center gap-4 px-5 py-4">
           <div>
             <p className="tech-label mb-1">end of the track</p>
@@ -69,7 +70,7 @@ function EndOfTrackCard() {
       </p>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <Link href="/learn">
+        <Link href={mapHref}>
           <Button size="sm" variant="outline">
             <MapIcon className="size-3.5" strokeWidth={1.75} />
             Back to the map
@@ -141,7 +142,9 @@ export function NextLessonCard() {
   const prev = prevLesson(meta.slug);
 
   const forward = !next ? (
-    <EndOfTrackCard />
+    // `next` is undefined only at a TRACK boundary now, so this card is about
+    // the track the reader is actually in, not the whole curriculum.
+    <EndOfTrackCard trackSlug={trackOfLesson(meta).slug} />
   ) : next.status === "coming-soon" ? (
     <div className="rounded-xl border border-border bg-surface px-5 py-4 opacity-60">
       <p className="tech-label mb-1 flex items-center gap-1.5">

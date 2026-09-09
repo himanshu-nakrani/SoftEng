@@ -1,12 +1,21 @@
 "use client";
 
+import { IconButton } from "@/components/ui/IconButton";
 import { ProgressRing } from "@/components/navigation/ProgressRing";
 import { SidebarTree } from "@/components/navigation/SidebarTree";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { Wordmark } from "@/components/navigation/SiteChrome";
 import type { LessonMeta } from "@/curriculum/types";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { useLessonProgress } from "@/hooks/use-lesson-progress";
-import { allLessons, lessonPath, moduleOf } from "@/lib/curriculum";
+import {
+  accentOf,
+  allLessons,
+  firstTrack,
+  lessonPath,
+  moduleOf,
+  trackFromPathname,
+  trackPath,
+} from "@/lib/curriculum";
 import { Menu, X } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { Transition } from "motion/react";
@@ -173,33 +182,24 @@ export function MobileNav() {
           {...panelMotion}
           className="fixed inset-y-0 left-0 z-50 flex w-[17.5rem] max-w-[85vw] flex-col border-r border-border-bright bg-surface/95 shadow-[1.5rem_0_4rem_-2rem_oklch(5%_0.02_255_/_90%)] backdrop-blur-xl md:hidden"
         >
-          <div className="flex items-center gap-2 border-b border-border bg-bg/20 px-4 py-3">
-            <Link href="/" onClick={close} className="flex items-baseline gap-1">
-              <span className="font-display text-lg font-bold tracking-tight">
-                syslab
-              </span>
-              <span className="size-1.5 rounded-full bg-accent shadow-[0_0_6px_var(--color-accent)]" />
-            </Link>
-            <button
-              type="button"
+          <div className="flex items-center gap-2 border-b border-border px-4 py-3">
+            <Wordmark onClick={close} />
+            <IconButton
               onClick={close}
-              aria-label="Close navigation"
-              className="ml-auto flex size-8 items-center justify-center rounded-lg text-fg-muted transition-colors hover:bg-raised hover:text-fg"
+              label="Close navigation"
+              className="ml-auto"
             >
               <X className="size-4.5" strokeWidth={1.75} />
-            </button>
+            </IconButton>
           </div>
 
           <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-contain px-3 py-4">
             <SidebarTree onNavigate={close} />
           </div>
 
-          <div className="border-t border-border bg-bg/20 px-4 py-3">
-            <ThemeToggle className="mb-3" />
-            <p className="font-mono text-[9px] tracking-widest text-fg-muted uppercase">
-              saved locally · no account needed
-            </p>
-          </div>
+          <p className="border-t border-border px-4 py-3 font-mono text-[9px] tracking-widest text-fg-faint uppercase">
+            saved locally · no account needed
+          </p>
         </motion.div>
       )}
     </AnimatePresence>
@@ -235,10 +235,12 @@ export function MobileCurrentLesson() {
   const lesson = allLessons.find((item) => lessonPath(item) === pathname);
 
   if (!lesson) {
+    const track = trackFromPathname(pathname) ?? firstTrack;
+    const href = trackPath(track);
     return (
       <Link
-        href="/learn"
-        aria-current={pathname === "/learn" ? "page" : undefined}
+        href={href}
+        aria-current={pathname === href ? "page" : undefined}
         className="ml-auto shrink-0 text-sm text-fg-muted transition-colors hover:text-fg"
       >
         Learning path
@@ -261,7 +263,7 @@ function CurrentLessonLabel({ lesson }: { lesson: LessonMeta }) {
         size={14}
         fraction={progress.fraction}
         state={progress.state}
-        accent={moduleOf(lesson).accent}
+        accent={accentOf(moduleOf(lesson))}
       />
       <span className="truncate text-sm text-fg">{lesson.title}</span>
     </span>

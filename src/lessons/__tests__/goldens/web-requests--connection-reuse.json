@@ -1,0 +1,41 @@
+{
+  "lesson": "web-requests/connection-reuse",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:reuse-first-request@10",
+      "t": 10.033333,
+      "metrics": {
+        "freshMs": 700,
+        "keepMs": 366.666667,
+        "keepOpened": 1,
+        "opened": 9
+      },
+      "packets": 1,
+      "nextPacketId": 57,
+      "nodes": {
+        "fresh": "healthy",
+        "keep": "healthy",
+        "server": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "freshMs": 2433.333333,
+        "keepMs": 766.666667,
+        "keepOpened": 1,
+        "opened": 28
+      },
+      "packets": 2,
+      "nextPacketId": 169,
+      "nodes": {
+        "fresh": "healthy",
+        "keep": "healthy",
+        "server": "healthy"
+      }
+    }
+  ]
+}

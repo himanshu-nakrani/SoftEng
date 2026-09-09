@@ -1,12 +1,14 @@
 "use client";
 
-import type { Difficulty, LessonMeta } from "@/curriculum/types";
+import type { LessonMeta } from "@/curriculum/types";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { useLessonKeyboardNav } from "@/hooks/use-lesson-keyboard-nav";
 import { useLessonProgress } from "@/hooks/use-lesson-progress";
 import { cn } from "@/lib/cn";
-import { getLesson, moduleOf } from "@/lib/curriculum";
+import { difficultyClass } from "@/lib/accent";
+import { getLesson, moduleOf, prerequisiteLabels } from "@/lib/curriculum";
 import { useProgress } from "@/stores/progress";
+import { SectionRule } from "@/components/ui/SectionRule";
 import { BookOpen, Focus, Sparkles } from "lucide-react";
 import { useCallback, useState, type ReactNode } from "react";
 import {
@@ -19,11 +21,6 @@ import { ReflectionCard } from "./ReflectionCard";
 import { LearningSummary } from "./LearningSummary";
 import { NextLessonCard } from "./NextLessonCard";
 
-const difficultyColor: Record<Difficulty, string> = {
-  foundational: "text-glow-green",
-  intermediate: "text-glow-orange",
-  advanced: "text-glow-violet",
-};
 
 /** Fixed right-rail mini-TOC with live checkpoint dots (xl screens). */
 function CheckpointRail({ slug }: { slug: string }) {
@@ -50,10 +47,12 @@ function CheckpointRail({ slug }: { slug: string }) {
             </span>
             <span
               className={cn(
-                "size-2 rounded-full transition-all",
+                // ruler tick, not a bullet — the rail is marginalia on the
+                // plate's edge, so the marks are dashes of luminance
+                "h-3.5 w-0.5 transition-all",
                 isDone
                   ? "bg-glow-green shadow-[0_0_6px_var(--color-glow-green)]"
-                  : "border border-border-bright bg-transparent group-hover:border-fg-muted",
+                  : "bg-border-bright group-hover:bg-fg-muted",
               )}
             />
           </a>
@@ -101,7 +100,7 @@ function LessonProgressStrip({ meta }: { meta: LessonMeta }) {
 
   return (
     <div
-      className="mt-5 rounded-lg border border-border bg-bg/25 px-3.5 py-3"
+      className="mt-5 rounded-sm border border-border bg-bg/25 px-3.5 py-3"
       aria-label={`Lesson progress: ${progress.done} of ${progress.total} sections, ${activityCopy[progress.activity]}`}
     >
       <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10px] tracking-widest text-fg-faint uppercase">
@@ -116,11 +115,17 @@ function LessonProgressStrip({ meta }: { meta: LessonMeta }) {
             ` · ${progress.quizzesAttempted} prediction${progress.quizzesAttempted === 1 ? "" : "s"}`}
         </span>
       </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-raised" aria-hidden>
-        <div
-          className="h-full rounded-full bg-accent transition-[width] duration-500 ease-[var(--ease-out-soft)]"
-          style={{ width: `${progress.fraction * 100}%` }}
-        />
+      {/* tick-scale tally — one tick per section, matching the learn hub */}
+      <div className="flex items-end gap-[3px] overflow-hidden" aria-hidden>
+        {meta.sections.map((section, i) => (
+          <span
+            key={section.id}
+            className={cn(
+              "min-w-0 flex-1 transition-colors duration-500",
+              i < progress.done ? "h-2.5 bg-accent" : "h-1.5 bg-border",
+            )}
+          />
+        ))}
       </div>
       <p className="mt-2 text-xs text-fg-muted">
         {nextSection ? (
@@ -171,29 +176,27 @@ export function Lesson({ slug, children }: LessonProps) {
       <LessonUiContext.Provider value={{ calibration, setCalibration }}>
         <LessonCompletionContext.Provider value={completeLessonSection}>
           <article data-calibration={calibration ? "true" : undefined}>
-          <header className="surface-card relative mb-14 overflow-hidden px-5 py-6 sm:px-8 sm:py-8">
-            {/* ghost index numeral */}
-            <span
-              aria-hidden
-              className="font-display pointer-events-none absolute -top-6 -left-1 text-[8rem] leading-none font-bold text-accent/[0.06] select-none"
-            >
-              {nn}
-            </span>
+            <header className="relative mb-14">
+              {/* kicker as marginalia — module name left, plate number right.
+                  No ghost numeral behind the type: on this ground, nothing
+                  overlaps; hierarchy comes from luminance alone. */}
+              <SectionRule
+                className="mb-4"
+                trailing={
+                  <>
+                    <MasteryMark meta={meta} />
+                    <span className="tech-num text-xs text-fg-faint">
+                      plate {nn} / {String(mod.lessons.length).padStart(2, "0")}
+                    </span>
+                  </>
+                }
+              >
+                <span className="tech-label">{mod.title}</span>
+              </SectionRule>
 
-            <div className="relative">
-              <div className="mb-5 flex items-center gap-3">
-                <span className="tech-label text-glow-red">live thought experiment</span>
-                <span className="hidden text-fg-faint sm:inline">/</span>
-                <span className="tech-label hidden sm:inline">{mod.title}</span>
-                <div className="tech-rule flex-1" />
-                <MasteryMark meta={meta} />
-                <span className="tech-num text-xs text-fg-faint">
-                  {nn} / {String(mod.lessons.length).padStart(2, "0")}
-                </span>
-              </div>
-
-              <h1 className="hero-copy font-display mb-3 text-3xl font-bold tracking-tight sm:text-4xl">
-                {meta.title}
+              <div>
+                <h1 className="font-display mb-3 text-3xl font-bold tracking-tight sm:text-4xl">
+                  {meta.title}
               </h1>
               <p className="mb-6 max-w-2xl leading-relaxed text-fg-muted">
                 {meta.tagline}
@@ -203,7 +206,7 @@ export function Lesson({ slug, children }: LessonProps) {
               <div className="flex flex-wrap items-center gap-x-6 gap-y-1.5 border-y border-border py-2.5 font-mono text-[11px] tracking-wide text-fg-faint uppercase">
                 <span>
                   difficulty{" "}
-                  <span className={difficultyColor[meta.difficulty]}>
+                  <span className={difficultyClass[meta.difficulty]}>
                     {meta.difficulty}
                   </span>
                 </span>
@@ -214,9 +217,7 @@ export function Lesson({ slug, children }: LessonProps) {
                   <span>
                     after{" "}
                     <span className="text-fg-muted normal-case">
-                      {meta.prerequisites
-                        .map((p) => getLesson(p)?.title ?? p)
-                        .join(", ")}
+                      {prerequisiteLabels(meta).join(", ")}
                     </span>
                   </span>
                 )}
@@ -224,17 +225,17 @@ export function Lesson({ slug, children }: LessonProps) {
 
               <LessonProgressStrip meta={meta} />
 
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-                <p className="calibration-secondary text-xs text-fg-faint">
-                  Read the causal story first, then restore the full instrument.
-                </p>
-                <button
-                  type="button"
-                  aria-pressed={calibration}
-                  aria-label={calibration ? "Return to experiment mode" : "Enter reading mode"}
-                  onClick={() => setCalibration((value) => !value)}
-                  className="inline-flex min-h-8 items-center gap-2 rounded-lg border border-border bg-raised px-3 py-1.5 font-mono text-[10px] tracking-widest text-fg-muted uppercase transition-colors hover:border-border-bright hover:bg-surface hover:text-fg"
-                >
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-xs text-fg-faint">
+                    Read the causal story first, then restore the full instrument.
+                  </p>
+                  <button
+                    type="button"
+                    aria-pressed={calibration}
+                    aria-label={calibration ? "Return to experiment mode" : "Enter reading mode"}
+                    onClick={() => setCalibration((value) => !value)}
+                    className="inline-flex min-h-8 cursor-pointer items-center gap-2 rounded-md border border-border bg-raised px-3 py-1.5 font-mono text-[10px] tracking-widest text-fg-muted uppercase transition-colors hover:border-border-bright hover:bg-surface hover:text-fg"
+                  >
                   <Focus className="size-3.5 text-accent" strokeWidth={1.75} />
                   {calibration ? "Return to experiment" : "Reading mode"}
                 </button>

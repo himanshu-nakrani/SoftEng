@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "check": "tsc --noEmit && eslint . && npx tsx scripts/check-curriculum.mts && vitest run"
+    "check": "tsc --noEmit && eslint . && npx tsx scripts/check-curriculum.mts && vitest run",
+    "new:lesson": "tsx scripts/new-lesson.mts",
+    "monitor:routes": "tsx scripts/check-live-routes.mts"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -18,6 +20,7 @@
     "next": "^16.2.11",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "tailwind-merge": "^3.6.0",
     "zustand": "^5.0.6"
   },
   "devDependencies": {

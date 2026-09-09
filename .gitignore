@@ -9,6 +9,15 @@
 .DS_Store
 *.pem
 
+# agent tooling scratch state (session hook-state, baselines, finding ledger).
+# Never useful to another clone, and it was 204 tracked files before this line.
+.mimosa/
+
+# Design SOURCES, not design decisions. The reference plate is ~15 MB, which
+# every clone would pay for forever; the derived mockups in design/mockups/ are
+# small enough to keep. Ask the owner for the plate if you need it.
+design/*.png
+
 # debug
 npm-debug.log*
 yarn-debug.log*

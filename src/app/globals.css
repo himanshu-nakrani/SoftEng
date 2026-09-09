@@ -2,51 +2,65 @@
 
 /* ---------------------------------------------------------------------------
    syslab design tokens — dark, technical, refined.
-   Arctic console: cool Polar Night surfaces, frost-cyan primary, hairline
-   borders, glow accents. CSS variables are shared verbatim by UI *and* SVG
-   visualizations so the whole site speaks one visual language.
+   Warm graphite surfaces, phosphor-amber primary, hairline borders, glow accents.
+   These CSS variables are shared verbatim by UI *and* SVG visualizations so
+   the whole site speaks one visual language.
 --------------------------------------------------------------------------- */
 
 @theme {
-  /* surfaces — Polar Night cool graphite (hue ~255) */
-  --color-bg: oklch(18% 0.014 255);
-  --color-surface: oklch(27% 0.018 255);
-  --color-raised: oklch(33% 0.02 255);
-  --color-overlay: oklch(38% 0.022 255);
+  /* surfaces — warm graphite, night-shift control room */
+  --color-bg: oklch(13.5% 0.01 70);
+  --color-surface: oklch(16.5% 0.012 70);
+  --color-raised: oklch(20% 0.014 70);
+  --color-overlay: oklch(23% 0.016 70);
 
   /* hairlines */
-  --color-border: oklch(42% 0.024 255);
-  --color-border-bright: oklch(52% 0.028 255);
+  --color-border: oklch(27% 0.016 70);
+  --color-border-bright: oklch(36% 0.02 70);
 
-  /* text — cool snow whites */
-  --color-fg: oklch(94% 0.008 250);
-  --color-fg-muted: oklch(74% 0.018 250);
-  /* Faint copy remains secondary but must clear WCAG AA on Polar Night surfaces. */
-  --color-fg-faint: oklch(66% 0.018 255);
+  /* text — warm off-whites. The quiet-text LADDER is a contract:
+     - fg        the sentence itself (prose, active states)
+     - fg-muted  support voice — captions, inactive controls, secondary prose
+     - fg-faint  marginalia — stamps, timestamps, units, footers. ALWAYS as
+                 solid text: it passes AA (≥4.5:1) against every ground it can
+                 sit on — bg, surface, and raised — which alpha variants
+                 (/50, /70, /80) never do; they composite below threshold and
+                 are banned for text. Borders and decorative marks may still
+                 use alpha. */
+  --color-fg: oklch(93% 0.008 80);
+  --color-fg-muted: oklch(66% 0.014 75);
+  --color-fg-faint: oklch(60% 0.014 75);
 
-  /* PRIMARY — frost cyan (Nord nord8): CTAs, request packets, rings, outline */
-  --color-accent: oklch(78% 0.055 215);
-  --color-accent-dim: oklch(78% 0.055 215 / 14%);
-  --color-accent-ink: var(--color-bg);
+  /* Radius grammar (plate geometry): near-square PLATES (cards, figure
+     shells, overlays — usually CornerTicks-framed) vs machined CONTROLS
+     (`rounded-md`, buttons/inputs/segments, left at Tailwind's 6px default).
+     Circles keep `rounded-full` (pips, rings, toggles). No other radius
+     values exist; don't reintroduce them. */
+  --radius-sm: 2px;
+  --radius-lg: 2px;
+  --radius-xl: 2px;
+  --radius: 2px;
 
-  /* semantic glow accents. glow-amber tracks the brand primary (legacy key
-     name for the scaling module accent) so CTAs and "amber" modules share
-     frost. Orange is the WARNING hue so degraded states never impersonate
-     brand. Info/misses use a deeper cool blue, distinct from brand frost. */
-  --color-glow-amber: oklch(78% 0.055 215);
-  --color-glow-orange: oklch(72% 0.1 45);
-  --color-glow-cyan: oklch(68% 0.05 240); /* demoted: info, misses */
-  --color-glow-violet: oklch(72% 0.08 320);
-  --color-glow-green: oklch(76% 0.07 140);
-  --color-glow-red: oklch(62% 0.12 20);
+  /* PRIMARY — phosphor amber: CTAs, request packets, rings, outlined type */
+  --color-accent: oklch(80% 0.15 80);
+  --color-accent-dim: oklch(80% 0.15 80 / 12%);
+
+  /* semantic glow accents (glow-amber === accent; orange is the WARNING
+     hue so degraded states never impersonate the brand color) */
+  --color-glow-amber: oklch(80% 0.15 80);
+  --color-glow-orange: oklch(72% 0.16 50);
+  --color-glow-cyan: oklch(80% 0.11 210); /* demoted: info, misses */
+  --color-glow-violet: oklch(74% 0.14 300);
+  --color-glow-green: oklch(80% 0.15 150);
+  --color-glow-red: oklch(66% 0.19 28);
 
   /* dimmed accent surfaces (chips, badges, meter tracks) */
-  --color-glow-amber-dim: oklch(78% 0.055 215 / 14%);
-  --color-glow-orange-dim: oklch(72% 0.1 45 / 14%);
-  --color-glow-cyan-dim: oklch(68% 0.05 240 / 14%);
-  --color-glow-violet-dim: oklch(72% 0.08 320 / 14%);
-  --color-glow-green-dim: oklch(76% 0.07 140 / 14%);
-  --color-glow-red-dim: oklch(62% 0.12 20 / 14%);
+  --color-glow-amber-dim: oklch(80% 0.15 80 / 12%);
+  --color-glow-orange-dim: oklch(72% 0.16 50 / 12%);
+  --color-glow-cyan-dim: oklch(80% 0.11 210 / 12%);
+  --color-glow-violet-dim: oklch(74% 0.14 300 / 12%);
+  --color-glow-green-dim: oklch(80% 0.15 150 / 12%);
+  --color-glow-red-dim: oklch(66% 0.19 28 / 12%);
 
   /* typography */
   --font-display: var(--font-bricolage);
@@ -58,100 +72,27 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Appearance system — a calm paper workspace surrounds an always-serious lab.
-   Token aliases are intentionally shared by Tailwind UI and inline SVG figures.
---------------------------------------------------------------------------- */
-
-:root,
-[data-theme="light"] {
-  color-scheme: light;
-  --color-bg: oklch(97.2% 0.006 95);
-  --color-surface: oklch(94.1% 0.009 95);
-  --color-raised: oklch(99.3% 0.004 95);
-  --color-overlay: oklch(96.2% 0.012 180);
-  --color-border: oklch(82.5% 0.01 95);
-  --color-border-bright: oklch(72% 0.015 95);
-  --color-fg: oklch(24% 0.012 180);
-  --color-fg-muted: oklch(45% 0.012 180);
-  --color-fg-faint: oklch(47% 0.012 180);
-  --color-accent: oklch(51% 0.09 235);
-  --color-accent-dim: oklch(51% 0.09 235 / 12%);
-  --color-accent-ink: var(--color-bg);
-  --color-glow-amber: oklch(46% 0.11 55);
-  --color-glow-orange: oklch(46% 0.11 55);
-  --color-glow-cyan: oklch(46% 0.08 230);
-  --color-glow-violet: oklch(50% 0.09 305);
-  --color-glow-green: oklch(49% 0.08 155);
-  --color-glow-red: oklch(56% 0.13 25);
-  --color-glow-amber-dim: oklch(46% 0.11 55 / 12%);
-  --color-glow-orange-dim: oklch(46% 0.11 55 / 12%);
-  --color-glow-cyan-dim: oklch(46% 0.08 230 / 12%);
-  --color-glow-violet-dim: oklch(50% 0.09 305 / 12%);
-  --color-glow-green-dim: oklch(49% 0.08 155 / 12%);
-  --color-glow-red-dim: oklch(56% 0.13 25 / 12%);
-}
-
-[data-theme="dark"] {
-  color-scheme: dark;
-  --color-bg: oklch(18.5% 0.012 180);
-  --color-surface: oklch(23% 0.012 180);
-  --color-raised: oklch(28% 0.014 180);
-  --color-overlay: oklch(31% 0.015 180);
-  --color-border: oklch(37% 0.012 180);
-  --color-border-bright: oklch(48% 0.014 180);
-  --color-fg: oklch(93% 0.008 130);
-  --color-fg-muted: oklch(71% 0.012 180);
-  --color-fg-faint: oklch(61% 0.012 180);
-  --color-accent: oklch(71% 0.08 230);
-  --color-accent-dim: oklch(71% 0.08 230 / 15%);
-  --color-accent-ink: var(--color-bg);
-  --color-glow-amber: oklch(73% 0.12 60);
-  --color-glow-orange: oklch(72% 0.12 55);
-  --color-glow-cyan: oklch(73% 0.08 225);
-  --color-glow-violet: oklch(71% 0.09 305);
-  --color-glow-green: oklch(73% 0.08 155);
-  --color-glow-red: oklch(70% 0.13 25);
-  --color-glow-amber-dim: oklch(73% 0.12 60 / 15%);
-  --color-glow-orange-dim: oklch(72% 0.12 55 / 15%);
-  --color-glow-cyan-dim: oklch(73% 0.08 225 / 15%);
-  --color-glow-violet-dim: oklch(71% 0.09 305 / 15%);
-  --color-glow-green-dim: oklch(73% 0.08 155 / 15%);
-  --color-glow-red-dim: oklch(70% 0.13 25 / 15%);
-}
-
-/* ---------------------------------------------------------------------------
    Base
 --------------------------------------------------------------------------- */
 
 html {
   scroll-behavior: smooth;
-  background: var(--color-bg);
-  font-size: 16px;
-}
-
-html[data-reading-size="compact"] {
-  font-size: 15px;
-}
-
-html[data-reading-size="comfortable"] {
-  font-size: 17px;
+  /* The site is dark-only, so tell the UA: native controls (scrollbars, range
+     inputs, form widgets, the canvas behind the page) render dark chrome
+     instead of light. */
+  color-scheme: dark;
 }
 
 body {
-  background:
-    radial-gradient(circle at 84% -12%, var(--color-accent-dim), transparent 30rem),
-    radial-gradient(circle at -10% 48%, var(--color-glow-green-dim), transparent 32rem),
-    var(--color-bg);
+  background: var(--color-bg);
   color: var(--color-fg);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  overflow-x: clip;
-  transition: background-color 220ms var(--ease-out-soft), color 180ms var(--ease-out-soft);
 }
 
 ::selection {
-  background: var(--color-accent-dim);
+  background: oklch(80% 0.15 80 / 25%);
   color: var(--color-fg);
 }
 
@@ -174,7 +115,7 @@ body::after {
   inset: 0;
   z-index: 100;
   pointer-events: none;
-  opacity: 0.022;
+  opacity: 0.05;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 180px 180px;
 }
@@ -186,7 +127,7 @@ body::after {
 /* dot-grid backdrop — hero, lesson map */
 .dot-grid {
   background-image: radial-gradient(
-    oklch(52% 0.028 255 / 45%) 1px,
+    oklch(36% 0.02 70 / 55%) 1px,
     transparent 1px
   );
   background-size: 24px 24px;
@@ -278,8 +219,8 @@ body::after {
 
      FILLED TRACK: ControlPanel sets `--fill` inline (value/min/max as a
      percentage); the gradient below paints the travelled side of the track
-     in brand frost. Scoped to `.sim-slider` so sliders without the inline
-     var (the landing vignette) keep their plain track.
+     amber. Scoped to `.sim-slider` so sliders without the inline var (the
+     landing vignette) keep their plain track.
   ------------------------------------------------------------------------- */
   .sim-slider,
   input[type="range"].accent-accent {
@@ -456,169 +397,53 @@ input[type="range"].accent-accent:focus-visible {
 }
 
 /* ---------------------------------------------------------------------------
-   Editorial surfaces — shared page chrome and hierarchy
+   Release-D feature hooks — phosphor equivalents.
+
+   The learning journal, causal workbench and reading-mode features arrive
+   with a few semantic class names. These definitions keep them on the token
+   system (plates and hairlines, no theme gradients). Reading mode REMOVES
+   the workbench's secondary instruments rather than dimming them — the same
+   information-discipline as reduced motion.
 --------------------------------------------------------------------------- */
 
 @layer components {
-  .site-header-shell {
-    border-bottom: 1px solid oklch(42% 0.024 255 / 46%);
-    background: linear-gradient(to bottom, oklch(18% 0.014 255 / 92%), oklch(18% 0.014 255 / 58%));
-    backdrop-filter: blur(16px);
-  }
-
-  .status-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    border: 1px solid oklch(76% 0.07 140 / 22%);
-    border-radius: 999px;
-    padding: 0.35rem 0.65rem;
-    background: oklch(76% 0.07 140 / 7%);
-    color: var(--color-fg-muted);
-    font-family: var(--font-mono);
-    font-size: 0.625rem;
-    letter-spacing: 0.08em;
-    line-height: 1;
-    text-transform: uppercase;
-  }
-
-  .hero-copy {
-    text-wrap: balance;
-  }
-
-  .hero-surface {
-    position: relative;
-    overflow: hidden;
-    border: 1px solid oklch(52% 0.028 255 / 45%);
-    border-radius: 1.25rem;
-    background:
-      linear-gradient(145deg, oklch(33% 0.02 255 / 54%), oklch(18% 0.014 255 / 25%)),
-      radial-gradient(circle at 80% 50%, oklch(78% 0.055 215 / 9%), transparent 58%);
-    box-shadow: 0 2rem 5rem -3rem oklch(5% 0.02 255 / 80%), inset 0 1px 0 oklch(94% 0.008 250 / 7%);
-  }
-
-  .hero-surface::after {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    content: "";
-    background: linear-gradient(115deg, transparent 0 42%, oklch(94% 0.008 250 / 4%) 50%, transparent 58%);
-    opacity: 0.7;
-  }
-
-  .section-heading {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    border-bottom: 1px solid oklch(42% 0.024 255 / 55%);
-    padding-bottom: 0.8rem;
-  }
-
-  .module-row {
-    position: relative;
-    overflow: hidden;
-    border-block: 1px solid oklch(42% 0.024 255 / 55%);
-    margin-top: -1px;
-    background: linear-gradient(90deg, transparent, oklch(27% 0.018 255 / 18%));
-    transition: background 180ms var(--ease-out-soft), transform 180ms var(--ease-out-soft), border-color 180ms var(--ease-out-soft);
-  }
-
-  .module-row:hover {
-    z-index: 1;
-    background: linear-gradient(90deg, oklch(33% 0.02 255 / 48%), oklch(33% 0.02 255 / 12%));
-    border-color: oklch(52% 0.028 255 / 68%);
-    transform: translateX(0.25rem);
-  }
-
-  .module-row::after {
-    position: absolute;
-    inset-block: 0;
-    right: 0;
-    width: 22%;
-    pointer-events: none;
-    content: "";
-    background: linear-gradient(90deg, transparent, oklch(78% 0.055 215 / 4%));
-    opacity: 0;
-    transition: opacity 180ms ease;
-  }
-
-  .module-row:hover::after {
-    opacity: 1;
-  }
-
+  /* learning surfaces (LearningSummary / ReflectionCard / LearningConnections) */
   .surface-card {
-    border: 1px solid oklch(52% 0.028 255 / 42%);
-    border-radius: 0.9rem;
-    background: linear-gradient(145deg, oklch(33% 0.02 255 / 44%), oklch(27% 0.018 255 / 58%));
-    box-shadow: inset 0 1px 0 oklch(94% 0.008 250 / 5%);
+    border-radius: 2px;
+  }
+
+  /* landing manifest rows: ledger hairlines + quiet hover wash */
+  .module-row {
+    border-block: 1px solid var(--color-border);
+    margin-top: -1px;
+    transition: background 180ms var(--ease-out-soft);
+  }
+  .module-row:hover {
+    background: var(--color-surface);
   }
 
   .lesson-shell {
     position: relative;
   }
 
-  .lesson-shell::before {
-    position: absolute;
-    top: -2.5rem;
-    right: 0;
-    width: 16rem;
-    height: 20rem;
-    pointer-events: none;
-    content: "";
-    background: radial-gradient(circle, oklch(78% 0.055 215 / 7%), transparent 68%);
-    filter: blur(12px);
-  }
-}
-
-/* ---------------------------------------------------------------------------
-   Second-pass refinement — navigation depth and interactive focus
---------------------------------------------------------------------------- */
-
-@layer components {
-  .sidebar-shell {
-    background:
-      linear-gradient(180deg, oklch(27% 0.018 255 / 54%), oklch(18% 0.014 255 / 78%)),
-      var(--color-bg);
-    box-shadow: inset -1px 0 0 oklch(94% 0.008 250 / 4%), 1.5rem 0 3.5rem -3.5rem oklch(5% 0.02 255 / 88%);
-  }
-
-  .sidebar-module {
-    position: relative;
-    padding-top: 0.15rem;
-  }
-
-  .sidebar-module::before {
-    position: absolute;
-    top: 0.45rem;
-    left: 0.15rem;
-    width: 2px;
-    height: 0.75rem;
-    border-radius: 999px;
-    content: "";
-    background: var(--module-accent, var(--color-accent));
-    box-shadow: 0 0 8px -1px var(--module-accent, var(--color-accent));
-  }
-
-  .sidebar-active-row {
-    box-shadow: inset 2px 0 0 var(--module-accent, var(--color-accent)), inset 0 1px 0 oklch(94% 0.008 250 / 5%);
-  }
-
   .sim-figure {
-    background:
-      linear-gradient(150deg, oklch(33% 0.02 255 / 58%), oklch(18% 0.014 255 / 68%)),
-      var(--color-surface);
-    box-shadow: 0 1.8rem 4.5rem -3.5rem oklch(5% 0.02 255 / 88%), inset 0 1px 0 oklch(94% 0.008 250 / 6%);
+    background: var(--color-surface);
   }
 
   .sim-figure-stage {
-    background:
-      radial-gradient(circle at 74% 22%, oklch(78% 0.055 215 / 8%), transparent 42%),
-      linear-gradient(180deg, oklch(18% 0.014 255 / 68%), oklch(18% 0.014 255 / 32%));
+    background: transparent;
   }
 
-  .sim-meters {
-    background: linear-gradient(90deg, oklch(18% 0.014 255 / 32%), transparent 72%);
+  /* the meter a workbench focus is about — one amber outline, nothing more */
+  .causal-meter-focus {
+    outline: 1px solid var(--color-accent);
+    outline-offset: 4px;
+    border-radius: 2px;
   }
+}
+
+[data-calibration="true"] .calibration-secondary {
+  display: none !important;
 }
 
 /* ---------------------------------------------------------------------------
@@ -636,721 +461,4 @@ input[type="range"].accent-accent:focus-visible {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-}
-
-/* ---------------------------------------------------------------------------
-   Unified workbench refinement — authored, calm, and explicitly instructional.
---------------------------------------------------------------------------- */
-
-.dot-grid {
-  background-image: radial-gradient(var(--color-border) 1px, transparent 1px);
-  background-size: 26px 26px;
-  opacity: 0.48;
-}
-
-.text-outline {
-  -webkit-text-stroke: 0;
-  color: var(--color-accent);
-}
-
-  .theme-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    min-height: 2.25rem;
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
-  padding: 0.35rem 0.5rem;
-  background: var(--color-raised);
-  color: var(--color-fg-muted);
-  box-shadow: 0 1px 1px oklch(20% 0.01 180 / 6%);
-  transition: border-color 160ms var(--ease-out-soft), color 160ms var(--ease-out-soft), transform 160ms var(--ease-out-soft);
-}
-
-.theme-toggle:hover {
-  border-color: var(--color-border-bright);
-  color: var(--color-fg);
-}
-
-.theme-toggle:active {
-  transform: scale(0.97);
-}
-
-.theme-toggle-track {
-  position: relative;
-  display: block;
-  width: 1.8rem;
-  height: 1rem;
-  border-radius: 999px;
-  background: var(--color-border);
-  transition: background 180ms var(--ease-out-soft);
-}
-
-.theme-toggle-thumb {
-  position: absolute;
-  top: 0.18rem;
-  left: 0.18rem;
-  width: 0.64rem;
-  height: 0.64rem;
-  border-radius: 50%;
-  background: var(--color-raised);
-  box-shadow: 0 1px 2px oklch(20% 0.01 180 / 20%);
-  transition: transform 180ms var(--ease-out-soft), background 180ms var(--ease-out-soft);
-}
-
-[data-theme="dark"] .theme-toggle-track {
-  background: var(--color-accent);
-}
-
-[data-theme="dark"] .theme-toggle-thumb {
-  transform: translateX(0.8rem);
-  background: oklch(97% 0.005 95);
-}
-
-.appearance-controls {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-  .appearance-settings-trigger {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.25rem;
-    height: 2.25rem;
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
-  background: var(--color-raised);
-  color: var(--color-fg-muted);
-  box-shadow: 0 1px 1px oklch(20% 0.01 180 / 6%);
-  transition: border-color 160ms var(--ease-out-soft), color 160ms var(--ease-out-soft), transform 160ms var(--ease-out-soft);
-}
-
-.appearance-settings-trigger:hover,
-.appearance-settings-trigger[aria-expanded="true"] {
-  border-color: var(--color-border-bright);
-  color: var(--color-fg);
-}
-
-.appearance-settings-trigger:active {
-  transform: scale(0.95);
-}
-
-.appearance-personalization-panel {
-  position: absolute;
-  z-index: 80;
-  top: calc(100% + 0.6rem);
-  right: 0;
-  width: min(18rem, calc(100vw - 2rem));
-  border: 1px solid var(--color-border);
-  border-radius: 0.85rem;
-  padding: 0.9rem;
-  background: color-mix(in oklch, var(--color-raised) 94%, transparent);
-  box-shadow: 0 1.2rem 2.8rem -1.4rem oklch(20% 0.01 180 / 36%);
-  backdrop-filter: blur(18px);
-}
-
-.appearance-panel-heading,
-.appearance-panel-label,
-.appearance-swatch-row,
-.appearance-size-row {
-  display: flex;
-  align-items: center;
-}
-
-.appearance-panel-heading {
-  justify-content: space-between;
-  margin-bottom: 0.85rem;
-}
-
-  .appearance-reset {
-    display: inline-flex;
-    align-items: center;
-    min-height: 2rem;
-    gap: 0.3rem;
-    border-radius: 999px;
-    padding: 0.2rem 0.4rem;
-  color: var(--color-fg-faint);
-  font-size: 0.6875rem;
-  transition: color 160ms var(--ease-out-soft), background 160ms var(--ease-out-soft);
-}
-
-.appearance-reset:hover {
-  background: var(--color-surface);
-  color: var(--color-fg);
-}
-
-.appearance-panel-group + .appearance-panel-group {
-  margin-top: 0.85rem;
-}
-
-.appearance-panel-label {
-  gap: 0.4rem;
-  margin-bottom: 0.5rem;
-  color: var(--color-fg-muted);
-  font-family: var(--font-mono);
-  font-size: 0.625rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-  .appearance-swatch-row,
-  .appearance-swatch-options {
-    gap: 0.45rem;
-  }
-
-  .appearance-swatch-options {
-    display: inline-flex;
-    align-items: center;
-  }
-
-  .appearance-swatch,
-.appearance-custom-swatch {
-  position: relative;
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-    width: 2rem;
-    height: 2rem;
-  overflow: hidden;
-  border: 1px solid color-mix(in oklch, var(--swatch, var(--color-border)) 60%, var(--color-border));
-  border-radius: 999px;
-  background: var(--swatch, conic-gradient(from 180deg, #2f73a8, #167c7a, #7453a6, #b95c42, #2f73a8));
-  box-shadow: inset 0 0 0 2px var(--color-raised);
-  transition: transform 150ms var(--ease-out-soft), box-shadow 150ms var(--ease-out-soft);
-}
-
-.appearance-swatch:hover,
-.appearance-custom-swatch:hover {
-  transform: translateY(-1px);
-}
-
-.appearance-swatch[aria-checked="true"] {
-  box-shadow: inset 0 0 0 2px var(--color-raised), 0 0 0 2px var(--color-accent);
-}
-
-.appearance-custom-swatch input {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  padding: 0;
-  opacity: 0;
-  cursor: pointer;
-}
-
-.appearance-size-row {
-  overflow: hidden;
-  border: 1px solid var(--color-border);
-  border-radius: 0.55rem;
-}
-
-.appearance-size-option {
-  display: inline-flex;
-  flex: 1;
-  align-items: center;
-  justify-content: center;
-  min-height: 2rem;
-  border-right: 1px solid var(--color-border);
-  color: var(--color-fg-muted);
-  font-family: var(--font-display);
-  font-weight: 700;
-  transition: background 150ms var(--ease-out-soft), color 150ms var(--ease-out-soft);
-}
-
-.appearance-size-option:last-child {
-  border-right: 0;
-}
-
-.appearance-size-option:hover {
-  background: var(--color-surface);
-  color: var(--color-fg);
-}
-
-.appearance-size-option[aria-checked="true"] {
-  background: var(--color-accent-dim);
-  color: var(--color-fg);
-  box-shadow: inset 0 -2px 0 var(--color-accent);
-}
-
-.appearance-panel-note {
-  margin-top: 0.75rem;
-  color: var(--color-fg-faint);
-  font-size: 0.6875rem;
-}
-
-@media (max-width: 30rem) {
-  .appearance-personalization-panel {
-    right: auto;
-    left: 0;
-  }
-}
-
-#mobile-nav-drawer .appearance-personalization-panel {
-  top: auto;
-  bottom: calc(100% + 0.6rem);
-}
-
-@layer components {
-  .site-header-shell {
-    border-bottom-color: var(--color-border);
-    background: color-mix(in oklch, var(--color-raised) 88%, transparent);
-    box-shadow: 0 1px 0 oklch(20% 0.01 180 / 4%);
-  }
-
-  .status-chip {
-    border-color: color-mix(in oklch, var(--color-glow-green) 32%, var(--color-border));
-    background: var(--color-glow-green-dim);
-    color: var(--color-fg-muted);
-  }
-
-  .hero-surface {
-    border-color: var(--color-border);
-    border-radius: 0.9rem;
-    background:
-      linear-gradient(145deg, color-mix(in oklch, var(--color-raised) 92%, var(--color-accent-dim)), var(--color-surface)),
-      var(--color-surface);
-    box-shadow: 0 1.25rem 2.8rem -2.3rem oklch(28% 0.02 180 / 28%), inset 0 1px 0 oklch(100% 0 0 / 38%);
-  }
-
-  .hero-surface::after {
-    display: none;
-  }
-
-  .section-heading {
-    border-bottom-color: var(--color-border);
-  }
-
-  .module-row {
-    border-block-color: var(--color-border);
-    background: transparent;
-  }
-
-  .module-row:hover {
-    background: color-mix(in oklch, var(--color-accent-dim) 52%, var(--color-raised));
-    border-color: var(--color-border-bright);
-    transform: translateX(0.18rem);
-  }
-
-  .surface-card {
-    border-color: var(--color-border);
-    border-radius: 0.75rem;
-    background: var(--color-raised);
-    box-shadow: 0 0.8rem 1.8rem -1.8rem oklch(25% 0.02 180 / 22%), inset 0 1px 0 oklch(100% 0 0 / 36%);
-  }
-
-  .sidebar-shell {
-    background: var(--color-surface);
-    box-shadow: inset -1px 0 0 color-mix(in oklch, var(--color-border) 72%, transparent);
-  }
-
-  .sidebar-module::before {
-    box-shadow: none;
-  }
-
-  .sidebar-active-row {
-    background: color-mix(in oklch, var(--module-accent, var(--color-accent)) 10%, var(--color-raised));
-    box-shadow: inset 2px 0 0 var(--module-accent, var(--color-accent));
-  }
-
-  .lesson-shell::before {
-    background: radial-gradient(circle, var(--color-accent-dim), transparent 68%);
-  }
-
-  /* Simulations retain a controlled dark instrument surface in both themes. */
-  .sim-figure {
-    --color-bg: oklch(18.5% 0.012 180);
-    --color-surface: oklch(23% 0.012 180);
-    --color-raised: oklch(28% 0.014 180);
-    --color-overlay: oklch(31% 0.015 180);
-    --color-border: oklch(37% 0.012 180);
-    --color-border-bright: oklch(48% 0.014 180);
-    --color-fg: oklch(93% 0.008 130);
-    --color-fg-muted: oklch(71% 0.012 180);
-    --color-fg-faint: oklch(61% 0.012 180);
-    --color-accent: oklch(71% 0.08 230);
-    --color-accent-dim: oklch(71% 0.08 230 / 15%);
-    border: 1px solid oklch(37% 0.012 180);
-    border-radius: 0.75rem;
-    background: oklch(21% 0.012 180);
-    box-shadow: 0 1.5rem 2.8rem -2.4rem oklch(18% 0.02 180 / 55%);
-  }
-
-  .sim-figure-stage {
-    background:
-      radial-gradient(circle at 72% 20%, oklch(71% 0.08 230 / 12%), transparent 42%),
-      oklch(18.5% 0.012 180);
-  }
-
-  .sim-meters {
-    background: oklch(20% 0.012 180);
-  }
-}
-
-[data-theme="dark"] .hero-surface,
-[data-theme="dark"] .surface-card {
-  box-shadow: 0 1.5rem 3rem -2.4rem oklch(8% 0.01 180 / 70%), inset 0 1px 0 oklch(100% 0 0 / 5%);
-}
-
-
-/* ---------------------------------------------------------------------------
-   Causal Learning Workbench — shared guidance and inspection surface.
---------------------------------------------------------------------------- */
-
-@layer components {
-  .causal-experiment {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    border-top: 1px solid var(--color-border);
-    padding: 0.9rem 1rem;
-    background: linear-gradient(90deg, var(--color-accent-dim), transparent 72%);
-  }
-
-  .causal-experiment-copy {
-    min-width: 0;
-  }
-
-  .causal-kicker {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    color: var(--color-accent);
-    font-family: var(--font-mono);
-    font-size: 0.625rem;
-    font-weight: 600;
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
-  }
-
-  .causal-experiment h3,
-  .causal-inspector h3 {
-    margin-top: 0.28rem;
-    color: var(--color-fg);
-    font-family: var(--font-display);
-    font-size: 1rem;
-    font-weight: 700;
-    line-height: 1.15;
-  }
-
-  .causal-experiment p {
-    max-width: 44rem;
-    margin-top: 0.35rem;
-    color: var(--color-fg-muted);
-    font-size: 0.8rem;
-    line-height: 1.45;
-  }
-
-  .causal-experiment-claim {
-    color: var(--color-fg) !important;
-  }
-
-  .causal-action {
-    display: inline-flex;
-    flex: 0 0 auto;
-    align-items: center;
-    gap: 0.42rem;
-    min-height: 2.45rem;
-    border-radius: 0.55rem;
-    padding: 0.55rem 0.75rem;
-    background: var(--color-accent);
-    color: var(--color-accent-ink);
-    font-family: var(--font-mono);
-    font-size: 0.6875rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    transition: transform 140ms var(--ease-out-soft), filter 140ms var(--ease-out-soft);
-  }
-
-  .causal-action:hover {
-    filter: brightness(1.08);
-  }
-
-  .causal-action:active {
-    transform: scale(0.97);
-  }
-
-  .causal-tape {
-    border-top: 1px solid var(--color-border);
-    padding: 0.72rem 1rem 0.8rem;
-    background: var(--color-surface);
-  }
-
-  .causal-tape-heading {
-    display: flex;
-    align-items: center;
-    gap: 0.38rem;
-    margin-bottom: 0.58rem;
-    color: var(--color-fg-faint);
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    font-weight: 600;
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
-  }
-
-  .causal-tape-list {
-    display: flex;
-    gap: 0.45rem;
-    overflow-x: auto;
-    padding-bottom: 0.12rem;
-    scrollbar-width: thin;
-  }
-
-  .causal-tape-event {
-    display: grid;
-    flex: 1 0 9.4rem;
-    grid-template-columns: auto 1fr;
-    column-gap: 0.42rem;
-    align-items: center;
-    min-height: 3.25rem;
-    border: 1px solid var(--color-border);
-    border-radius: 0.5rem;
-    padding: 0.42rem 0.5rem;
-    color: var(--color-fg-muted);
-    text-align: left;
-    transition: background 160ms var(--ease-out-soft), border-color 160ms var(--ease-out-soft), transform 160ms var(--ease-out-soft);
-  }
-
-  .causal-tape-event:hover {
-    border-color: var(--color-border-bright);
-    background: var(--color-raised);
-  }
-
-  .causal-tape-event:active {
-    transform: scale(0.98);
-  }
-
-  .causal-tape-event.is-active {
-    border-color: var(--color-accent);
-    background: var(--color-accent-dim);
-    color: var(--color-fg);
-  }
-
-  .causal-tape-dot {
-    width: 0.5rem;
-    height: 0.5rem;
-    border: 1px solid var(--color-border-bright);
-    border-radius: 999px;
-    background: var(--color-surface);
-  }
-
-  .causal-tape-event.is-active .causal-tape-dot {
-    border-color: var(--color-accent);
-    background: var(--color-accent);
-    box-shadow: 0 0 0 3px var(--color-accent-dim);
-  }
-
-  .causal-tape-meta,
-  .causal-tape-time {
-    color: var(--color-fg-faint);
-    font-family: var(--font-mono);
-    font-size: 0.57rem;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-  }
-
-  .causal-tape-label {
-    grid-column: 2;
-    overflow: hidden;
-    color: inherit;
-    font-size: 0.74rem;
-    font-weight: 600;
-    line-height: 1.25;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .causal-tape-time {
-    grid-column: 2;
-  }
-
-  .causal-inspector {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 0.85rem 1rem;
-    border-top: 1px solid var(--color-border);
-    padding: 0.9rem 1rem;
-    background: linear-gradient(110deg, color-mix(in oklch, var(--color-raised) 94%, var(--color-accent-dim)), var(--color-surface));
-  }
-
-  .causal-inspector-heading {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 0.7rem;
-  }
-
-  .causal-inspector-reset {
-    display: inline-flex;
-    align-items: center;
-    min-height: 2rem;
-    gap: 0.34rem;
-    border-radius: 0.4rem;
-    padding: 0.34rem 0.42rem;
-    color: var(--color-fg-faint);
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    transition: background 140ms var(--ease-out-soft), color 140ms var(--ease-out-soft);
-  }
-
-  .causal-inspector-reset:hover {
-    background: var(--color-surface);
-    color: var(--color-fg);
-  }
-
-  .causal-node-select-label {
-    grid-row: span 2;
-    min-width: 10.5rem;
-    color: var(--color-fg-faint);
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-  }
-
-  .causal-node-select {
-    display: block;
-    width: 100%;
-    margin-top: 0.38rem;
-    border: 1px solid var(--color-border);
-    border-radius: 0.4rem;
-    padding: 0.42rem 1.8rem 0.42rem 0.5rem;
-    background: var(--color-surface);
-    color: var(--color-fg);
-    font-family: var(--font-mono);
-    font-size: 0.67rem;
-    text-transform: none;
-  }
-
-  .causal-inspector-state {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.45rem;
-  }
-
-  .causal-inspector-state > div {
-    min-width: 4.6rem;
-    border-left: 2px solid var(--color-border-bright);
-    padding-left: 0.48rem;
-  }
-
-  .causal-inspector-state span {
-    display: block;
-    color: var(--color-fg-faint);
-    font-family: var(--font-mono);
-    font-size: 0.57rem;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-  }
-
-  .causal-inspector-state strong {
-    display: block;
-    margin-top: 0.18rem;
-    color: var(--color-fg);
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-  }
-
-  .causal-inspector-explanation {
-    display: flex;
-    grid-column: 1 / -1;
-    align-items: flex-start;
-    gap: 0.45rem;
-    color: var(--color-fg-muted);
-    font-size: 0.78rem;
-    line-height: 1.45;
-  }
-
-  .causal-inspector-explanation svg {
-    flex: 0 0 auto;
-    margin-top: 0.16rem;
-    color: var(--color-accent);
-  }
-
-  .causal-next-action {
-    grid-column: 1 / -1;
-    margin-top: -0.35rem;
-    color: var(--color-fg-faint);
-    font-size: 0.72rem;
-  }
-
-  .causal-static-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    min-height: 2rem;
-    border: 1px solid var(--color-border);
-    border-radius: 0.42rem;
-    padding: 0.3rem 0.42rem;
-    background: var(--color-surface);
-    color: var(--color-fg-muted);
-    font-family: var(--font-mono);
-    font-size: 0.58rem;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    transition: background 140ms var(--ease-out-soft), color 140ms var(--ease-out-soft), border-color 140ms var(--ease-out-soft);
-  }
-
-  .causal-static-toggle:hover,
-  .causal-static-toggle.is-active {
-    border-color: var(--color-accent);
-    background: var(--color-accent-dim);
-    color: var(--color-fg);
-  }
-
-  .causal-meter-focus {
-    position: relative;
-  }
-
-  .causal-meter-focus::after {
-    position: absolute;
-    inset: -0.35rem 0.45rem;
-    border: 1px solid var(--color-accent);
-    border-radius: 0.42rem;
-    content: "";
-    pointer-events: none;
-  }
-
-  @media (max-width: 40rem) {
-    .causal-experiment {
-      align-items: flex-start;
-      flex-direction: column;
-    }
-
-    .causal-action {
-      width: 100%;
-      justify-content: center;
-    }
-
-    .causal-inspector {
-      grid-template-columns: 1fr;
-    }
-
-    .causal-node-select-label {
-      grid-row: auto;
-    }
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .causal-tape-event,
-  .causal-action,
-  .causal-static-toggle {
-    transition: none;
-  }
-}
-
-/* Reading mode: reduce cognitive load without changing simulation state. */
-[data-calibration="true"] .calibration-secondary {
-  display: none !important;
-}
-
-[data-calibration="true"] .sim-figure-stage {
-  border-bottom-color: var(--color-border-bright);
 }

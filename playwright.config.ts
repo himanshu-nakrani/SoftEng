@@ -4,8 +4,11 @@ import { defineConfig, devices } from "@playwright/test";
  * E2E runs against the real static export, not the dev server: `npm run build`
  * writes `out/`, and `serve` hands it back exactly like a static host would.
  * That way the smoke suite exercises the artifact we actually deploy.
+ *
+ * The port is overridable because 4173 is a popular squat: when anything else
+ * already listens there, `reuseExistingServer` would happily test THAT app.
  */
-const PORT = 4173;
+const PORT = Number(process.env.E2E_PORT ?? 4173);
 const BASE_URL = `http://localhost:${PORT}`;
 
 /**

@@ -1,5 +1,6 @@
 "use client";
 
+import { IconButton } from "@/components/ui/IconButton";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { cn } from "@/lib/cn";
 import { ListVideo, Pause, Play, RotateCcw, StepForward } from "lucide-react";
@@ -265,11 +266,20 @@ export function TransportBar({
   return (
     <>
       <div className="flex flex-wrap items-center gap-1 border-t border-border px-3 py-2">
-        <button
-          type="button"
-          onClick={controls.toggle}
+        <IconButton
+          /**
+           * Explicit intent, NOT `controls.toggle`.
+           *
+           * `toggle` asks the engine which way to flip, and the engine's status
+           * can change without a re-render — the scroll observer pauses a figure
+           * that leaves the viewport. That left a window where this button read
+           * "Pause simulation" while the sim was already paused, so clicking it
+           * PLAYED. Deriving the action from the same `playing` value that
+           * renders the label makes the control honest by construction.
+           */
+          onClick={() => (playing ? controls.pause() : controls.play())}
           disabled={quizzing}
-          aria-label={playing ? "Pause simulation" : "Play simulation"}
+          label={playing ? "Pause simulation" : "Play simulation"}
           aria-pressed={playing}
           aria-keyshortcuts="Space"
           title={
@@ -279,37 +289,33 @@ export function TransportBar({
                 ? "Pause simulation (Space)"
                 : "Play simulation (Space)"
           }
-          className="flex size-8 cursor-pointer items-center justify-center rounded-lg bg-accent text-accent-ink transition-[transform,filter] hover:brightness-110 active:scale-95 disabled:opacity-40"
+          variant="solid"
         >
           {playing ? (
             <Pause className="size-4" fill="currentColor" strokeWidth={0} />
           ) : (
             <Play className="size-4 translate-x-px" fill="currentColor" strokeWidth={0} />
           )}
-        </button>
+        </IconButton>
 
-        <button
-          type="button"
+        <IconButton
           onClick={controls.stepOnce}
           disabled={playing || quizzing}
-          aria-label="Advance one tick"
+          label="Advance one tick"
           aria-keyshortcuts="."
           title="Step one tick"
-          className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-fg-muted transition-colors hover:bg-raised hover:text-fg disabled:pointer-events-none disabled:opacity-40"
         >
           <StepForward className="size-4" />
-        </button>
+        </IconButton>
 
-        <button
-          type="button"
+        <IconButton
           onClick={controls.restart}
-          aria-label="Restart simulation"
+          label="Restart simulation"
           aria-keyshortcuts="R"
           title="Restart (deterministic replay)"
-          className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-fg-muted transition-colors hover:bg-raised hover:text-fg"
         >
           <RotateCcw className="size-4" />
-        </button>
+        </IconButton>
 
         <div className="mx-2 h-4 w-px bg-border" />
 
@@ -353,6 +359,17 @@ export function TransportBar({
                 "--fill": `${(value / scrubMax) * 100}%`,
               } as React.CSSProperties
             }
+          />
+          {/* tick ruler — ten divisions along the timeline, the plate's
+              arrivals scale. Purely decorative; the track above owns input. */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-2 bottom-0 h-1.5 opacity-70"
+            style={{
+              backgroundImage:
+                "linear-gradient(to right, var(--color-border) 0 1px, transparent 1px)",
+              backgroundSize: "10% 100%",
+            }}
           />
           {/* Scripted beats: dots for timeline captions, violet diamonds for
               checkpoints (the same violet the quiz status pip uses). Inset by
@@ -411,13 +428,12 @@ export function TransportBar({
             run. The clock keeps its own `ml-auto`; a second auto margin here
             would split the free space between them and float this into the
             middle of the row on narrow screens. */}
-        <button
-          type="button"
+        <IconButton
           onClick={() => setTranscriptOpen((v) => !v)}
           disabled={transcriptDisabled}
           aria-expanded={transcriptOpen}
           aria-controls={transcriptId}
-          aria-label={
+          label={
             transcriptOpen ? "Hide caption transcript" : "Show caption transcript"
           }
           title={
@@ -428,12 +444,12 @@ export function TransportBar({
                 : "Show the caption transcript (every caption so far, seekable)"
           }
           className={cn(
-            "ml-1 flex size-8 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-raised hover:text-fg disabled:pointer-events-none disabled:opacity-40",
-            transcriptOpen ? "bg-raised text-accent" : "text-fg-muted",
+            "ml-1",
+            transcriptOpen ? "bg-raised text-accent" : undefined,
           )}
         >
           <ListVideo className="size-4" />
-        </button>
+        </IconButton>
       </div>
       <TranscriptPanel
         id={transcriptId}

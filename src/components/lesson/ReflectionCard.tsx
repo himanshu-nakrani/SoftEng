@@ -102,14 +102,19 @@ export function ReflectionCard({ meta }: { meta: LessonMeta }) {
                     aria-hidden
                     className={cn(
                       "flex size-4 shrink-0 items-center justify-center rounded-full border",
-                      selected ? "border-accent bg-accent text-accent-ink" : "border-border-bright",
+                      selected ? "border-accent bg-accent text-bg" : "border-border-bright",
                     )}
                   >
                     {selected && <Check className="size-3" strokeWidth={2.5} />}
                   </span>
                   <span>
                     <span className="block text-xs font-medium">{option.label}</span>
-                    <span className="block text-[11px] text-fg-faint">{option.description}</span>
+                    {/* muted, not faint: on the amber-tinted selected ground
+                        faint composites to 4.37:1 — under AA at 11px */}
+                    <span className={cn(
+                      "block text-[11px]",
+                      selected ? "text-fg-muted" : "text-fg-faint",
+                    )}>{option.description}</span>
                   </span>
                 </button>
               );
@@ -131,7 +136,7 @@ export function ReflectionCard({ meta }: { meta: LessonMeta }) {
             type="button"
             onClick={save}
             disabled={!hydrated}
-            className="inline-flex min-h-9 items-center gap-2 rounded-lg bg-accent px-3.5 py-2 text-xs font-semibold text-accent-ink transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex min-h-9 items-center gap-2 rounded-md bg-accent px-3.5 py-2 text-xs font-semibold text-bg transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Save className="size-3.5" strokeWidth={1.75} />
             Save reflection

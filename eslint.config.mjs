@@ -64,6 +64,11 @@ const eslintConfig = [
       "src/engine/**",
       "src/lessons/**",
       "src/components/landing/hero-sim.ts",
+      // The playground drives real sims too, so it is held to the same rule. Its
+      // one legitimate use — picking a fresh seed for free play — carries an
+      // inline disable with the reason, which is the point: an exemption you can
+      // see beats a gap in the glob.
+      "src/components/playground/**",
     ],
     rules: {
       "no-restricted-properties": [
@@ -120,6 +125,27 @@ const eslintConfig = [
               message:
                 "Lessons never touch render internals: compose <SectionFigure sim={...}> (which owns InteractiveFigure/useSimulation) and import types + sim-helpers only.",
             },
+            {
+              // Archetype B (the discrete-step player) gets the same layering.
+              // A lesson may import the contract (`@/engine/algo/types`), the
+              // author verb (`@/engine/algo/recorder`) and a view's state
+              // contract (`@/engine/algo/views/<view>`); the player and the
+              // figure belong to the render layer. A `-figure.tsx` wrapper is
+              // the ONLY place allowed to name a view COMPONENT, because that
+              // is the file that already owns "use client".
+              group: [
+                "@/engine/algo/AlgoFigure",
+                "@/engine/algo/AlgoTransportBar",
+                "@/engine/algo/CodePanel",
+                "@/engine/algo/useAlgoPlayer",
+                "**/engine/algo/AlgoFigure",
+                "**/engine/algo/AlgoTransportBar",
+                "**/engine/algo/CodePanel",
+                "**/engine/algo/useAlgoPlayer",
+              ],
+              message:
+                "Lessons never touch render internals: compose <SectionAlgoFigure def={...} view={...}> and import @/engine/algo/types, /recorder and a view's state module only.",
+            },
           ],
         },
       ],
@@ -173,6 +199,14 @@ const eslintConfig = [
       "no-restricted-properties": "off",
       "react-hooks/rules-of-hooks": "off",
       "@typescript-eslint/no-explicit-any": "off",
+      // Test tooling is allowed to drive the headless runner directly — that is
+      // exactly how a flow lesson's prose is pinned (see networking-claims and
+      // the engine harness). Only the LAYERING patterns are lifted here (a claim
+      // test legitimately imports the runner / buildAlgoSteps); the project-wide
+      // `framer-motion` ban is RESTATED, because flat config replaces rather than
+      // merges rule options — `"off"` would silently drop it for test files, the
+      // trap this file's header comment warns about.
+      "no-restricted-imports": ["error", { paths: [LEGACY_MOTION] }],
     },
   },
 ];

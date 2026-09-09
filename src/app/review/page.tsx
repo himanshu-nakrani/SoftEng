@@ -1,4 +1,5 @@
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { SiteHeader } from "@/components/navigation/SiteChrome";
+import { SectionRule } from "@/components/ui/SectionRule";
 import { JournalTools } from "./JournalTools";
 import { shareMetadata } from "@/lib/site";
 import type { Metadata } from "next";
@@ -32,27 +33,20 @@ export const metadata: Metadata = {
 export default function ReviewPage() {
   return (
     <div className="relative min-h-screen">
-      <header className="mx-auto flex max-w-3xl items-center gap-6 px-6 py-5">
-        <Link href="/" className="flex items-baseline gap-1">
-          <span className="font-display text-xl font-bold tracking-tight">
-            syslab
-          </span>
-          <span className="size-1.5 rounded-full bg-accent shadow-[0_0_6px_var(--color-accent)]" />
-        </Link>
-        <nav className="ml-auto flex items-center gap-5 text-sm text-fg-muted">
-          <Link href="/learn" className="transition-colors hover:text-fg">
+      <SiteHeader
+        width="read"
+        nav={
+          <Link href="/learn" className="text-sm transition-colors hover:text-fg text-fg-muted">
             Learning path
           </Link>
-          <ThemeToggle />
-        </nav>
-      </header>
+        }
+      />
 
       <main id="main" className="mx-auto max-w-3xl px-6 pb-20">
         <div className="mb-8">
-          <div className="mb-4 flex items-center gap-3">
+          <SectionRule className="mb-4">
             <span className="tech-label text-accent">review</span>
-            <div className="tech-rule flex-1" />
-          </div>
+          </SectionRule>
           <h1 className="font-display mb-3 text-3xl font-bold tracking-tight">
             Every prediction, in one deck
           </h1>

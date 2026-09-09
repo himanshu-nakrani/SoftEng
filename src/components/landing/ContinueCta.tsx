@@ -1,18 +1,25 @@
 "use client";
 
+import { buttonClasses } from "@/components/ui/Button";
 import { ProgressRing } from "@/components/navigation/ProgressRing";
 import type { LessonMeta } from "@/curriculum/types";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { useLessonProgress } from "@/hooks/use-lesson-progress";
 import { cn } from "@/lib/cn";
-import { getLesson, lessonPath, moduleOf } from "@/lib/curriculum";
+import {
+  accentOf,
+  firstTrack,
+  getLesson,
+  lessonPath,
+  moduleOf,
+  trackPath,
+} from "@/lib/curriculum";
 import { useProgress } from "@/stores/progress";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
-/** The hero's primary button shape — shared so the swap can't drift. */
-const CTA =
-  "flex items-center gap-2 rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-accent-ink transition-all hover:shadow-[0_0_28px_-6px_var(--color-accent)] hover:brightness-110";
+/** The hero's primary button shape — the shared recipe, so no drift. */
+const CTA = buttonClasses("primary", "md");
 
 /**
  * The pre-hydration / first-visit CTA. This is the markup that ships in the
@@ -21,7 +28,7 @@ const CTA =
  */
 function StartCta() {
   return (
-    <Link href="/learn" className={CTA}>
+    <Link href={trackPath(firstTrack)} className={CTA}>
       Start the track
       <ArrowRight className="size-4" />
     </Link>
@@ -64,7 +71,7 @@ function ContinueButton({
           fraction={progress.fraction}
           state={progress.state}
           mastered={progress.mastered}
-          accent={moduleOf(lesson).accent}
+          accent={accentOf(moduleOf(lesson))}
         />
       </span>
       <span className="min-w-0 truncate">Continue · {lesson.title}</span>

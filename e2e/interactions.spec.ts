@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
-const LOAD_BALANCING = "/learn/scaling/load-balancing";
+const LOAD_BALANCING = "/learn/system-design-fundamentals/scaling/load-balancing";
 
 async function gotoAndSettle(page: Page, route: string) {
   const response = await page.goto(route);
@@ -72,7 +72,7 @@ test.describe("interactive learning flows", () => {
   test("workbench event path seeks deterministically and exposes a static state view", async ({
     page,
   }) => {
-    await gotoAndSettle(page, "/learn/scaling/client-server");
+    await gotoAndSettle(page, "/learn/system-design-fundamentals/scaling/client-server");
     const figure = page.locator("figure").first();
     await figure.scrollIntoViewIfNeeded();
     await figure.getByRole("button", { name: "Restart simulation" }).click();
@@ -97,7 +97,7 @@ test.describe("interactive learning flows", () => {
   test("an answered prediction checkpoint can close without advancing the simulation", async ({
     page,
   }) => {
-    await gotoAndSettle(page, "/learn/scaling/scaling-strategies");
+    await gotoAndSettle(page, "/learn/system-design-fundamentals/scaling/scaling-strategies");
     const figure = page.locator("figure").first();
     await figure.scrollIntoViewIfNeeded();
     await figure.getByRole("button", { name: "Restart simulation" }).click();
@@ -168,68 +168,54 @@ test.describe("interactive learning flows", () => {
     await expect(clock).toHaveText(pausedAt ?? "");
   });
 
-  test("appearance control changes the document theme and persists the learner preference", async ({
-    page,
-  }) => {
-    await gotoAndSettle(page, "/");
+  test("a step-engine figure records its section as complete", async ({ page }) => {
+    /*
+     * Archetype B's completion path was wired by reusing `SectionAlgoFigure` ->
+     * `onEngage`, and shared-with-archetype-A code is exactly the kind that gets
+     * assumed rather than checked: nothing asserted that interacting with a
+     * discrete-step figure actually persists anything. If it did not, a whole
+     * track's progress rings would silently never fill.
+     */
+    const route = "/learn/concurrency/shared-state/data-races";
+    await gotoAndSettle(page, route);
 
-    const root = page.locator("html");
-    const before = await root.getAttribute("data-theme");
-    expect(before === "light" || before === "dark").toBeTruthy();
-    const after = before === "dark" ? "light" : "dark";
+    const strip = page.getByLabel(/^Lesson progress:/);
+    await expect(strip).toBeVisible();
+    // Concept sections complete on dwell, so assert on the persisted store
+    // rather than on the visible count, which the header may already have moved.
+    const completedFor = () =>
+      page.evaluate(() => {
+        const raw = window.localStorage.getItem("softeng-progress");
+        if (!raw) return [] as string[];
+        const parsed = JSON.parse(raw) as {
+          state?: { completedSections?: Record<string, string[]> };
+        };
+        return parsed.state?.completedSections?.["data-races"] ?? [];
+      });
 
-    await page
-      .getByRole("button", { name: `Switch to ${after} mode` })
-      .click();
-    await expect(root).toHaveAttribute("data-theme", after);
-    await expect(
-      page.getByRole("button", {
-        name: `Switch to ${before === "dark" ? "dark" : "light"} mode`,
-      }),
-    ).toBeVisible();
+    expect(await completedFor()).not.toContain("interleave-it");
 
-    await page.reload();
-    await page.waitForLoadState("networkidle");
-    await expect(root).toHaveAttribute("data-theme", after);
-  });
+    // Drive the figure the way a learner would: step it forward once.
+    const figure = page.locator("figure").first();
+    await figure.scrollIntoViewIfNeeded();
+    await figure.getByRole("button", { name: "Step forward" }).click();
 
-  test("personalization panel saves a custom accent and reading size", async ({
-    page,
-  }) => {
-    await gotoAndSettle(page, "/");
-
-    await page
-      .getByRole("button", { name: "Customize color and reading size" })
-      .click();
-
-    await page.getByRole("radio", { name: "Plum accent" }).click();
     await expect
-      .poll(() =>
-        page.evaluate(() =>
-          document.documentElement.style.getPropertyValue("--user-accent"),
-        ),
-      )
-      .toBe("#7453A6");
+      .poll(completedFor, {
+        message: "stepping a step-engine figure should complete its section",
+        timeout: 5_000,
+      })
+      .toContain("interleave-it");
 
-    await page.getByTitle("Comfortable").click();
-    await expect(page.locator("html")).toHaveAttribute("data-reading-size", "comfortable");
-
-    await page.reload();
-    await page.waitForLoadState("networkidle");
-    await expect(page.locator("html")).toHaveAttribute("data-reading-size", "comfortable");
-    await expect
-      .poll(() =>
-        page.evaluate(() =>
-          document.documentElement.style.getPropertyValue("--user-accent"),
-        ),
-      )
-      .toBe("#7453A6");
+    // And it must survive a reload, which is the whole point of persisting it.
+    await gotoAndSettle(page, route);
+    expect(await completedFor()).toContain("interleave-it");
   });
 
   test("lesson wayfinding exposes learning state, concept links, and calibration mode", async ({
     page,
   }) => {
-    await gotoAndSettle(page, "/learn/scaling/scaling-strategies");
+    await gotoAndSettle(page, "/learn/system-design-fundamentals/scaling/scaling-strategies");
 
     const article = page
       .locator("article")
@@ -262,7 +248,7 @@ test.describe("interactive learning flows", () => {
   test("local journal saves confidence, persists across reload, and exports from review", async ({
     page,
   }) => {
-    await gotoAndSettle(page, "/learn/scaling/scaling-strategies");
+    await gotoAndSettle(page, "/learn/system-design-fundamentals/scaling/scaling-strategies");
     await page.evaluate(() => localStorage.removeItem("softeng-journal"));
     await page.reload();
     await page.waitForLoadState("networkidle");
@@ -321,38 +307,6 @@ test.describe("interactive learning flows", () => {
     await page.getByRole("button", { name: "Ask again" }).click();
     await expect(firstChoice).toBeEnabled();
     await expect(visibleVerdict).toHaveCount(0);
-  });
-
-  test("personalization radios support keyboard selection and return focus on Escape", async ({
-    page,
-  }) => {
-    await gotoAndSettle(page, "/");
-
-    const trigger = page.getByRole("button", {
-      name: "Customize color and reading size",
-    });
-    await trigger.click();
-    const panel = page.getByRole("region", { name: "Appearance preferences" });
-    const reset = panel.getByRole("button", { name: "Reset" });
-    await expect(reset).toBeFocused();
-
-    const cobalt = panel.getByRole("radio", { name: "Cobalt accent" });
-    const teal = panel.getByRole("radio", { name: "Teal accent" });
-    await cobalt.focus();
-    await page.keyboard.press("ArrowRight");
-    await expect(teal).toBeFocused();
-    await expect(teal).toHaveAttribute("aria-checked", "true");
-
-    const defaultSize = panel.getByRole("radio", { name: "Default reading size" });
-    const comfortable = panel.getByRole("radio", { name: "Comfortable reading size" });
-    await defaultSize.focus();
-    await page.keyboard.press("End");
-    await expect(comfortable).toBeFocused();
-    await expect(comfortable).toHaveAttribute("aria-checked", "true");
-
-    await page.keyboard.press("Escape");
-    await expect(panel).toHaveCount(0);
-    await expect(trigger).toBeFocused();
   });
 
   test("review feedback moves focus to recovery and back to the first answer", async ({

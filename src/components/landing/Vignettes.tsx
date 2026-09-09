@@ -259,7 +259,7 @@ function BreakWidget() {
       <span className="font-mono text-xs text-fg">
         {dead ? "api-1 · DEAD" : "api-1 · healthy"}
       </span>
-      <span className="ml-1 font-mono text-[10px] text-fg-muted">
+      <span className="ml-1 font-mono text-[10px] text-fg-faint">
         {dead ? "healing…" : "click to kill"}
       </span>
     </button>
@@ -306,9 +306,13 @@ export function Vignettes() {
           key={verb.label}
           className="grid items-center gap-x-8 gap-y-4 border-t border-border py-7 md:grid-cols-[72px_1fr_minmax(220px,260px)] last:border-b"
         >
-          <span className="font-display text-3xl font-bold text-fg-muted/85 tabular-nums">
-            {verb.n}
-          </span>
+          <div className="flex flex-col items-start gap-1.5">
+            <span className="font-display text-3xl font-bold text-fg-faint tabular-nums">
+              {verb.n}
+            </span>
+            {/* hairline footing — the numeral sits on its own ruler mark */}
+            <span aria-hidden className="h-px w-9 bg-border-bright" />
+          </div>
           <div>
             <p className="tech-label mb-1 text-accent">{verb.label}</p>
             <h3 className="font-display mb-1.5 text-xl font-semibold">

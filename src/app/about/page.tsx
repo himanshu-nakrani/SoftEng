@@ -1,4 +1,6 @@
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { SiteHeader } from "@/components/navigation/SiteChrome";
+import { buttonClasses } from "@/components/ui/Button";
+import { SectionRule } from "@/components/ui/SectionRule";
 import { shareMetadata } from "@/lib/site";
 import { ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
@@ -21,23 +23,19 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <div className="relative min-h-screen">
-      <header className="mx-auto flex max-w-2xl items-center gap-6 px-6 py-5">
-        <Link href="/" className="flex items-baseline gap-1">
-          <span className="font-display text-xl font-bold tracking-tight">
-            syslab
-          </span>
-          <span className="size-1.5 rounded-full bg-accent shadow-[0_0_6px_var(--color-accent)]" />
-        </Link>
-        <nav className="ml-auto flex items-center gap-5 text-sm text-fg-muted">
-          <Link href="/learn" className="transition-colors hover:text-fg">
+      <SiteHeader
+        width="read"
+        nav={
+          <Link href="/learn" className="text-sm transition-colors hover:text-fg text-fg-muted">
             Learning path
           </Link>
-          <ThemeToggle />
-        </nav>
-      </header>
+        }
+      />
 
-      <main id="main" className="mx-auto max-w-2xl px-6 py-14">
-        <p className="tech-label mb-2">about</p>
+      <main id="main" className="mx-auto max-w-3xl px-6 py-14">
+        <SectionRule className="mb-2">
+          <span className="tech-label">about</span>
+        </SectionRule>
         <h1 className="font-display mb-8 text-3xl font-bold tracking-tight">
           Learn by manipulating systems, not reading about them.
         </h1>
@@ -81,10 +79,7 @@ export default function AboutPage() {
           browser&apos;s localStorage; there is no account and no server.
         </p>
 
-        <Link
-          href="/learn"
-          className="mt-12 inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-accent-ink transition-all hover:brightness-110"
-        >
+        <Link href="/learn" className={buttonClasses("primary", "md", "mt-12")}>
           Start the track
           <ArrowRight className="size-4" />
         </Link>

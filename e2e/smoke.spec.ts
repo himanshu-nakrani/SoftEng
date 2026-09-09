@@ -1,5 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
-import { allLessons, lessonPath } from "@/lib/curriculum";
+import { trackPath, tracks } from "@/lib/curriculum";
+import {
+  announceSelection,
+  selectedLegacyRoutes,
+  selectedLessonRoutes,
+} from "./_selection";
 
 /**
  * Smoke coverage for the static export. Two jobs:
@@ -15,13 +20,24 @@ import { allLessons, lessonPath } from "@/lib/curriculum";
 
 const STATIC_ROUTES = ["/", "/learn", "/review", "/about"];
 
-const LESSON_ROUTES = allLessons
-  .filter((lesson) => lesson.status === "available")
-  .map(lessonPath);
+/** Every track landing — added to the sweep the moment a track is registered. */
+const TRACK_ROUTES = tracks.map(trackPath);
 
-const ROUTES = [...STATIC_ROUTES, ...LESSON_ROUTES];
+/** Sampled on a PR, complete on the scheduled run — see `_selection.ts`. */
+const LESSON_ROUTES = selectedLessonRoutes().map((entry) => entry.route);
 
-const CLIENT_SERVER = "/learn/scaling/client-server";
+/**
+ * The pre-track URLs, which must keep resolving to a redirect stub rather than
+ * 404 — see src/app/learn/[...legacy]/page.tsx. They are in the console sweep
+ * because a stub that throws is worse than a dead link.
+ */
+const LEGACY = selectedLegacyRoutes();
+
+const ROUTES = [...STATIC_ROUTES, ...TRACK_ROUTES, ...LESSON_ROUTES];
+
+announceSelection("smoke");
+
+const CLIENT_SERVER = "/learn/system-design-fundamentals/scaling/client-server";
 
 /** React/Next phrase hydration failures in a few ways; catch all of them. */
 const HYDRATION_RE = /hydrat/i;
@@ -94,7 +110,44 @@ test.describe("every route loads clean", () => {
   }
 });
 
+test.describe("pre-track URLs still resolve", () => {
+  /**
+   * Lessons moved from `/learn/<module>/<slug>` to
+   * `/learn/<track>/<module>/<slug>`. A static host cannot 301, so the old URLs
+   * are generated redirect stubs. Every one of them must land on its lesson —
+   * a sample would let a single missing param go unnoticed, and the whole set
+   * is cheap because the stubs are static HTML.
+   */
+  for (const { legacy, target } of LEGACY) {
+
+    test(`${legacy} redirects to ${target}`, async ({ page }) => {
+      const watcher = watchConsole(page);
+
+      await page.goto(legacy);
+      // The stub replaces the history entry client-side, so wait for the URL
+      // rather than for a network response.
+      await expect(page).toHaveURL(new RegExp(`${target}/?$`));
+
+      expect(watcher.errors, `console errors redirecting ${legacy}`).toEqual([]);
+    });
+  }
+});
+
 test.describe("the simulation engine runs in the browser", () => {
+  /**
+   * Lesson figures run to ~1150px tall — taller than the default 720px viewport.
+   * That matters because this suite DRIVES the transport, whose controls sit at
+   * the figure's bottom edge: in a short viewport, clicking them scrolls the
+   * page, which moves the target mid-click and drops the figure below the
+   * observer's 0.35 visibility threshold (measured at 0.332), so the engine
+   * correctly pauses a figure the test still expects to be running.
+   *
+   * A viewport that fits the figure removes the geometry fight and keeps these
+   * tests about the engine. Scroll-driven pause/resume behaviour is a separate
+   * concern and belongs in its own test.
+   */
+  test.use({ viewport: { width: 1280, height: 1240 } });
+
   test("play advances the sim clock and puts packets on the stage", async ({
     page,
   }) => {

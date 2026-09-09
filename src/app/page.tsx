@@ -1,56 +1,58 @@
 import { ContinueCta } from "@/components/landing/ContinueCta";
 import { HeroSim } from "@/components/landing/HeroSim";
 import { Vignettes } from "@/components/landing/Vignettes";
+import { SiteFooter, SiteHeader } from "@/components/navigation/SiteChrome";
 import { CornerTicks } from "@/components/ui/CornerTicks";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { buttonClasses } from "@/components/ui/Button";
+import { PlateLabel } from "@/components/ui/PlateLabel";
+import { SectionRule } from "@/components/ui/SectionRule";
 import { accentCssVar } from "@/lib/accent";
-import { allLessons, modules, track } from "@/lib/curriculum";
+import {
+  accentOf,
+  allLessons,
+  firstTrack,
+  modules,
+  trackLabel,
+  trackPath,
+} from "@/lib/curriculum";
 import { absoluteUrl, siteDescription, siteName } from "@/lib/site";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
-function SiteHeader() {
+/** Landing nav — the status readout is marginalia and lives at the edge. */
+function LandingNav() {
   return (
-    <header className="site-header-shell sticky top-0 z-40">
-      <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 sm:gap-4 sm:px-6 sm:py-4">
-        <Link href="/" className="group flex items-baseline gap-1.5">
-          <span className="font-display text-xl font-bold tracking-tight transition-colors group-hover:text-accent">
-            syslab
-          </span>
-          <span className="size-1.5 rounded-full bg-accent shadow-[0_0_8px_var(--color-accent)] transition-shadow group-hover:shadow-[0_0_14px_var(--color-accent)]" />
-        </Link>
-        <span className="status-chip hidden sm:inline-flex">
-          <span className="size-1.5 animate-pulse rounded-full bg-glow-green" />
-          all systems nominal
-        </span>
-          <nav aria-label="Primary navigation" className="ml-auto flex items-center gap-0 text-sm text-fg-muted sm:gap-1">
-            <Link href="/learn" className="rounded-full px-1.5 py-1.5 transition-colors hover:bg-surface/70 hover:text-fg sm:px-3">
-              Learning path
-            </Link>
-            <Link href="/about" className="rounded-full px-1.5 py-1.5 transition-colors hover:bg-surface/70 hover:text-fg sm:px-3">
-              About
-            </Link>
-            <ThemeToggle className="ml-1" />
-          </nav>
-      </div>
-    </header>
+    <>
+      <span className="tech-label hidden items-center gap-1.5 sm:flex">
+        <span className="size-1.5 animate-pulse rounded-full bg-glow-green" />
+        all systems nominal
+      </span>
+      <Link href="/learn" className="text-sm transition-colors hover:text-fg text-fg-muted">
+        Learning path
+      </Link>
+      <Link href="/about" className="text-sm transition-colors hover:text-fg text-fg-muted">
+        About
+      </Link>
+    </>
   );
 }
 
 /** Hairline rule with a mono index — the section divider language. */
-function SectionRule({ n, label }: { n: string; label: string }) {
+function LedgerRule({ n, label }: { n: string; label: string }) {
   return (
-    <div className="mb-8 flex items-center gap-4">
+    <SectionRule className="mb-8">
       <span className="tech-num text-xs text-fg-faint">{n}</span>
       <span className="tech-label text-accent">{label}</span>
-      <div className="tech-rule flex-1" />
-    </div>
+    </SectionRule>
   );
 }
 
 export default function Home() {
   // Every count on this page is derived — the registry is the only source of
-  // truth, so shipping a lesson updates the copy for free.
+  // truth, so shipping a lesson updates the copy for free. Site-wide counts
+  // (lessons, modules) stay cross-track on purpose; the manifest section below
+  // is scoped to the track the landing page actually sells.
+  const featured = firstTrack;
   const availableCount = allLessons.filter(
     (l) => l.status === "available",
   ).length;
@@ -77,16 +79,16 @@ export default function Home() {
       },
       {
         "@type": "Course",
-        "@id": `${absoluteUrl("/learn")}#course`,
-        name: track.title,
+        "@id": `${absoluteUrl(trackPath(featured))}#course`,
+        name: featured.title,
         description:
           "A self-paced interactive course in system design, distributed systems, data infrastructure, resilience, and observability.",
-        url: absoluteUrl("/learn"),
+        url: absoluteUrl(trackPath(featured)),
         inLanguage: "en-US",
         educationalLevel: "Beginner to advanced",
         timeRequired: `PT${totalMinutes}M`,
         provider: { "@id": `${absoluteUrl("/")}#organization` },
-        hasPart: modules.map((module, index) => ({
+        hasPart: featured.modules.map((module, index) => ({
           "@type": "Course",
           position: index + 1,
           name: module.title,
@@ -108,7 +110,7 @@ export default function Home() {
         }}
       />
       <div className="dot-grid dot-grid-fade pointer-events-none absolute inset-x-0 top-0 -z-10 h-[90vh]" />
-      <SiteHeader />
+      <SiteHeader nav={<LandingNav />} />
 
       {/* Skip-link target: the header above and the footer below stay outside,
           so "skip to content" lands past the nav on the hero. */}
@@ -132,10 +134,7 @@ export default function Home() {
             </p>
             <div className="mb-10 flex flex-wrap items-center gap-3">
               <ContinueCta />
-              <Link
-                href="/about"
-                className="rounded-md border border-border px-5 py-2.5 text-sm text-fg-muted transition-colors hover:border-border-bright hover:text-fg"
-              >
+              <Link href="/about" className={buttonClasses("outline", "md")}>
                 How it works
               </Link>
             </div>
@@ -152,25 +151,24 @@ export default function Home() {
               className="glow-blob absolute inset-0 -z-10"
               style={{ ["--glow-color" as string]: "var(--color-accent)" }}
             />
-              <div className="hero-surface relative px-3 pt-8 pb-4 sm:px-5">
+            <div className="relative">
               <CornerTicks inset={0} />
-              <span
-                aria-hidden
-                className="pointer-events-none absolute top-1.5 right-4 font-mono text-[9px] tracking-[0.12em] text-fg-muted uppercase"
-              >
+              <PlateLabel className="absolute top-1.5 right-4">
                 fig · 00 — lb-cluster · self-healing
-              </span>
+              </PlateLabel>
               <HeroSim />
             </div>
-            <p className="tech-label mt-1 text-center">
-              ☠ this is live — click a server
-            </p>
+            {/* plate marginalia — specimen count left, the invitation right */}
+            <div className="mt-1.5 flex items-center justify-between">
+              <PlateLabel>specimens · {availableCount} live sims</PlateLabel>
+              <p className="tech-label">☠ this is live — click a server</p>
+            </div>
           </div>
         </section>
 
         {/* ---- the four verbs: numbered ledger ---- */}
         <section className="mx-auto max-w-6xl px-6 pb-28">
-          <SectionRule n="01" label="the method" />
+          <LedgerRule n="01" label="the method" />
           <h2 className="font-display mb-8 text-2xl font-bold tracking-tight sm:text-3xl">
             Observe. Manipulate. Predict. Break.
           </h2>
@@ -179,10 +177,10 @@ export default function Home() {
 
         {/* ---- the track: a manifest, not a card grid ---- */}
         <section className="mx-auto max-w-6xl px-6 pb-28">
-          <SectionRule n="02" label="track 01" />
+          <LedgerRule n="02" label={trackLabel(featured)} />
           <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
             <h2 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
-              {track.title}
+              {featured.title}
             </h2>
             <p className="tech-num text-xs text-fg-faint">
               {allLive
@@ -192,26 +190,26 @@ export default function Home() {
           </div>
 
           <div>
-            {modules.map((mod, i) => {
+            {featured.modules.map((mod, i) => {
               const live = mod.lessons.filter(
                 (l) => l.status === "available",
               ).length;
               return (
                 <Link
                   key={mod.slug}
-                  href={`/learn#${mod.slug}`}
+                  href={`${trackPath(featured)}#${mod.slug}`}
                   className="module-row group relative grid items-baseline gap-x-8 gap-y-2 py-6 md:grid-cols-[110px_240px_1fr_auto]"
                 >
                   <span
                     className="absolute top-0 bottom-0 left-0 w-0.5 opacity-0 transition-opacity group-hover:opacity-100"
-                    style={{ background: accentCssVar[mod.accent] }}
+                    style={{ background: accentCssVar[accentOf(mod)] }}
                   />
                   <span className="tech-num pl-4 text-xs text-fg-faint md:pl-0">
                     <span
                       className="mr-2 inline-block size-1.5 rounded-full align-middle"
                       style={{
-                        background: accentCssVar[mod.accent],
-                        boxShadow: `0 0 6px ${accentCssVar[mod.accent]}`,
+                        background: accentCssVar[accentOf(mod)],
+                        boxShadow: `0 0 6px ${accentCssVar[accentOf(mod)]}`,
                       }}
                     />
                     mod.{String(i + 1).padStart(2, "0")}
@@ -235,23 +233,21 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="border-t border-border bg-surface/15">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-6 py-8">
-          <p className="font-mono text-xs text-fg-faint">
-            syslab — learn systems by breaking them
-            <span className="mx-3 text-border-bright">·</span>
-            no production servers were harmed
-          </p>
-          <nav className="ml-auto flex gap-5 text-xs text-fg-muted">
-            <Link href="/learn" className="transition-colors hover:text-fg">
-              Learning path
-            </Link>
-            <Link href="/about" className="transition-colors hover:text-fg">
-              About
-            </Link>
-          </nav>
-        </div>
-      </footer>
+      <SiteFooter width="app" className="border-t border-border">
+        <p className="font-mono text-xs text-fg-faint">
+          syslab — learn systems by breaking them
+          <span className="mx-3 text-border-bright">·</span>
+          no production servers were harmed
+        </p>
+        <nav aria-label="Footer" className="ml-auto flex gap-5 text-xs text-fg-muted">
+          <Link href="/learn" className="transition-colors hover:text-fg">
+            Learning path
+          </Link>
+          <Link href="/about" className="transition-colors hover:text-fg">
+            About
+          </Link>
+        </nav>
+      </SiteFooter>
     </div>
   );
 }

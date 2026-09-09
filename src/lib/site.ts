@@ -23,7 +23,7 @@ export const siteTitle = "syslab — learn systems by breaking them";
 export const siteDescription =
   "Interactive system design lessons. Watch requests flow, drag the sliders, kill the servers — learn how large-scale systems actually behave.";
 
-/** Absolute URL for a root-relative route (`/learn/scaling/client-server`). */
+/** Absolute URL for a root-relative route (`/learn/<track>/scaling/client-server`). */
 export function absoluteUrl(path: string): string {
   if (path === "/") return `${siteUrl}/`;
   return `${siteUrl}${path.startsWith("/") ? path : `/${path}`}`;
@@ -85,7 +85,7 @@ export function shareCardAlt(title: string, description: string): string {
 export function shareMetadata(page: {
   title: string;
   description: string;
-  /** Root-relative route, e.g. "/learn/data/caching". */
+  /** Root-relative route, e.g. "/learn/system-design-fundamentals/data/caching". */
   path: string;
   type?: "website" | "article";
   /**

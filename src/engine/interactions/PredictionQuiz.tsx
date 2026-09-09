@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/cn";
+import { CornerTicks } from "@/components/ui/CornerTicks";
 import { ArrowRight, Check, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useId, useRef, type KeyboardEvent } from "react";
@@ -47,6 +48,8 @@ export function PredictionQuiz({
   const resumeRef = useRef<HTMLButtonElement | null>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
   const fallbackFocusRef = useRef<HTMLElement | null>(null);
+  /** Set when the learner closes to inspect — see `restoreFocus`. */
+  const dismissedRef = useRef(false);
   const quizId = quiz?.id ?? null;
 
   // A checkpoint fired: pull focus into the dialog. Keyed on the quiz id so a
@@ -120,6 +123,7 @@ export function PredictionQuiz({
     const onKeyDown = (event: globalThis.KeyboardEvent) => {
       if (event.key !== "Escape") return;
       event.preventDefault();
+      dismissedRef.current = true;
       onDismiss();
     };
     document.addEventListener("keydown", onKeyDown);
@@ -154,11 +158,25 @@ export function PredictionQuiz({
     choiceRefs.current[next]?.focus();
   };
 
+  /**
+   * Focus restoration after the dialog finishes exiting.
+   *
+   * Default is "back where the checkpoint took it from" — correct when the sim
+   * resumes, because the learner's attention returns to the control they were
+   * using. But an explicit dismiss ("Close and inspect") means the opposite: the
+   * learner wants the paused SYSTEM, and the figure is the element that owns the
+   * inspection shortcuts. Restoring the trigger there would silently override
+   * the focus the figure had just taken, stranding a keyboard user on a Play
+   * button when they asked to look at the stage.
+   */
   const restoreFocus = () => {
     const previous = returnFocusRef.current;
     const fallback = fallbackFocusRef.current;
+    const dismissed = dismissedRef.current;
     returnFocusRef.current = null;
     fallbackFocusRef.current = null;
+    dismissedRef.current = false;
+    if (dismissed) return; // the figure claimed focus; leave it there
     if (previous?.isConnected) previous.focus();
     else if (fallback?.isConnected) fallback.focus();
   };
@@ -192,14 +210,19 @@ export function PredictionQuiz({
             aria-labelledby={titleId}
             aria-describedby={descriptionId}
             tabIndex={-1}
-            className="relative max-h-full w-full max-w-md overflow-y-auto rounded-lg border border-glow-violet/40 bg-surface p-5 shadow-[0_0_40px_-12px_var(--color-glow-violet)]"
+            className="relative max-h-full w-full max-w-md overflow-y-auto rounded-sm border border-border bg-surface p-5 shadow-[0_0_40px_-16px_var(--color-bg)]"
           >
-            <p className="tech-label mb-2 text-glow-violet">
+            <CornerTicks inset={8} />
+            <p className="tech-label relative mb-2 text-accent">
+              <span
+                aria-hidden
+                className="mr-2 inline-block h-3 w-0.5 translate-y-0.5 bg-accent shadow-[0_0_6px_var(--color-accent)]"
+              />
               predict — sim paused
             </p>
             <p
               id={titleId}
-              className="mb-4 text-sm leading-relaxed font-medium"
+              className="relative mb-4 text-sm leading-relaxed font-medium"
             >
               {quiz.question}
             </p>
@@ -210,7 +233,7 @@ export function PredictionQuiz({
                 : `${verdict} ${quiz.explain} Choose Close and inspect to study the paused state, or Watch it happen to resume playback.`}
             </p>
 
-            <div className="flex flex-col gap-2" onKeyDown={onChoiceKeyDown}>
+            <div className="relative flex flex-col gap-2" onKeyDown={onChoiceKeyDown}>
               {quiz.choices.map((choice, i) => {
                 const chosen = answer === choice.id;
                 const correct = choice.id === quiz.correctChoiceId;
@@ -225,9 +248,9 @@ export function PredictionQuiz({
                     disabled={revealed}
                     onClick={() => onAnswer(choice.id)}
                     className={cn(
-                      "flex cursor-pointer items-center gap-2.5 rounded-lg border px-3.5 py-2.5 text-left text-sm transition-all",
+                      "relative flex cursor-pointer items-center gap-2.5 rounded-sm border px-3.5 py-2.5 text-left text-sm transition-all",
                       !revealed &&
-                        "border-border hover:border-glow-violet/60 hover:bg-raised",
+                        "border-border hover:border-border-bright hover:bg-raised",
                       revealed && correct &&
                         "border-glow-green/60 bg-glow-green-dim text-glow-green",
                       revealed && chosen && !correct &&
@@ -258,16 +281,19 @@ export function PredictionQuiz({
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
-                  className="overflow-hidden"
+                  className="relative overflow-hidden"
                 >
-                  <p className="mt-4 border-l-2 border-glow-violet/50 pl-3 text-[13px] leading-relaxed text-fg-muted">
+                  <p className="mt-4 border-l-2 border-accent/50 pl-3 text-[13px] leading-relaxed text-fg-muted">
                     {quiz.explain}
                   </p>
                   <div className="mt-4 grid gap-2 sm:grid-cols-2">
                     <button
                       type="button"
-                      onClick={onDismiss}
-                      className="cursor-pointer rounded-lg border border-border bg-raised px-4 py-2.5 text-sm font-semibold text-fg transition-colors hover:border-border-bright hover:bg-surface"
+                      onClick={() => {
+                        dismissedRef.current = true;
+                        onDismiss();
+                      }}
+                      className="cursor-pointer rounded-md border border-border bg-raised px-4 py-2.5 text-sm font-semibold text-fg transition-colors hover:border-border-bright hover:bg-surface"
                     >
                       Close and inspect
                     </button>
@@ -275,7 +301,7 @@ export function PredictionQuiz({
                       ref={resumeRef}
                       type="button"
                       onClick={onResume}
-                      className="flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-glow-violet px-4 py-2.5 text-sm font-semibold text-bg transition-all hover:brightness-110"
+                      className="flex cursor-pointer items-center justify-center gap-2 rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-bg transition-all hover:brightness-110"
                     >
                       Watch it happen
                       <ArrowRight className="size-4" />

@@ -4,6 +4,7 @@ import { GlowCard } from "@/components/ui/GlowCard";
 import { getLearningGuide } from "@/curriculum/learning";
 import { useJournal } from "@/stores/journal";
 import { accentCssVar } from "@/lib/accent";
+import { accentOf } from "@/lib/curriculum";
 import { cn } from "@/lib/cn";
 import { ArrowRight, Check, RotateCcw, X } from "lucide-react";
 import Link from "next/link";
@@ -86,7 +87,7 @@ export function ReviewCard({ item }: { item: ReviewItem }) {
 
   return (
     <GlowCard
-      accent={item.module.accent}
+      accent={accentOf(item.module)}
       className={cn(
         "p-5",
         // An untouched checkpoint is absence of data, not a bad score — the
@@ -99,7 +100,7 @@ export function ReviewCard({ item }: { item: ReviewItem }) {
           {/* Kicker: the module in its own accent, then the lesson — the same
               "where am I" line the lesson map uses, in one row. */}
           <p className="tech-label mb-1 truncate">
-            <span style={{ color: accentCssVar[item.module.accent] }}>
+            <span style={{ color: accentCssVar[accentOf(item.module)] }}>
               {item.module.title}
             </span>
             {" · "}

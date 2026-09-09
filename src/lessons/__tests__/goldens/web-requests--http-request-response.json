@@ -1,0 +1,41 @@
+{
+  "lesson": "web-requests/http-request-response",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:http-hol@9",
+      "t": 9.033333,
+      "metrics": {
+        "completed": 11,
+        "inFlight": 1,
+        "lastPageMs": 4766.666667,
+        "pageMs": 2383.333333,
+        "queued": 4
+      },
+      "packets": 1,
+      "nextPacketId": 24,
+      "nodes": {
+        "client": "healthy",
+        "server": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "completed": 40,
+        "inFlight": 0,
+        "lastPageMs": 4766.666667,
+        "pageMs": 4617.708333,
+        "queued": 0
+      },
+      "packets": 0,
+      "nextPacketId": 81,
+      "nodes": {
+        "client": "healthy",
+        "server": "healthy"
+      }
+    }
+  ]
+}

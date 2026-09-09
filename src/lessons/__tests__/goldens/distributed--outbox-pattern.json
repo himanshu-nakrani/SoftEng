@@ -1,0 +1,45 @@
+{
+  "lesson": "distributed/outbox-pattern",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:outbox-lost-event@12.5",
+      "t": 12.533333,
+      "metrics": {
+        "committed": 36,
+        "duplicates": 0,
+        "gap": 1,
+        "lost": 1,
+        "published": 35
+      },
+      "packets": 0,
+      "nextPacketId": 73,
+      "nodes": {
+        "broker": "healthy",
+        "db": "healthy",
+        "relay": "healthy",
+        "service": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "committed": 104,
+        "duplicates": 0,
+        "gap": 1,
+        "lost": 1,
+        "published": 101
+      },
+      "packets": 3,
+      "nextPacketId": 210,
+      "nodes": {
+        "broker": "healthy",
+        "db": "healthy",
+        "relay": "healthy",
+        "service": "healthy"
+      }
+    }
+  ]
+}

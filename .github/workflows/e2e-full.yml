@@ -1,0 +1,80 @@
+name: E2E (full sweep)
+
+# The counterpart to the sampled run in ci.yml. Pull requests scan one lesson per
+# module to keep the gate fast; this scans every lesson, every legacy redirect and
+# every hub route, so a regression in an unsampled lesson surfaces within a day.
+on:
+  schedule:
+    # 03:15 UTC daily — after the usual push traffic, before working hours.
+    - cron: "15 3 * * *"
+  # Runnable on demand, e.g. before a release or after touching a shared component.
+  workflow_dispatch:
+    inputs:
+      regen_visual:
+        description: >
+          Regenerate the visual baselines in THIS runner's image and upload them as
+          an artifact. The committed baselines are Linux-rasterizer-specific, which
+          is why they cannot be regenerated on a contributor's Mac — this job is the
+          supported way to do it. Download the artifact, eyeball every png, commit.
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-full
+  cancel-in-progress: true
+
+jobs:
+  full:
+    name: Every route
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # The suite runs against the static export, so it has to exist first.
+      - name: Build
+        run: npm run build
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E (full)
+        if: inputs.regen_visual != true
+        env:
+          E2E_FULL: "1"
+        run: npm run test:e2e
+
+      # The visual suite is normally skipped on CI because baselines depend on the
+      # host rasterizer and font stack. This is the one place they CAN be produced
+      # correctly: the same ubuntu image that would later verify them.
+      - name: Regenerate visual baselines
+        if: inputs.regen_visual == true
+        env:
+          PW_VISUAL: "1"
+        run: npx playwright test visual --update-snapshots
+
+      - name: Upload regenerated baselines
+        if: inputs.regen_visual == true
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-baselines-linux
+          path: e2e/visual.spec.ts-snapshots
+          retention-days: 14
+
+      - name: Upload Playwright artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts-full
+          path: e2e/.artifacts
+          if-no-files-found: ignore
+          retention-days: 7

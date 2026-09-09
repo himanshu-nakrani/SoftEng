@@ -86,7 +86,7 @@ export function SystemNode({
         <rect
           width={W}
           height={H}
-          rx={10}
+          rx={2}
           fill="none"
           stroke="var(--color-border-bright)"
           strokeWidth={1}
@@ -147,7 +147,7 @@ export function SystemNode({
           y={-HIT_PAD}
           width={W + HIT_PAD * 2}
           height={H + HIT_PAD * 2}
-          rx={10 + HIT_PAD}
+          rx={2 + HIT_PAD}
           fill="none"
           pointerEvents="all"
         />
@@ -170,7 +170,7 @@ export function SystemNode({
       <motion.rect
         width={W}
         height={H}
-        rx={10}
+        rx={2}
         fill="var(--color-surface)"
         stroke={focused ? "var(--color-accent)" : stroke}
         strokeWidth={focused ? 1.75 : dead ? 1.5 : 1}
@@ -220,13 +220,22 @@ export function SystemNode({
       */}
       {overlay}
 
-      {/* load bar */}
+      {/* load bar — square-ended gauge with a limit notch at 85%, where
+          loadColor tips into red; the mark makes the threshold legible
+          before it is crossed */}
+      <line
+        x1={12 + (W - 24) * 0.85}
+        y1={46.5}
+        x2={12 + (W - 24) * 0.85}
+        y2={52.5}
+        stroke="var(--color-border-bright)"
+        strokeWidth={1}
+      />
       <rect
         x={12}
         y={48}
         width={W - 24}
         height={3}
-        rx={1.5}
         fill="var(--color-border)"
       />
       <rect
@@ -234,7 +243,6 @@ export function SystemNode({
         y={48}
         width={Math.max((W - 24) * Math.min(runtime.load, 1), 0)}
         height={3}
-        rx={1.5}
         fill={loadColor(runtime.load)}
         style={{ transition: "width 150ms linear, fill 300ms" }}
       />
@@ -277,7 +285,7 @@ export function SystemNode({
           y={-4}
           width={W + 8}
           height={H + 8}
-          rx={12}
+          rx={6}
           fill="none"
           stroke="var(--color-accent)"
           strokeWidth={1.5}
@@ -306,7 +314,7 @@ export function SystemNode({
             y={-9}
             width={26}
             height={14}
-            rx={7}
+            rx={2}
             fill="var(--color-raised)"
             stroke="var(--color-border-bright)"
             strokeWidth={0.75}

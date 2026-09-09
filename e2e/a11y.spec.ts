@@ -1,7 +1,8 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import type { AxeResults, Result } from "axe-core";
-import { allLessons, lessonPath } from "@/lib/curriculum";
+import { trackPath, tracks } from "@/lib/curriculum";
+import { announceSelection, selectedLessonRoutes } from "./_selection";
 
 /**
  * Automated accessibility scanning (axe-core) over the shipped static export.
@@ -71,22 +72,31 @@ const WCAG_TAGS = ["wcag2a", "wcag2aa"] as const;
 const KNOWN_FINDINGS: string[] = [];
 
 /** Static hub routes. */
-const HUB_ROUTES = ["/", "/learn"];
+const HUB_ROUTES = ["/", "/learn", ...tracks.map(trackPath)];
 
-/** Registry-resolved lesson routes — every authored interactive surface. */
-const LESSON_ROUTES: { slug: string; route: string }[] = allLessons.map(
-  (lesson) => ({ slug: lesson.slug, route: lessonPath(lesson) }),
-);
+/**
+ * Lesson routes to scan. Sampled to one per module on a pull request and complete
+ * on the scheduled run — see `_selection.ts` for why per-lesson scanning is the
+ * wrong thing to pay for.
+ */
+const LESSON_ROUTES: { slug: string; route: string }[] = selectedLessonRoutes();
 
 /** Built by a sibling; scanned the moment it exists (see the test). */
 const REVIEW_ROUTE = "/review";
+
+announceSelection("a11y");
 
 /**
  * How long a figure gets to autoplay itself before we conclude it is not
  * going to. Generous relative to the ~300ms hydration takes, short enough
  * that a page full of `autoplay={false}` figures does not stall the run.
+ *
+ * Raised from 5s after two load-induced failures on a busy machine: hydration is
+ * fast, but "fast" is not a promise you can make about a shared CI runner mid-run.
+ * The cost of a generous budget is only how long a genuinely dead figure takes to
+ * be reported; the cost of a tight one is a red pipeline nobody trusts.
  */
-const AUTOPLAY_TIMEOUT_MS = 5_000;
+const AUTOPLAY_TIMEOUT_MS = 15_000;
 
 /* ------------------------------------------------------------------ *
  * Helpers
@@ -212,6 +222,15 @@ async function expectNoViolations(
 /* ------------------------------------------------------------------ *
  * Suites
  * ------------------------------------------------------------------ */
+
+/**
+ * An axe scan is expensive, and the heaviest surface here is a track landing:
+ * it renders every lesson in the track with a live progress ring each, so the
+ * accessibility tree is large. On a loaded machine that scan has crossed
+ * Playwright's 30s default — a false failure, not a violation. CI runners are
+ * slower and shared, so the whole axe suite gets headroom.
+ */
+test.describe.configure({ timeout: 120_000 });
 
 test.describe("hub routes have no WCAG A/AA violations", () => {
   for (const route of HUB_ROUTES) {

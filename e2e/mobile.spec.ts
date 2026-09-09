@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { getLesson, lessonPath } from "@/lib/curriculum";
+import { firstTrack, getLesson, lessonPath } from "@/lib/curriculum";
 
 /**
  * Mobile-viewport coverage for the static export. The smoke suite drives a
@@ -183,26 +183,20 @@ test.describe("mobile nav drawer", () => {
     const targetLink = drawer.getByRole("link", { name: TARGET.title });
     await expect(targetLink).toBeVisible();
     await expect(targetLink).toHaveAttribute("href", TARGET.route);
-    await expect(drawer.getByRole("link", { name: "Learning path" })).toBeVisible();
+    // Two levels of escape from a lesson, both registry-derived: this track's
+    // map (named by the track, not a generic "Learning path"), and the
+    // curriculum index above it.
+    await expect(
+      drawer.getByRole("link", { name: firstTrack.title }),
+    ).toBeVisible();
+    await expect(drawer.getByRole("link", { name: "All tracks" })).toBeVisible();
 
-    // The appearance control lives in the drawer footer. Its own Escape key
-    // closes the preference panel, not the navigation context that contains it.
-    await drawer
-      .getByRole("button", { name: "Customize color and reading size" })
-      .click();
-    const preferences = drawer.getByRole("region", { name: "Appearance preferences" });
-    await expect(preferences).toBeVisible();
-    await preferences.getByRole("radio", { name: "Teal accent" }).click();
-    await expect
-      .poll(() =>
-        page.evaluate(() =>
-          document.documentElement.style.getPropertyValue("--user-accent"),
-        ),
-      )
-      .toBe("#167C7A");
-    await page.keyboard.press("Escape");
-    await expect(preferences).toHaveCount(0);
-    await expect(drawer).toBeVisible();
+    // The drawer footer carries the storage disclosure. (The appearance
+    // panel that used to live here went out with the light-theme system;
+    // syslab is dark-only phosphor again, so there is nothing to customize.)
+    await expect(
+      drawer.getByText("saved locally · no account needed"),
+    ).toBeVisible();
 
     // A modal drawer that pushes the page sideways would be worse than none,
     // and the lesson behind it must not scroll under the learner's thumb.

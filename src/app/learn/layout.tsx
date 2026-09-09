@@ -2,8 +2,8 @@ import {
   MobileCurrentLesson,
   MobileNav,
 } from "@/components/navigation/MobileNav";
+import { Wordmark } from "@/components/navigation/SiteChrome";
 import { Sidebar } from "@/components/navigation/Sidebar";
-import Link from "next/link";
 
 export default function LearnLayout({
   children,
@@ -18,15 +18,10 @@ export default function LearnLayout({
             same module tree in a drawer; the right side names where you are. */}
         <header className="sticky top-0 z-40 flex items-center gap-3 border-b border-border bg-bg/78 px-4 py-3 shadow-[0_10px_30px_-24px_var(--color-accent)] backdrop-blur-xl md:hidden">
           <MobileNav />
-          <Link
-            href="/"
-            className="shrink-0 font-display text-base font-bold"
-          >
-            syslab
-          </Link>
+          <Wordmark className="shrink-0" />
           <MobileCurrentLesson />
         </header>
-        <main id="main" className="lesson-shell mx-auto w-full max-w-4xl px-4 py-10 md:px-8 lg:py-14">
+        <main id="main" className="lesson-shell mx-auto w-full max-w-3xl px-4 py-10 md:px-8">
           {children}
         </main>
       </div>

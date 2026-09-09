@@ -6,8 +6,14 @@ import type { LearningActivity } from "@/hooks/use-lesson-progress";
 import { useLessonProgress } from "@/hooks/use-lesson-progress";
 import { cn } from "@/lib/cn";
 import { accentCssVar } from "@/lib/accent";
-import { lessonPath, modules } from "@/lib/curriculum";
-import { ListChecks, Map as MapIcon } from "lucide-react";
+import {
+  accentOf,
+  firstTrack,
+  lessonPath,
+  trackFromPathname,
+  trackPath,
+} from "@/lib/curriculum";
+import { Library, ListChecks, Map as MapIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -53,7 +59,7 @@ function SidebarLesson({
         size={16}
         fraction={progress.fraction}
         state={progress.state}
-        accent={module.accent}
+        accent={accentOf(module)}
       />
       <span className="truncate">{lesson.title}</span>
       {!soon && progress.activity !== "untouched" && (
@@ -94,10 +100,15 @@ function SidebarLesson({
 }
 
 /**
- * The learn-area navigation body: "Learning path" link + every module →
- * lesson row with its progress ring. Registry-driven (nothing hardcoded) and
- * shared verbatim by the desktop `Sidebar` and the mobile drawer, so the two
- * can never drift.
+ * The learn-area navigation body: a link back to the curriculum index, then
+ * every module → lesson row of the ACTIVE track with its progress ring.
+ * Registry-driven (nothing hardcoded) and shared verbatim by the desktop
+ * `Sidebar` and the mobile drawer, so the two can never drift.
+ *
+ * Scoped to one track deliberately: a flat tree over every track would be
+ * hundreds of rows deep and would imply the curriculum is one long course.
+ * On the index itself (no track in the URL) it falls back to the first track
+ * so the tree is never empty.
  *
  * Renders a fragment: the parent owns the column layout (both callers are
  * `flex flex-col gap-1`).
@@ -107,32 +118,50 @@ function SidebarLesson({
  */
 export function SidebarTree({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
-  const onMap = pathname === "/learn";
+  const track = trackFromPathname(pathname) ?? firstTrack;
+  const mapHref = trackPath(track);
+  const onMap = pathname === mapHref;
 
   return (
     <>
+      {/* Two levels up, in order: this track's map, then every track. The
+          index row is quiet because it is an escape hatch, not the primary
+          move — with one track it is nearly redundant, with eleven it is how
+          you leave. */}
       <Link
-        href="/learn"
+        href={mapHref}
         aria-current={onMap ? "page" : undefined}
         onClick={onNavigate}
         className={cn(
           ROW,
-          "mb-3",
           onMap
             ? "sidebar-active-row bg-raised/90 text-fg"
             : "text-fg-muted hover:translate-x-px hover:bg-surface/80 hover:text-fg",
         )}
       >
         <MapIcon className="size-4" strokeWidth={1.75} />
-        Learning path
+        {track.title}
       </Link>
 
-      {modules.map((module) => (
+      <Link
+        href="/learn"
+        aria-current={pathname === "/learn" ? "page" : undefined}
+        onClick={onNavigate}
+        className={cn(
+          ROW,
+          "mb-3 text-fg-faint hover:translate-x-px hover:bg-surface/80 hover:text-fg-muted",
+        )}
+      >
+        <Library className="size-4" strokeWidth={1.75} />
+        All tracks
+      </Link>
+
+      {track.modules.map((module) => (
         <nav
           key={module.slug}
           className="sidebar-module mb-4"
           aria-label={module.title}
-          style={{ ["--module-accent" as string]: accentCssVar[module.accent] }}
+          style={{ ["--module-accent" as string]: accentCssVar[accentOf(module)] }}
         >
           <p className="tech-label mb-1.5 pl-4">{module.title}</p>
           <ul className="flex flex-col gap-0.5">

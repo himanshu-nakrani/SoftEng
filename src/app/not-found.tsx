@@ -1,3 +1,7 @@
+import { buttonClasses } from "@/components/ui/Button";
+import {
+  SiteHeader,
+} from "@/components/navigation/SiteChrome";
 import { ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -15,18 +19,15 @@ export default function NotFound() {
     <div className="relative min-h-screen">
       <div className="dot-grid dot-grid-fade pointer-events-none absolute inset-0 -z-10" />
 
-      <header className="mx-auto flex max-w-3xl items-center gap-6 px-6 py-5">
-        <Link href="/" className="flex items-baseline gap-1">
-          <span className="font-display text-xl font-bold tracking-tight">
-            syslab
+      <SiteHeader
+        width="read"
+        nav={
+          <span className="tech-label flex items-center gap-1.5">
+            <span className="size-1.5 rounded-full bg-glow-red" />
+            request failed
           </span>
-          <span className="size-1.5 rounded-full bg-accent shadow-[0_0_6px_var(--color-accent)]" />
-        </Link>
-        <span className="tech-label ml-auto flex items-center gap-1.5">
-          <span className="size-1.5 rounded-full bg-glow-red" />
-          request failed
-        </span>
-      </header>
+        }
+      />
 
       <main
         id="main"
@@ -57,17 +58,11 @@ export default function NotFound() {
         </p>
 
         <div className="flex flex-wrap items-center gap-3">
-          <Link
-            href="/learn"
-            className="flex items-center gap-2 rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-accent-ink transition-all hover:shadow-[0_0_28px_-6px_var(--color-accent)] hover:brightness-110"
-          >
+          <Link href="/learn" className={buttonClasses("primary", "md")}>
             Back to the track
             <ArrowRight className="size-4" />
           </Link>
-          <Link
-            href="/"
-            className="rounded-md border border-border px-5 py-2.5 text-sm text-fg-muted transition-colors hover:border-border-bright hover:text-fg"
-          >
+          <Link href="/" className={buttonClasses("outline", "md")}>
             Home
           </Link>
         </div>

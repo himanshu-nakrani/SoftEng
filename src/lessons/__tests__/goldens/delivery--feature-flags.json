@@ -1,0 +1,43 @@
+{
+  "lesson": "delivery/feature-flags",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:feature-flags-decouples-release@7.05",
+      "t": 7.066667,
+      "metrics": {
+        "errorRate": 0,
+        "errors": 0,
+        "onNew": 0,
+        "served": 57
+      },
+      "packets": 15,
+      "nextPacketId": 255,
+      "nodes": {
+        "client": "healthy",
+        "lb": "healthy",
+        "new": "healthy",
+        "old": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "errorRate": 0.000145,
+        "errors": 41,
+        "onNew": 0,
+        "served": 262
+      },
+      "packets": 30,
+      "nextPacketId": 1098,
+      "nodes": {
+        "client": "healthy",
+        "lb": "healthy",
+        "new": "healthy",
+        "old": "healthy"
+      }
+    }
+  ]
+}

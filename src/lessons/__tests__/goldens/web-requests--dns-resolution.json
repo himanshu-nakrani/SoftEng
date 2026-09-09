@@ -1,0 +1,45 @@
+{
+  "lesson": "web-requests/dns-resolution",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:dns-auth-down@18.5",
+      "t": 18.5,
+      "metrics": {
+        "authRps": 0,
+        "errors": 0,
+        "hitRatio": 44.112531,
+        "lookupMs": 84.65587
+      },
+      "packets": 3,
+      "nextPacketId": 147,
+      "nodes": {
+        "auth": "dead",
+        "browser": "healthy",
+        "resolver": "healthy",
+        "root": "healthy",
+        "tld": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "authRps": 0.001155,
+        "errors": 17,
+        "hitRatio": 27.192411,
+        "lookupMs": 235.616976
+      },
+      "packets": 1,
+      "nextPacketId": 259,
+      "nodes": {
+        "auth": "healthy",
+        "browser": "healthy",
+        "resolver": "healthy",
+        "root": "healthy",
+        "tld": "healthy"
+      }
+    }
+  ]
+}

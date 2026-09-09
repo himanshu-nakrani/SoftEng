@@ -1,0 +1,45 @@
+{
+  "lesson": "distributed/distributed-locks",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "quiz:dl-stale-write@14.5",
+      "t": 14.533333,
+      "metrics": {
+        "believers": 2,
+        "corruptWrites": 0,
+        "goodWrites": 5,
+        "rejectedWrites": 0,
+        "storeToken": 1
+      },
+      "packets": 1,
+      "nextPacketId": 34,
+      "nodes": {
+        "lock": "healthy",
+        "store": "healthy",
+        "worker-a": "healthy",
+        "worker-b": "healthy"
+      }
+    },
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "believers": 2,
+        "corruptWrites": 15,
+        "goodWrites": 17,
+        "rejectedWrites": 0,
+        "storeToken": 2
+      },
+      "packets": 2,
+      "nextPacketId": 111,
+      "nodes": {
+        "lock": "healthy",
+        "store": "healthy",
+        "worker-a": "healthy",
+        "worker-b": "healthy"
+      }
+    }
+  ]
+}

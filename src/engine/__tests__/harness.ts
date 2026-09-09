@@ -46,6 +46,18 @@ import { clientServerSim } from "@/lessons/scaling/client-server";
 import { loadBalancingSim } from "@/lessons/scaling/load-balancing";
 import { realtimeDeliverySim } from "@/lessons/scaling/realtime-delivery";
 import { scalingStrategiesSim } from "@/lessons/scaling/scaling-strategies";
+import { connectionReuseSim } from "@/lessons/web-requests/connection-reuse";
+import { httpRequestResponseSim } from "@/lessons/web-requests/http-request-response";
+import { tcpHandshakeSim } from "@/lessons/web-requests/tcp-handshake";
+import { dnsResolutionSim } from "@/lessons/web-requests/dns-resolution";
+import { featureFlagsSim } from "@/lessons/delivery/feature-flags";
+import { blueGreenSim } from "@/lessons/delivery/blue-green";
+import { distributedLocksSim } from "@/lessons/distributed/distributed-locks";
+import { outboxPatternSim } from "@/lessons/distributed/outbox-pattern";
+import { canaryReleasesSim } from "@/lessons/delivery/canary-releases";
+import { bulkheadsSim } from "@/lessons/resilience/bulkheads";
+import { quorumsSim } from "@/lessons/distributed/quorums";
+import { loadSheddingSim } from "@/lessons/resilience/load-shedding";
 
 /* ------------------------------------------------------------------ *
  * Registry → sim resolution
@@ -100,6 +112,18 @@ const SIM_BY_KEY: Record<string, LessonSim<unknown>> = {
   "distributed/gossip": widen(gossipSim),
   "distributed/geo-replication": widen(geoReplicationSim),
   "distributed/two-phase-commit": widen(twoPhaseCommitSim),
+  "resilience/load-shedding": widen(loadSheddingSim),
+  "distributed/quorums": widen(quorumsSim),
+  "resilience/bulkheads": widen(bulkheadsSim),
+  "delivery/canary-releases": widen(canaryReleasesSim),
+  "distributed/outbox-pattern": widen(outboxPatternSim),
+  "distributed/distributed-locks": widen(distributedLocksSim),
+  "delivery/blue-green": widen(blueGreenSim),
+  "delivery/feature-flags": widen(featureFlagsSim),
+  "web-requests/dns-resolution": widen(dnsResolutionSim),
+  "web-requests/tcp-handshake": widen(tcpHandshakeSim),
+  "web-requests/http-request-response": widen(httpRequestResponseSim),
+  "web-requests/connection-reuse": widen(connectionReuseSim),
 };
 
 export interface LessonUnderTest {
@@ -113,9 +137,19 @@ export interface LessonUnderTest {
 
 export const lessonKey = (l: LessonMeta) => `${l.moduleSlug}/${l.slug}`;
 
-/** Every `status: "available"` lesson in the registry, in curriculum order. */
+/**
+ * Every `status: "available"` lesson driven by the PACKET engine, in curriculum
+ * order.
+ *
+ * `engine: "steps"` lessons (archetype B — a precomputed step list, not a
+ * `LessonSim`) are excluded: they have no `topology`, no `step(state, dt)` and
+ * no tick loop, so none of the invariants below apply to them. Their engine is
+ * covered by `src/engine/algo/__tests__/`. Excluding by registry FIELD rather
+ * than by "whatever is missing from SIM_BY_KEY" keeps the matrix guard sharp —
+ * a flow lesson someone forgot to map still fails loudly.
+ */
 export const availableLessons: LessonMeta[] = allLessons.filter(
-  (l) => l.status === "available",
+  (l) => l.status === "available" && l.engine !== "steps",
 );
 
 /** Available lessons that have no entry in `SIM_BY_KEY` (asserted empty). */

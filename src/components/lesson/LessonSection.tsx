@@ -1,6 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { Check, Link as LinkIcon } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { SectionRule } from "@/components/ui/SectionRule";
 import { useProgress } from "@/stores/progress";
 import { LessonContext, SectionCompletionContext } from "./context";
 import { useContext } from "react";
@@ -97,17 +99,47 @@ export function LessonSection({ id, children }: LessonSectionProps) {
   return (
     <SectionCompletionContext.Provider value={markComplete}>
       <section ref={ref} id={id} className="mb-14 scroll-mt-24">
-        <div className="mb-4 flex items-baseline gap-3">
+        <SectionRule className="group mb-4">
           <span className="tech-num text-xs text-fg-faint">
             {String(index).padStart(2, "0")}
           </span>
           <h2 className="font-display text-xl font-bold tracking-tight">
             {section.title}
           </h2>
-          <div className="tech-rule min-w-8 flex-1" />
-        </div>
+          <PermalinkButton id={id} />
+        </SectionRule>
         {children}
       </section>
     </SectionCompletionContext.Provider>
+  );
+}
+
+/** Hover-reveal anchor copier — sections are deep-linkable via #id. */
+function PermalinkButton({ id }: { id: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    const url = `${location.origin}${location.pathname}#${id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // Clipboard unavailable (permissions/http) — fall back to navigation.
+      location.hash = id;
+    }
+  };
+  return (
+    <button
+      onClick={copy}
+      aria-label="Copy link to this section"
+      title="Copy section link"
+      className="cursor-pointer self-center opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+    >
+      {copied ? (
+        <Check className="size-3.5 text-glow-green" />
+      ) : (
+        <LinkIcon className="size-3.5 text-fg-faint hover:text-fg-muted" />
+      )}
+    </button>
   );
 }

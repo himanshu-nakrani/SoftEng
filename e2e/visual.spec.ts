@@ -58,6 +58,15 @@ import type { LessonMeta } from "@/curriculum/types";
  *     below (see `hideCaption`); fanout's superscripts are drawn inside the
  *     stage itself and cannot be.
  *
+ * PLATFORM POLICY (decided 2026-08-30). Linux is the ONLY canonical platform;
+ * the 23 partial `-chromium-darwin` baselines were deleted rather than completed,
+ * because two half-maintained sets are worse than one. Baselines are regenerated
+ * by running the `E2E (full sweep)` workflow with `regen_visual: true`, which
+ * produces them in the same ubuntu image that verifies them and uploads them as an
+ * artifact to review and commit. Until that has been run once, the committed
+ * baselines are stale (they predate the phosphor pass) and the suite stays gated
+ * off — it currently enforces nothing, which is a known, recorded gap (debt.md).
+ *
  * CI: gated OFF by default (see CI_GATE). CI runs `npx playwright install
  * chromium`, which pins the same Chromium revision this repo's Playwright
  * wants — but on a GitHub `ubuntu-latest` image, whose font stack is not this
@@ -77,7 +86,17 @@ import type { LessonMeta } from "@/curriculum/types";
  * Opt-in on CI. Locally this is always on; see the CI note above for what it
  * takes to flip it. `PW_VISUAL=1 npm run test:e2e` opts in anywhere.
  */
-const CI_GATE = Boolean(process.env.CI) && !process.env.PW_VISUAL;
+/**
+ * Opt-in EVERYWHERE, not just on CI.
+ *
+ * It used to run by default locally, which followed from baselines being
+ * committed per platform. Now that Linux is the only canonical platform (see the
+ * policy note above), a pixel comparison on any other host can only produce
+ * noise — and running 30 screenshot tests alongside the rest of the suite starved
+ * the others enough to make load-sensitive assertions fail. Both problems go away
+ * by making the opt-in explicit: `PW_VISUAL=1 npx playwright test visual`.
+ */
+const CI_GATE = !process.env.PW_VISUAL;
 
 /** Sim-second every lesson is seeked to unless T_OVERRIDES says otherwise. */
 const DEFAULT_T = 12;

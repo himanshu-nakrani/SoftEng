@@ -3,6 +3,7 @@
 import { Component, Fragment, type ErrorInfo, type ReactNode } from "react";
 import { RotateCcw, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { PlateLabel } from "@/components/ui/PlateLabel";
 
 interface FigureErrorBoundaryProps {
   children: ReactNode;
@@ -98,12 +99,9 @@ export class FigureErrorBoundary extends Component<
               Restart
             </Button>
 
-            <span
-              aria-hidden
-              className="pointer-events-none absolute top-2.5 right-5 font-mono text-[9px] tracking-[0.12em] text-fg-muted uppercase"
-            >
+            <PlateLabel className="absolute top-2.5 right-5">
               fig · {this.props.label ?? "sim"} · halted
-            </span>
+            </PlateLabel>
           </div>
         </figure>
       );
