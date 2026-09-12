@@ -277,50 +277,54 @@ html[data-theme="light"] {
   input[type="range"].accent-accent::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 16px;
-    height: 16px;
-    /* centre a 16px handle on a 4px track: (4 - 16) / 2 */
-    margin-top: -6px;
+    width: 15px;
+    height: 15px;
+    /* centre a 15px handle on a 4px track: (4 - 15) / 2 */
+    margin-top: -5.5px;
     border: none;
     border-radius: 50%;
     background: var(--color-accent);
-    box-shadow: 0 0 0 1px var(--color-bg);
+    box-shadow: 0 0 0 2px var(--color-bg), 0 1px 3px rgba(0, 0, 0, 0.25);
     transition:
-      transform 120ms var(--ease-out-soft),
-      box-shadow 120ms linear;
+      transform 140ms var(--ease-out-soft),
+      box-shadow 140ms var(--ease-out-soft);
   }
 
   .sim-slider::-moz-range-thumb,
   input[type="range"].accent-accent::-moz-range-thumb {
     appearance: none;
     box-sizing: border-box;
-    width: 16px;
-    height: 16px;
+    width: 15px;
+    height: 15px;
     border: none;
     border-radius: 50%;
     background: var(--color-accent);
-    box-shadow: 0 0 0 1px var(--color-bg);
+    box-shadow: 0 0 0 2px var(--color-bg), 0 1px 3px rgba(0, 0, 0, 0.25);
     transition:
-      transform 120ms var(--ease-out-soft),
-      box-shadow 120ms linear;
+      transform 140ms var(--ease-out-soft),
+      box-shadow 140ms var(--ease-out-soft);
   }
 
   .sim-slider:hover::-webkit-slider-thumb,
   input[type="range"].accent-accent:hover::-webkit-slider-thumb {
-    transform: scale(1.15);
+    transform: scale(1.22);
+    box-shadow: 0 0 0 2px var(--color-bg), 0 0 10px var(--color-accent);
   }
   .sim-slider:hover::-moz-range-thumb,
   input[type="range"].accent-accent:hover::-moz-range-thumb {
-    transform: scale(1.15);
+    transform: scale(1.22);
+    box-shadow: 0 0 0 2px var(--color-bg), 0 0 10px var(--color-accent);
   }
 
   .sim-slider:active::-webkit-slider-thumb,
   input[type="range"].accent-accent:active::-webkit-slider-thumb {
-    transform: scale(0.92);
+    transform: scale(0.95);
+    box-shadow: 0 0 0 2px var(--color-bg), 0 0 12px var(--color-accent);
   }
   .sim-slider:active::-moz-range-thumb,
   input[type="range"].accent-accent:active::-moz-range-thumb {
-    transform: scale(0.92);
+    transform: scale(0.95);
+    box-shadow: 0 0 0 2px var(--color-bg), 0 0 12px var(--color-accent);
   }
 
   /* Keyboard focus rings the handle (see the unlayered outline reset below). */
@@ -459,18 +463,15 @@ input[type="range"].accent-accent:focus-visible {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
+    gap: 0.75rem;
     border-top: 1px solid var(--color-border);
-    padding: 0.9rem 1rem;
-    background: linear-gradient(
-      90deg,
-      var(--color-accent-dim),
-      transparent 72%
-    );
+    padding: 0.45rem 1rem;
+    background: linear-gradient(90deg, var(--color-accent-dim)/18, var(--color-surface)/25);
   }
 
   .causal-experiment-copy {
     min-width: 0;
+    flex: 1;
   }
 
   .causal-kicker {
@@ -487,70 +488,76 @@ input[type="range"].accent-accent:focus-visible {
 
   .causal-experiment h3,
   .causal-inspector h3 {
-    margin-top: 0.28rem;
     color: var(--color-fg);
     font-family: var(--font-display);
-    font-size: 1rem;
-    font-weight: 700;
-    line-height: 1.15;
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.25;
   }
 
   .causal-experiment p {
     max-width: 44rem;
-    margin-top: 0.35rem;
+    margin-top: 0.1rem;
     color: var(--color-fg-muted);
-    font-size: 0.8rem;
-    line-height: 1.45;
+    font-size: 0.72rem;
+    line-height: 1.35;
   }
 
   .causal-experiment-claim {
     color: var(--color-fg) !important;
+    font-weight: 500;
   }
 
   .causal-action {
     display: inline-flex;
     flex: 0 0 auto;
     align-items: center;
-    gap: 0.42rem;
-    min-height: 2.45rem;
-    border: 0;
+    gap: 0.35rem;
+    min-height: 1.85rem;
+    border: 1px solid var(--color-border-bright);
     border-radius: 6px;
-    padding: 0.55rem 0.75rem;
-    background: var(--color-accent);
-    color: var(--color-bg);
+    padding: 0.25rem 0.65rem;
+    background: linear-gradient(180deg, var(--color-raised), var(--color-surface));
+    color: var(--color-fg);
     font-family: var(--font-mono);
-    font-size: 0.6875rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
     cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.04);
     transition:
-      transform 140ms var(--ease-out-soft),
-      filter 140ms var(--ease-out-soft);
+      border-color 140ms var(--ease-out-soft),
+      background 140ms var(--ease-out-soft),
+      color 140ms var(--ease-out-soft),
+      box-shadow 140ms var(--ease-out-soft),
+      transform 140ms var(--ease-out-soft);
   }
 
   .causal-action:hover {
-    filter: brightness(1.08);
+    border-color: var(--color-accent);
+    background: linear-gradient(180deg, var(--color-accent-dim), var(--color-surface));
+    color: var(--color-fg);
+    box-shadow: 0 2px 6px -1px var(--color-accent-dim), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   }
 
   .causal-action:active {
-    transform: scale(0.97);
+    transform: scale(0.96);
   }
 
   .causal-tape {
     border-top: 1px solid var(--color-border);
-    padding: 0.72rem 1rem 0.8rem;
-    background: var(--color-surface);
+    padding: 0.35rem 1rem 0.4rem;
+    background: var(--color-surface)/20;
   }
 
   .causal-tape-heading {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 0.38rem;
-    margin-bottom: 0.58rem;
+    gap: 0.35rem;
     color: var(--color-fg-faint);
     font-family: var(--font-mono);
-    font-size: 0.6rem;
+    font-size: 0.58rem;
     font-weight: 600;
     letter-spacing: 0.09em;
     text-transform: uppercase;
@@ -558,198 +565,186 @@ input[type="range"].accent-accent:focus-visible {
 
   .causal-tape-list {
     display: flex;
-    gap: 0.45rem;
+    gap: 0.35rem;
     overflow-x: auto;
-    padding-bottom: 0.12rem;
+    padding-bottom: 0.05rem;
     scrollbar-width: thin;
   }
 
   .causal-tape-event {
-    display: grid;
-    flex: 1 0 9.4rem;
-    grid-template-columns: auto 1fr;
-    column-gap: 0.42rem;
-    align-items: center;
-    min-height: 3.25rem;
+    display: flex;
+    flex: 1 1 8.5rem;
+    min-width: 7.5rem;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.1rem;
+    min-height: 2.25rem;
     border: 1px solid var(--color-border);
-    border-radius: 8px;
-    padding: 0.42rem 0.5rem;
-    background: transparent;
+    border-radius: 6px;
+    padding: 0.3rem 0.5rem;
+    background: var(--color-bg)/40;
     color: var(--color-fg-muted);
     text-align: left;
     cursor: pointer;
     transition:
-      background 160ms var(--ease-out-soft),
-      border-color 160ms var(--ease-out-soft),
-      transform 160ms var(--ease-out-soft);
+      background 140ms var(--ease-out-soft),
+      border-color 140ms var(--ease-out-soft),
+      box-shadow 140ms var(--ease-out-soft),
+      transform 140ms var(--ease-out-soft);
   }
 
   .causal-tape-event:hover {
     border-color: var(--color-border-bright);
     background: var(--color-raised);
+    color: var(--color-fg);
   }
 
   .causal-tape-event:active {
-    transform: scale(0.98);
+    transform: scale(0.97);
   }
 
   .causal-tape-event.is-active {
     border-color: var(--color-accent);
-    background: var(--color-accent-dim);
+    background: linear-gradient(180deg, var(--color-accent-dim), var(--color-surface));
     color: var(--color-fg);
+    box-shadow: 0 0 0 1px var(--color-accent), 0 2px 10px -2px var(--color-accent-dim);
   }
 
-  .causal-tape-dot {
-    width: 0.5rem;
-    height: 0.5rem;
-    border: 1px solid var(--color-border-bright);
-    border-radius: 999px;
-    background: var(--color-surface);
+  .causal-tape-event.is-active .causal-tape-meta {
+    color: var(--color-accent);
   }
 
-  .causal-tape-event.is-active .causal-tape-dot {
-    border-color: var(--color-accent);
-    background: var(--color-accent);
-    box-shadow: 0 0 0 3px var(--color-accent-dim);
-  }
-
-  .causal-tape-meta,
-  .causal-tape-time {
+  .causal-tape-meta {
     color: var(--color-fg-faint);
     font-family: var(--font-mono);
-    font-size: 0.57rem;
-    letter-spacing: 0.07em;
+    font-size: 0.58rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
+    transition: color 140ms;
   }
 
   .causal-tape-label {
-    grid-column: 2;
     overflow: hidden;
     color: inherit;
-    font-size: 0.74rem;
+    font-size: 0.68rem;
     font-weight: 600;
-    line-height: 1.25;
+    line-height: 1.2;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   .causal-tape-time {
-    grid-column: 2;
+    color: var(--color-fg-faint);
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.04em;
   }
 
   .causal-inspector {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 0.85rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
     border-top: 1px solid var(--color-border);
-    padding: 0.9rem 1rem;
-    background: var(--color-raised);
+    padding: 0.4rem 1rem 0.45rem;
+    background: var(--color-surface)/25;
   }
 
   .causal-inspector-heading {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 0.7rem;
-  }
-
-  .causal-inspector-reset {
-    display: inline-flex;
     align-items: center;
-    gap: 0.34rem;
-    border: 0;
-    border-radius: 6px;
-    padding: 0.34rem 0.42rem;
-    background: transparent;
-    color: var(--color-fg-faint);
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    cursor: pointer;
-    transition:
-      background 140ms var(--ease-out-soft),
-      color 140ms var(--ease-out-soft);
-  }
-
-  .causal-inspector-reset:hover {
-    background: var(--color-surface);
-    color: var(--color-fg);
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.4rem;
   }
 
   .causal-node-select-label {
-    grid-row: span 2;
-    min-width: 10.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
     color: var(--color-fg-faint);
     font-family: var(--font-mono);
-    font-size: 0.6rem;
+    font-size: 0.58rem;
     letter-spacing: 0.07em;
     text-transform: uppercase;
   }
 
   .causal-node-select {
-    display: block;
-    width: 100%;
-    margin-top: 0.38rem;
     border: 1px solid var(--color-border);
-    border-radius: 6px;
-    padding: 0.42rem 0.5rem;
+    border-radius: 4px;
+    padding: 0.15rem 0.4rem;
     background: var(--color-surface);
     color: var(--color-fg);
     font-family: var(--font-mono);
-    font-size: 0.67rem;
-    text-transform: none;
+    font-size: 0.625rem;
     cursor: pointer;
+    outline: none;
+    transition: border-color 140ms;
+  }
+
+  .causal-node-select:focus {
+    border-color: var(--color-accent);
   }
 
   .causal-inspector-state {
-    display: flex;
-    flex-wrap: wrap;
+    display: inline-flex;
+    align-items: center;
     gap: 0.45rem;
+    border: 1px solid var(--color-border);
+    border-radius: 5px;
+    padding: 0.15rem 0.45rem;
+    background: var(--color-surface);
   }
 
   .causal-inspector-state > div {
-    min-width: 4.6rem;
-    border-left: 2px solid var(--color-border-bright);
-    padding-left: 0.48rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .causal-inspector-state > div:not(:last-child)::after {
+    content: "·";
+    color: var(--color-border-bright);
+    margin-left: 0.25rem;
   }
 
   .causal-inspector-state span {
-    display: block;
     color: var(--color-fg-faint);
     font-family: var(--font-mono);
-    font-size: 0.57rem;
+    font-size: 0.55rem;
     letter-spacing: 0.07em;
     text-transform: uppercase;
   }
 
   .causal-inspector-state strong {
-    display: block;
-    margin-top: 0.18rem;
     color: var(--color-fg);
     font-family: var(--font-mono);
-    font-size: 0.72rem;
+    font-size: 0.65rem;
+    font-weight: 600;
   }
 
   .causal-inspector-explanation {
     display: flex;
-    grid-column: 1 / -1;
     align-items: flex-start;
-    gap: 0.45rem;
+    gap: 0.4rem;
     color: var(--color-fg-muted);
-    font-size: 0.78rem;
-    line-height: 1.45;
-  }
-
-  .causal-inspector-explanation svg {
-    flex: 0 0 auto;
-    margin-top: 0.16rem;
-    color: var(--color-accent);
+    font-size: 0.72rem;
+    line-height: 1.35;
   }
 
   .causal-next-action {
-    grid-column: 1 / -1;
-    margin-top: -0.35rem;
-    color: var(--color-fg-faint);
-    font-size: 0.72rem;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 4px;
+    border: 1px solid var(--color-border-bright);
+    background: var(--color-surface);
+    padding: 0.05rem 0.35rem;
+    color: var(--color-fg-muted);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    line-height: 1.3;
   }
 
   .causal-static-toggle {
@@ -759,7 +754,7 @@ input[type="range"].accent-accent:focus-visible {
     min-height: 1.75rem;
     border: 1px solid var(--color-border);
     border-radius: 6px;
-    padding: 0.3rem 0.5rem;
+    padding: 0.3rem 0.55rem;
     background: var(--color-surface);
     color: var(--color-fg-muted);
     font-family: var(--font-mono);
@@ -767,23 +762,36 @@ input[type="range"].accent-accent:focus-visible {
     letter-spacing: 0.05em;
     text-transform: uppercase;
     cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     transition:
       background 140ms var(--ease-out-soft),
       color 140ms var(--ease-out-soft),
-      border-color 140ms var(--ease-out-soft);
+      border-color 140ms var(--ease-out-soft),
+      box-shadow 140ms var(--ease-out-soft),
+      transform 140ms var(--ease-out-soft);
   }
 
-  .causal-static-toggle:hover,
-  .causal-static-toggle.is-active {
-    border-color: var(--color-accent);
-    background: var(--color-accent-dim);
+  .causal-static-toggle:hover {
+    border-color: var(--color-border-bright);
     color: var(--color-fg);
   }
 
-  /* the meter a workbench focus is about — one accent outline, nothing more */
+  .causal-static-toggle:active {
+    transform: scale(0.97);
+  }
+
+  .causal-static-toggle.is-active {
+    border-color: var(--color-accent);
+    background: linear-gradient(180deg, var(--color-accent-dim), var(--color-surface));
+    color: var(--color-fg);
+    box-shadow: 0 0 0 1px var(--color-accent), 0 2px 6px -1px var(--color-accent-dim);
+  }
+
+  /* the meter a workbench focus is about — subtle luminous card treatment without outline clipping/overlap */
   .causal-meter-focus {
-    outline: 1px solid var(--color-accent);
-    outline-offset: 4px;
+    background: linear-gradient(180deg, var(--color-accent-dim), var(--color-surface)/40) !important;
+    border-color: var(--color-accent) !important;
+    box-shadow: 0 0 0 1px var(--color-accent), 0 0 16px -2px var(--color-accent-dim) !important;
     border-radius: 8px;
   }
 
@@ -791,6 +799,7 @@ input[type="range"].accent-accent:focus-visible {
     .causal-experiment {
       align-items: flex-start;
       flex-direction: column;
+      gap: 0.75rem;
     }
 
     .causal-action {

@@ -93,16 +93,16 @@ export function ControlPanel({
   if (specs.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap items-end gap-x-6 gap-y-3 border-t border-border px-4 py-3">
+    <div className="flex flex-wrap items-end gap-x-5 gap-y-2.5 border-t border-border/60 bg-surface/30 px-3.5 py-2">
       {specs.map((spec) => {
         const value = values[spec.key];
 
         if (spec.kind === "slider") {
           return (
-            <label key={spec.key} className="flex min-w-36 flex-col gap-1.5">
+            <label key={spec.key} className="flex flex-1 min-w-[160px] max-w-sm flex-col gap-1.5">
               <span className="tech-label flex items-baseline justify-between gap-3">
-                {spec.label}
-                <span className="tech-num text-accent normal-case">
+                <span className="truncate">{spec.label}</span>
+                <span className="tech-num shrink-0 rounded-md border border-accent/25 bg-accent-dim/40 px-1.5 py-0.5 font-mono text-[11px] font-semibold text-accent tabular-nums shadow-xs">
                   {value}
                   {spec.unit}
                 </span>
@@ -145,15 +145,15 @@ export function ControlPanel({
                   travel, accent state, hairline frame */}
               <span
                 className={cn(
-                  "relative h-4.5 w-8 rounded-[2px] border transition-colors duration-150",
+                  "relative h-4.5 w-8 rounded-[4px] border transition-colors duration-150 shadow-xs",
                   on ? "border-accent/60 bg-accent-dim" : "border-border bg-raised",
                 )}
               >
                 <span
                   className={cn(
-                    "absolute top-[3px] left-0.5 size-3 rounded-[2px] transition-transform duration-150",
+                    "absolute top-[2.5px] left-0.5 size-3 rounded-[2.5px] transition-transform duration-150",
                     on
-                      ? "translate-x-3.5 bg-accent shadow-[0_0_6px_var(--color-accent)]"
+                      ? "translate-x-3.5 bg-accent shadow-[0_0_8px_var(--color-accent)]"
                       : "bg-fg-muted",
                   )}
                 />

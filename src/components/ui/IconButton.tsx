@@ -5,10 +5,10 @@ type Variant = "quiet" | "bordered" | "solid";
 type Size = "sm" | "md";
 
 const variants: Record<Variant, string> = {
-  quiet: "text-fg-muted hover:bg-raised hover:text-fg",
+  quiet: "text-fg-muted hover:bg-raised hover:text-fg active:scale-95 transition-all duration-150",
   bordered:
-    "border border-border bg-surface/80 backdrop-blur hover:border-border-bright hover:text-fg",
-  solid: "bg-accent text-bg hover:brightness-110",
+    "border border-border bg-surface/80 backdrop-blur hover:border-border-bright hover:text-fg active:scale-95 transition-all duration-150 shadow-xs",
+  solid: "bg-accent text-bg hover:brightness-110 active:scale-95 transition-all duration-150 shadow-xs hover:shadow-sm",
 };
 
 const sizes: Record<Size, string> = {

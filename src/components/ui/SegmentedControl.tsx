@@ -26,14 +26,17 @@ interface SegmentedControlProps<T extends string | number> {
   className?: string;
 }
 
-const groupSize = { sm: "rounded-md", md: "rounded-lg" } as const;
+const groupSize = {
+  sm: "rounded-md p-0.5 bg-surface/60 border border-border/70",
+  md: "rounded-lg p-0.5 bg-surface/60 border border-border/70",
+} as const;
 const itemSize = {
-  sm: "px-2 py-0.5 text-[10px]",
-  md: "px-2.5 py-1 text-[11px]",
+  sm: "px-2 py-0.5 text-[10px] rounded-[4px]",
+  md: "px-2.5 py-1 text-[11px] rounded-[6px]",
 } as const;
 const idleTone = {
   sm: "text-fg-faint hover:text-fg-muted",
-  md: "text-fg-muted hover:bg-raised hover:text-fg",
+  md: "text-fg-muted hover:bg-raised/80 hover:text-fg",
 } as const;
 
 /**
@@ -101,7 +104,7 @@ export function SegmentedControl<T extends string | number>({
       aria-label={ariaLabel}
       onKeyDown={onKeyDown}
       className={cn(
-        "flex overflow-hidden border border-border",
+        "flex overflow-hidden",
         groupSize[size],
         className,
       )}
@@ -123,12 +126,14 @@ export function SegmentedControl<T extends string | number>({
             tabIndex={selected || (selectedIndex === -1 && i === 0) ? 0 : -1}
             onClick={() => onChange(opt.value)}
             className={cn(
-              "cursor-pointer font-mono transition-colors",
+              "cursor-pointer font-mono transition-all duration-150",
               // The group clips overflow (shared rounded corners), which would
               // eat an outset focus ring — pull it inside the segment.
               "focus-visible:[outline-offset:-2px]",
               itemSize[size],
-              selected ? "bg-accent-dim text-accent" : idleTone[size],
+              selected
+                ? "bg-raised text-accent font-semibold shadow-xs"
+                : idleTone[size],
             )}
           >
             {opt.label}

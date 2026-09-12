@@ -273,26 +273,27 @@ function MetersRow({
   const snapshot = useSimSnapshot(simulation);
   if (sim.meters.length === 0) return null;
   return (
-    <div className="sim-meters grid grid-cols-2 gap-y-3 border-t border-border px-4 py-3 sm:flex sm:flex-wrap sm:items-stretch">
-      {sim.meters.map((spec, i) => (
-        <div
-          key={spec.metricKey}
-          className={
-            cn(
-              i === 0
-                ? "sm:pr-6"
-                : "sm:border-l sm:border-border sm:px-6 max-sm:odd:pl-4",
-              activeFocus?.metrics?.includes(spec.metricKey) && "causal-meter-focus",
-            )
-          }
-        >
-          <Meter
-            spec={spec}
-            value={snapshot.metrics[spec.metricKey] ?? 0}
-            series={snapshot.series[spec.metricKey]}
-          />
-        </div>
-      ))}
+    <div className="sim-meters grid grid-cols-2 gap-2 border-t border-border/70 bg-gradient-to-b from-surface/40 to-surface/20 px-3.5 py-2.5 sm:flex sm:flex-wrap sm:items-stretch sm:gap-2.5">
+      {sim.meters.map((spec) => {
+        const isFocused = activeFocus?.metrics?.includes(spec.metricKey);
+        return (
+          <div
+            key={spec.metricKey}
+            className={cn(
+              "relative flex-1 min-w-[110px] rounded-lg px-3 py-2 transition-all duration-200",
+              isFocused
+                ? "causal-meter-focus"
+                : "border border-border/40 bg-surface/50 hover:border-border-bright/80 hover:bg-surface/80 hover:shadow-xs shadow-[inset_0_1px_0_0_rgba(255,255,255,0.03)]",
+            )}
+          >
+            <Meter
+              spec={spec}
+              value={snapshot.metrics[spec.metricKey] ?? 0}
+              series={snapshot.series[spec.metricKey]}
+            />
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -581,6 +582,10 @@ function FigureBody<L>({
         mark("paused");
         simulation.controls.seekTo(t);
       },
+      restart: () => {
+        mark("paused");
+        simulation.controls.restart();
+      },
     };
     // Not memoized: the React Compiler declines to optimize a component whose
     // manual memoization it cannot preserve, and this object is cheap — it is
@@ -718,10 +723,10 @@ function FigureBody<L>({
       // same node in the very same position, so React reconciles in place and
       // the running sim (runner, RNG cursor, quiz progress) is untouched.
       className={cn(
-        "sim-figure border-border bg-surface",
+        "sim-figure border-border/80 bg-surface",
         expanded
           ? "fixed inset-0 z-50 m-0 flex flex-col overflow-y-auto rounded-none border-0"
-          : "my-8 overflow-hidden rounded-xl border",
+          : "my-8 overflow-hidden rounded-xl border shadow-xl shadow-black/15 ring-1 ring-white/5",
       )}
       tabIndex={0}
       onKeyDown={onFigureKeyDown}
@@ -784,11 +789,17 @@ function FigureBody<L>({
         />
       </div>
       <figcaption className="sr-only">{description}</figcaption>
+      {/* Directly under the stage: PacketLegend and live Telemetry Meters */}
+      <div className="calibration-secondary">
+        <PacketLegend sim={sim} />
+        <MetersRow sim={sim} simulation={simulation} activeFocus={activeFocus} />
+      </div>
+
+      {/* Causal Learning Workbench: Experiment -> Event Path -> Inspector */}
       {workbench?.experiment && (
         <div className="calibration-secondary">
           <ExperimentCard
             experiment={workbench.experiment}
-            focus={activeFocus}
             onStart={startExperiment}
           />
         </div>
@@ -800,16 +811,8 @@ function FigureBody<L>({
           onSelect={selectFocus}
         />
       )}
-      {/* Directly under the stage, above the instruments: the key belongs next
-          to the thing it explains, and it stays out of the meters row, whose
-          flex dividers and 2-column mobile grid a chip row would break. Renders
-          nothing — not an empty strip — for sims with no `packetLegend`. */}
-      <div className="calibration-secondary">
-        <PacketLegend sim={sim} />
-        <MetersRow sim={sim} simulation={simulation} activeFocus={activeFocus} />
-      </div>
-      <div className="calibration-secondary">
-        {workbench && (
+      {workbench && (
+        <div className="calibration-secondary">
           <CausalInspector
             focus={activeFocus}
             nodes={sim.topology.nodes}
@@ -818,7 +821,11 @@ function FigureBody<L>({
             onSelectNode={setSelectedNodeId}
             onRestart={simulation.controls.restart}
           />
-        )}
+        </div>
+      )}
+
+      {/* Parameter Inputs and Playback Transport */}
+      <div className="calibration-secondary">
         <ControlPanel
           specs={sim.params}
           values={simulation.params}

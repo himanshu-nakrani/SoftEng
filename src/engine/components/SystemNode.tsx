@@ -86,7 +86,7 @@ export function SystemNode({
         <rect
           width={W}
           height={H}
-          rx={2}
+          rx={6}
           fill="none"
           stroke="var(--color-border-bright)"
           strokeWidth={1}
@@ -147,7 +147,7 @@ export function SystemNode({
           y={-HIT_PAD}
           width={W + HIT_PAD * 2}
           height={H + HIT_PAD * 2}
-          rx={2 + HIT_PAD}
+          rx={6 + HIT_PAD}
           fill="none"
           pointerEvents="all"
         />
@@ -159,7 +159,7 @@ export function SystemNode({
           y={-5}
           width={W + 10}
           height={H + 10}
-          rx={14}
+          rx={10}
           fill="var(--color-accent-dim)"
           stroke="var(--color-accent)"
           strokeWidth={1.5}
@@ -170,14 +170,14 @@ export function SystemNode({
       <motion.rect
         width={W}
         height={H}
-        rx={2}
+        rx={6}
         fill="var(--color-surface)"
         stroke={focused ? "var(--color-accent)" : stroke}
         strokeWidth={focused ? 1.75 : dead ? 1.5 : 1}
         animate={
           dead
             ? { filter: "drop-shadow(0 0 6px var(--color-glow-red))" }
-            : { filter: "none" }
+            : { filter: "drop-shadow(0 2px 5px rgba(0, 0, 0, 0.08))" }
         }
         className={breakable && !dead ? "hover:stroke-glow-red" : undefined}
       />
@@ -236,6 +236,7 @@ export function SystemNode({
         y={48}
         width={W - 24}
         height={3}
+        rx={1.5}
         fill="var(--color-border)"
       />
       <rect
@@ -243,6 +244,7 @@ export function SystemNode({
         y={48}
         width={Math.max((W - 24) * Math.min(runtime.load, 1), 0)}
         height={3}
+        rx={1.5}
         fill={loadColor(runtime.load)}
         style={{ transition: "width 150ms linear, fill 300ms" }}
       />

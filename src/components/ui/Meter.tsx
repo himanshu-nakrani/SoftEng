@@ -288,12 +288,13 @@ export function Meter({ spec, value, series }: MeterProps) {
 
       {spec.kind === "bar" && (
         <div className="flex items-center gap-2">
-          <div className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-border">
+          <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-border/60">
             <div
               className="h-full rounded-full"
               style={{
                 width: `${fraction * 100}%`,
                 background: accent,
+                boxShadow: danger ? "0 0 6px var(--color-glow-red)" : undefined,
                 transition: "width 150ms linear, background 300ms",
               }}
             />

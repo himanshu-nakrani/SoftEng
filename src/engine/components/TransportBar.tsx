@@ -265,7 +265,7 @@ export function TransportBar({
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-1 border-t border-border px-3 py-2">
+      <div className="flex flex-wrap items-center gap-1 border-t border-border/50 bg-surface/30 px-3.5 py-1.5">
         <IconButton
           /**
            * Explicit intent, NOT `controls.toggle`.
@@ -392,25 +392,25 @@ export function TransportBar({
                 title={m.title}
                 style={{ left: `${(m.at / scrubMax) * 100}%` }}
                 className={cn(
-                  "absolute -translate-x-1/2 -translate-y-1/2 ring-1 ring-bg",
+                  "absolute -translate-x-1/2 -translate-y-1/2 ring-2 ring-surface shadow-xs transition-transform duration-150",
                   m.kind === "checkpoint"
-                    ? "size-1.5 rotate-45 bg-glow-violet"
-                    : "size-1 rounded-full bg-fg-muted",
+                    ? "size-2 rotate-45 bg-glow-violet shadow-[0_0_6px_var(--color-glow-violet)]"
+                    : "size-1.5 rounded-full bg-fg-muted",
                 )}
               />
             ))}
           </div>
         </div>
 
-        <span className="tech-num ml-auto flex items-center gap-2 text-xs text-fg-muted">
+        <span className="tech-num ml-auto flex shrink-0 items-center gap-2 rounded-md border border-border/60 bg-surface/80 px-2 py-0.5 text-xs whitespace-nowrap text-fg font-mono shadow-xs">
           <span
             className={cn(
-              "size-1.5 rounded-full",
+              "size-1.5 rounded-full transition-all duration-300",
               playing
-                ? "animate-pulse bg-glow-green shadow-[0_0_6px_var(--color-glow-green)]"
+                ? "animate-pulse bg-glow-green shadow-[0_0_8px_var(--color-glow-green)]"
                 : quizzing
-                  ? "bg-glow-violet"
-                  : "bg-glow-orange",
+                  ? "bg-glow-violet shadow-[0_0_8px_var(--color-glow-violet)]"
+                  : "bg-glow-orange shadow-[0_0_6px_var(--color-glow-orange)]",
             )}
           />
           t={t.toFixed(1)}s

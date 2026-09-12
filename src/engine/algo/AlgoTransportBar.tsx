@@ -95,7 +95,7 @@ export function AlgoTransportBar({
         style={{ "--fill": `${fill}%` } as CSSProperties}
       />
 
-      <span className="tech-num text-xs text-fg-muted">
+      <span className="tech-num shrink-0 text-xs whitespace-nowrap text-fg-muted">
         step {String(index).padStart(3, "0")}/{String(last).padStart(3, "0")}
       </span>
     </div>

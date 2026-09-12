@@ -86,15 +86,11 @@ export function AlgoFigure<S, I>({
       {/* counters — declared by the def, so a new algorithm adds its own
           (splits, disk reads, retries) without touching the figure */}
       {def.counters.length > 0 && (
-        <div className="flex flex-wrap items-stretch border-t border-border px-4 py-3">
-          {def.counters.map((counter, i) => (
+        <div className="flex flex-wrap items-stretch gap-2.5 border-t border-border px-4 py-3">
+          {def.counters.map((counter) => (
             <div
               key={counter.key}
-              className={
-                i === 0
-                  ? "pr-6"
-                  : "border-l border-border px-6"
-              }
+              className="flex-1 min-w-[120px] rounded-lg border border-border/50 bg-surface/40 p-2.5 transition-all duration-200 hover:border-border"
             >
               <Meter
                 spec={{
@@ -115,12 +111,12 @@ export function AlgoFigure<S, I>({
           lesson def with a `size` was actually rendered. */}
 
       {/* input controls */}
-      <div className="flex flex-wrap items-end gap-x-6 gap-y-3 border-t border-border px-4 py-3">
+      <div className="flex flex-wrap items-end gap-x-6 gap-y-4 border-t border-border px-4 py-3">
         {def.size && (
-          <label className="flex min-w-36 flex-col gap-1.5">
+          <label className="flex flex-1 min-w-[160px] max-w-sm flex-col gap-1.5">
             <span className="tech-label flex items-baseline justify-between gap-3">
-              {def.size.label}
-              <span className="tech-num text-accent normal-case">{size}</span>
+              <span className="truncate">{def.size.label}</span>
+              <span className="tech-num shrink-0 font-mono text-xs font-semibold text-accent normal-case">{size}</span>
             </span>
             <input
               type="range"
@@ -141,7 +137,7 @@ export function AlgoFigure<S, I>({
         <button
           onClick={() => setSeed((s) => (s * 48271) % 2147483647)}
           title="New random input (deterministic per seed)"
-          className="flex cursor-pointer items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 font-mono text-[11px] text-fg-muted transition-colors hover:border-border-bright hover:text-fg"
+          className="flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-border bg-surface/60 px-3 py-1.5 font-mono text-[11px] text-fg-muted transition-colors hover:border-border-bright hover:text-fg active:scale-95"
         >
           <Dices className="size-3.5" />
           shuffle · seed {seed}
