@@ -3,6 +3,8 @@
 import { InteractiveFigure } from "@/engine/components/InteractiveFigure";
 import type { LessonSim } from "@/engine/types";
 import { simBySlug } from "@/lessons/index";
+import { buttonClasses } from "@/components/ui/Button";
+import { INSTRUMENT_BUTTON } from "@/components/ui/control-chrome";
 import { SectionRule } from "@/components/ui/SectionRule";
 import { cn } from "@/lib/cn";
 import { accentOf, allLessons, getLesson, moduleOf } from "@/lib/curriculum";
@@ -105,9 +107,9 @@ export function PlaygroundClient() {
                 type="button"
                 onClick={() => pick(e.slug)}
                 className={cn(
-                  "flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5 text-left font-mono text-xs transition-colors",
+                  "flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5 text-left font-mono text-xs transition-[background-color,color,box-shadow] duration-150 ease-[var(--ease-out-soft)]",
                   e.slug === slug
-                    ? "bg-raised text-fg"
+                    ? "bg-raised text-fg shadow-[inset_2px_0_0_var(--color-accent)]"
                     : "text-fg-muted hover:bg-surface hover:text-fg",
                 )}
               >
@@ -131,7 +133,7 @@ export function PlaygroundClient() {
                 type="button"
                 onClick={reseed}
                 title="New random seed (deterministic per seed)"
-                className="flex cursor-pointer items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 font-mono text-[11px] text-fg-muted transition-colors hover:border-border-bright hover:text-fg"
+                className={INSTRUMENT_BUTTON}
               >
                 <Dices className="size-3.5" />
                 seed {seed}
@@ -140,7 +142,7 @@ export function PlaygroundClient() {
                 type="button"
                 onClick={share}
                 title="Copy a link that reproduces this exact run"
-                className="flex cursor-pointer items-center gap-1.5 rounded-md bg-accent px-2.5 py-1.5 font-mono text-[11px] font-medium text-bg transition-all hover:brightness-110"
+                className={buttonClasses("primary", "sm", "font-mono")}
               >
                 {copied ? (
                   <Check className="size-3.5" />

@@ -1,14 +1,15 @@
 import { cn } from "@/lib/cn";
-import type { ButtonHTMLAttributes } from "react";
+import { forwardRef, type ButtonHTMLAttributes } from "react";
 
 type Variant = "quiet" | "bordered" | "solid";
 type Size = "sm" | "md";
 
 const variants: Record<Variant, string> = {
-  quiet: "text-fg-muted hover:bg-raised hover:text-fg active:scale-95 transition-all duration-150",
+  quiet: "text-fg-muted hover:bg-raised hover:text-fg active:scale-95",
   bordered:
-    "border border-border bg-surface/80 backdrop-blur hover:border-border-bright hover:text-fg active:scale-95 transition-all duration-150 shadow-xs",
-  solid: "bg-accent text-bg hover:brightness-110 active:scale-95 transition-all duration-150 shadow-xs hover:shadow-sm",
+    "border border-border bg-surface/80 backdrop-blur hover:border-border-bright hover:text-fg active:scale-95 shadow-xs",
+  solid:
+    "bg-accent text-bg hover:brightness-110 active:scale-95 shadow-xs hover:shadow-sm",
 };
 
 const sizes: Record<Size, string> = {
@@ -28,29 +29,36 @@ interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
  * hairline or bare surface per variant; every engine and page-chrome icon
  * button composes this instead of re-rolling the recipe.
  */
-export function IconButton({
-  label,
-  variant = "quiet",
-  size = "md",
-  className,
-  type,
-  children,
-  ...rest
-}: IconButtonProps) {
-  return (
-    <button
-      type={type ?? "button"}
-      aria-label={label}
-      className={cn(
-        "inline-flex cursor-pointer items-center justify-center transition-colors",
-        "disabled:pointer-events-none disabled:opacity-40",
-        variants[variant],
-        sizes[size],
-        className,
-      )}
-      {...rest}
-    >
-      {children}
-    </button>
-  );
-}
+export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
+  function IconButton(
+    {
+      label,
+      variant = "quiet",
+      size = "md",
+      className,
+      type,
+      children,
+      ...rest
+    },
+    ref,
+  ) {
+    return (
+      <button
+        ref={ref}
+        type={type ?? "button"}
+        aria-label={label}
+        className={cn(
+          "inline-flex cursor-pointer items-center justify-center",
+          "transition-[background-color,border-color,color,box-shadow,filter,transform] duration-150 ease-[var(--ease-out-soft)]",
+          "disabled:pointer-events-none disabled:opacity-40 disabled:active:scale-100",
+          variants[variant],
+          sizes[size],
+          className,
+        )}
+        {...rest}
+      >
+        {children}
+      </button>
+    );
+  },
+);

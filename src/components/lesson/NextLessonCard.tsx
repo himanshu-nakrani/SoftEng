@@ -117,7 +117,7 @@ function PrevLessonLink({ lesson }: { lesson: LessonMeta }) {
   return (
     <Link
       href={lessonPath(lesson)}
-      className="group flex items-center gap-3 rounded-xl border border-border px-4 py-3 transition-colors hover:border-border-bright hover:bg-surface/60 sm:w-64 sm:shrink-0"
+      className="group flex items-center gap-3 rounded-xl border border-border px-4 py-3 transition-[border-color,background-color] duration-150 ease-[var(--ease-out-soft)] hover:border-border-bright hover:bg-surface/60 sm:w-64 sm:shrink-0"
     >
       <ArrowLeft
         className="size-4 shrink-0 text-fg-faint transition-transform group-hover:-translate-x-0.5"

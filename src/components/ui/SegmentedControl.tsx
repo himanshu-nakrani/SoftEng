@@ -28,11 +28,11 @@ interface SegmentedControlProps<T extends string | number> {
 
 const groupSize = {
   sm: "rounded-md p-0.5 bg-surface/60 border border-border/70",
-  md: "rounded-lg p-0.5 bg-surface/60 border border-border/70",
+  md: "rounded-md p-0.5 bg-surface/60 border border-border/70",
 } as const;
 const itemSize = {
   sm: "px-2 py-0.5 text-[10px] rounded-[4px]",
-  md: "px-2.5 py-1 text-[11px] rounded-[6px]",
+  md: "px-2.5 py-1 text-[11px] rounded-[4px]",
 } as const;
 const idleTone = {
   sm: "text-fg-faint hover:text-fg-muted",
@@ -126,7 +126,7 @@ export function SegmentedControl<T extends string | number>({
             tabIndex={selected || (selectedIndex === -1 && i === 0) ? 0 : -1}
             onClick={() => onChange(opt.value)}
             className={cn(
-              "cursor-pointer font-mono transition-all duration-150",
+              "cursor-pointer font-mono transition-[background-color,color,box-shadow] duration-150 ease-[var(--ease-out-soft)]",
               // The group clips overflow (shared rounded corners), which would
               // eat an outset focus ring — pull it inside the segment.
               "focus-visible:[outline-offset:-2px]",

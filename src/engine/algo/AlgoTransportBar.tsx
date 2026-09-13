@@ -1,7 +1,9 @@
 "use client";
 
+import { CLOCK_CHIP, INSTRUMENT_DIVIDER, TRANSPORT_ROW } from "@/components/ui/control-chrome";
 import { IconButton } from "@/components/ui/IconButton";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
+import { cn } from "@/lib/cn";
 import { Pause, Play, RotateCcw, StepBack, StepForward } from "lucide-react";
 import type { CSSProperties } from "react";
 import type { AlgoControls } from "./useAlgoPlayer";
@@ -32,7 +34,7 @@ export function AlgoTransportBar({
   const fill = last === 0 ? 0 : (index / last) * 100;
 
   return (
-    <div className="flex flex-wrap items-center gap-1 border-t border-border px-3 py-2">
+    <div className={TRANSPORT_ROW}>
       <IconButton
         // Explicit intent, not `toggle` — same contract as the packet
         // transport. Deriving the action from the `playing` value that
@@ -73,7 +75,7 @@ export function AlgoTransportBar({
         <RotateCcw className="size-4" />
       </IconButton>
 
-      <div className="mx-2 h-4 w-px bg-border" />
+      <div className={INSTRUMENT_DIVIDER} />
 
       <SegmentedControl
         ariaLabel="Playback speed"
@@ -83,19 +85,29 @@ export function AlgoTransportBar({
         onChange={controls.setSpeed}
       />
 
-      {/* scrubber — drag through the whole run */}
-      <input
-        type="range"
-        min={0}
-        max={last}
-        value={index}
-        onChange={(e) => controls.scrub(Number(e.target.value))}
-        aria-label="Scrub through steps"
-        className="sim-slider mx-3 h-1 min-w-24 flex-1 cursor-pointer appearance-none rounded-full bg-border accent-accent"
-        style={{ "--fill": `${fill}%` } as CSSProperties}
-      />
+      <div className="relative order-last flex h-10 w-full items-center sm:order-none sm:mx-3 sm:h-auto sm:w-auto sm:min-w-24 sm:flex-1">
+        <input
+          type="range"
+          min={0}
+          max={last}
+          value={index}
+          onChange={(e) => controls.scrub(Number(e.target.value))}
+          aria-label="Scrub through steps"
+          aria-valuetext={`step ${index} of ${last}`}
+          className="sim-slider h-1 w-full cursor-pointer appearance-none rounded-full bg-border accent-accent"
+          style={{ "--fill": `${fill}%` } as CSSProperties}
+        />
+      </div>
 
-      <span className="tech-num shrink-0 text-xs whitespace-nowrap text-fg-muted">
+      <span className={cn(CLOCK_CHIP, "ml-auto")}>
+        <span
+          className={cn(
+            "size-1.5 rounded-full transition-all duration-300",
+            playing
+              ? "animate-pulse bg-glow-green shadow-[0_0_8px_var(--color-glow-green)]"
+              : "bg-glow-orange shadow-[0_0_6px_var(--color-glow-orange)]",
+          )}
+        />
         step {String(index).padStart(3, "0")}/{String(last).padStart(3, "0")}
       </span>
     </div>

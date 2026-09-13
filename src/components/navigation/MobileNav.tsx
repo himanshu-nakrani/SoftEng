@@ -207,17 +207,16 @@ export function MobileNav() {
 
   return (
     <>
-      <button
+      <IconButton
         ref={triggerRef}
-        type="button"
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
         aria-controls={DRAWER_ID}
-        aria-label="Navigation menu"
-        className="-ml-1.5 flex size-9 shrink-0 items-center justify-center rounded-lg text-fg-muted transition-colors hover:bg-surface hover:text-fg"
+        label="Navigation menu"
+        className="-ml-1.5 size-9"
       >
         <Menu className="size-5" strokeWidth={1.75} />
-      </button>
+      </IconButton>
 
       {/* Portalled only after mount: the static HTML has no document. */}
       {hydrated && createPortal(drawer, document.body)}

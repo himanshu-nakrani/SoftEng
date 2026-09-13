@@ -8,6 +8,7 @@ import { cn } from "@/lib/cn";
 import { difficultyClass } from "@/lib/accent";
 import { getLesson, moduleOf, prerequisiteLabels } from "@/lib/curriculum";
 import { useProgress } from "@/stores/progress";
+import { INSTRUMENT_BUTTON } from "@/components/ui/control-chrome";
 import { SectionRule } from "@/components/ui/SectionRule";
 import { BookOpen, Focus, Sparkles } from "lucide-react";
 import { useCallback, useState, type ReactNode } from "react";
@@ -234,7 +235,11 @@ export function Lesson({ slug, children }: LessonProps) {
                     aria-pressed={calibration}
                     aria-label={calibration ? "Return to experiment mode" : "Enter reading mode"}
                     onClick={() => setCalibration((value) => !value)}
-                    className="inline-flex min-h-8 cursor-pointer items-center gap-2 rounded-md border border-border bg-raised px-3 py-1.5 font-mono text-[10px] tracking-widest text-fg-muted uppercase transition-colors hover:border-border-bright hover:bg-surface hover:text-fg"
+                    className={cn(
+                      INSTRUMENT_BUTTON,
+                      "tracking-widest uppercase",
+                      calibration && "border-accent/50 bg-accent-dim text-fg",
+                    )}
                   >
                   <Focus className="size-3.5 text-accent" strokeWidth={1.75} />
                   {calibration ? "Return to experiment" : "Reading mode"}

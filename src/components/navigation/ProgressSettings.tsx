@@ -171,7 +171,7 @@ export function ProgressSettings() {
             placeholder={CONFIRM_WORD}
             autoComplete="off"
             spellCheck={false}
-            className="h-8 w-24 rounded-md border border-border bg-bg px-2 font-mono text-xs outline-none placeholder:text-fg-faint focus:border-glow-orange"
+            className="field h-8 w-24 rounded-md bg-bg px-2 font-mono text-xs outline-none focus:border-glow-orange"
           />
           <Button
             size="sm"

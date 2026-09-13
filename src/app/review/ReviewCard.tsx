@@ -1,12 +1,14 @@
 "use client";
 
+import { Button } from "@/components/ui/Button";
+import { ChoiceOption } from "@/components/ui/ChoiceOption";
 import { GlowCard } from "@/components/ui/GlowCard";
 import { getLearningGuide } from "@/curriculum/learning";
 import { useJournal } from "@/stores/journal";
 import { accentCssVar } from "@/lib/accent";
 import { accentOf } from "@/lib/curriculum";
 import { cn } from "@/lib/cn";
-import { ArrowRight, Check, RotateCcw, X } from "lucide-react";
+import { ArrowRight, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import type { ReviewItem, ReviewStatus } from "./deck";
@@ -15,15 +17,15 @@ import type { ReviewItem, ReviewStatus } from "./deck";
 const statusChip: Record<ReviewStatus, { label: string; className: string }> = {
   missed: {
     label: "missed first try",
-    className: "bg-glow-red-dim text-glow-red",
+    className: "text-glow-red",
   },
   unattempted: {
     label: "not asked yet",
-    className: "bg-raised text-fg-muted",
+    className: "text-fg-muted",
   },
   mastered: {
     label: "first try",
-    className: "bg-glow-green-dim text-glow-green",
+    className: "text-glow-green",
   },
 };
 
@@ -122,13 +124,13 @@ export function ReviewCard({ item }: { item: ReviewItem }) {
         <div className="ml-auto flex shrink-0 flex-wrap justify-end gap-1.5">
           <span
             className={cn(
-              "rounded-full px-2.5 py-0.5 font-mono text-[10px] tracking-wide whitespace-nowrap",
+              "rounded-sm border border-border bg-raised px-2 py-0.5 font-mono text-[10px] tracking-wide whitespace-nowrap",
               chip.className,
             )}
           >
             {chip.label}
           </span>
-          <span className="rounded-full bg-raised px-2.5 py-0.5 font-mono text-[10px] tracking-wide text-fg-faint whitespace-nowrap">
+          <span className="rounded-sm border border-border bg-raised px-2 py-0.5 font-mono text-[10px] tracking-wide text-fg-muted whitespace-nowrap">
             {confidenceLabel}
           </span>
         </div>
@@ -143,35 +145,18 @@ export function ReviewCard({ item }: { item: ReviewItem }) {
           const chosen = choice === c.id;
           const correct = c.id === quiz.correctChoiceId;
           return (
-            <button
+            <ChoiceOption
               key={c.id}
               ref={(element) => {
                 choiceRefs.current[index] = element;
               }}
-              type="button"
-              disabled={revealed}
+              revealed={revealed}
+              chosen={chosen}
+              correct={correct}
               onClick={() => setChoice(c.id)}
-              className={cn(
-                "flex cursor-pointer items-center gap-2.5 rounded-lg border px-3.5 py-2.5 text-left text-[13px] transition-all",
-                !revealed &&
-                  "border-border hover:border-glow-violet/60 hover:bg-raised",
-                revealed &&
-                  correct &&
-                  "border-glow-green/60 bg-glow-green-dim text-glow-green",
-                revealed &&
-                  chosen &&
-                  !correct &&
-                  "border-glow-red/60 bg-glow-red-dim text-glow-red",
-                revealed && !chosen && !correct && "border-border opacity-45",
-                revealed && "cursor-default",
-              )}
             >
-              {revealed && correct && <Check className="size-4 shrink-0" />}
-              {revealed && chosen && !correct && (
-                <X className="size-4 shrink-0" />
-              )}
               {c.label}
-            </button>
+            </ChoiceOption>
           );
         })}
       </div>
@@ -218,15 +203,16 @@ export function ReviewCard({ item }: { item: ReviewItem }) {
         </Link>
 
         {revealed && (
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="sm"
             ref={askAgainRef}
             onClick={askAgain}
-            className="inline-flex min-h-8 cursor-pointer items-center gap-1.5 text-[13px] text-fg-faint transition-colors hover:text-fg-muted"
+            className="text-fg-muted"
           >
             <RotateCcw className="size-3.5" />
             Ask again
-          </button>
+          </Button>
         )}
 
         <span className="tech-label ml-auto text-fg-faint">

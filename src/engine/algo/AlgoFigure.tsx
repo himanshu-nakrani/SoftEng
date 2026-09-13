@@ -1,5 +1,6 @@
 "use client";
 
+import { CONTROL_STRIP, CONTROL_VALUE, INSTRUMENT_BUTTON } from "@/components/ui/control-chrome";
 import { CornerTicks } from "@/components/ui/CornerTicks";
 import { Meter } from "@/components/ui/Meter";
 import { PlateLabel } from "@/components/ui/PlateLabel";
@@ -111,12 +112,12 @@ export function AlgoFigure<S, I>({
           lesson def with a `size` was actually rendered. */}
 
       {/* input controls */}
-      <div className="flex flex-wrap items-end gap-x-6 gap-y-4 border-t border-border px-4 py-3">
+      <div className={CONTROL_STRIP}>
         {def.size && (
           <label className="flex flex-1 min-w-[160px] max-w-sm flex-col gap-1.5">
             <span className="tech-label flex items-baseline justify-between gap-3">
               <span className="truncate">{def.size.label}</span>
-              <span className="tech-num shrink-0 font-mono text-xs font-semibold text-accent normal-case">{size}</span>
+              <span className={CONTROL_VALUE}>{size}</span>
             </span>
             <input
               type="range"
@@ -135,9 +136,10 @@ export function AlgoFigure<S, I>({
           </label>
         )}
         <button
+          type="button"
           onClick={() => setSeed((s) => (s * 48271) % 2147483647)}
           title="New random input (deterministic per seed)"
-          className="flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-border bg-surface/60 px-3 py-1.5 font-mono text-[11px] text-fg-muted transition-colors hover:border-border-bright hover:text-fg active:scale-95"
+          className={INSTRUMENT_BUTTON}
         >
           <Dices className="size-3.5" />
           shuffle · seed {seed}
