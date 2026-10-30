@@ -276,15 +276,9 @@ function PackageMetricsView({ state }: { state: PackageTableState }) {
               : zone === "Main Sequence"
                 ? "var(--color-glow-green)"
                 : "var(--color-accent)";
-
-        const zoneBg =
-          zone === "Zone of Pain"
-            ? "rgba(239, 68, 68, 0.12)"
-            : zone === "Zone of Uselessness"
-              ? "rgba(249, 115, 22, 0.12)"
-              : zone === "Main Sequence"
-                ? "rgba(34, 197, 94, 0.12)"
-                : "rgba(245, 158, 11, 0.12)";
+        /* A 12% wash of the zone's own hue, so the band and its label cannot
+           drift apart and both follow the theme's tokens. */
+        const zoneBg = `color-mix(in oklab, ${zoneBadgeColour} 12%, transparent)`;
 
         return (
           <g key={pkg.name}>
@@ -294,7 +288,7 @@ function PackageMetricsView({ state }: { state: PackageTableState }) {
               width={usableW}
               height={32}
               rx={3}
-              fill={isHighlight ? "rgba(245, 158, 11, 0.08)" : "var(--color-raised)"}
+              fill={isHighlight ? "color-mix(in oklab, var(--color-glow-amber) 8%, transparent)" : "var(--color-raised)"}
               stroke={isHighlight ? "var(--color-accent)" : "var(--color-border)"}
               strokeWidth={isHighlight ? 1.5 : 1}
             />

@@ -222,7 +222,9 @@ export function SystemNode({
 
       {/* load bar — square-ended gauge with a limit notch at 85%, where
           loadColor tips into red; the mark makes the threshold legible
-          before it is crossed */}
+          before it is crossed. The EMPTY track reads on both grounds:
+          `border` vanishes into the pale light surface, `border-bright` at
+          60% stays a quiet track in dark and a visible one in light. */}
       <line
         x1={12 + (W - 24) * 0.85}
         y1={46.5}
@@ -237,7 +239,8 @@ export function SystemNode({
         width={W - 24}
         height={3}
         rx={1.5}
-        fill="var(--color-border)"
+        fill="var(--color-border-bright)"
+        opacity={0.6}
       />
       <rect
         x={12}

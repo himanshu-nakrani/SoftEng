@@ -385,10 +385,12 @@ html[data-theme="light"] {
 /* breakable-node badge — a slow "you can kill me" pulse on the SVG badge group.
    Base opacity is 1 and the 100% keyframe is 1, so the reduced-motion block at
    the bottom of this file (duration 0.01ms, one iteration) leaves the badge
-   fully visible: the affordance survives, only the pulsing goes. */
+   fully visible: the affordance survives, only the pulsing goes. The pulse
+   floor stays high (0.75) because the badge is a 1px hairline: a deeper dip
+   turns it into a smudge mid-cycle, worst on the pale light ground. */
 @keyframes break-pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.45; }
+  50% { opacity: 0.75; }
 }
 .break-pulse {
   animation: break-pulse 2.6s ease-in-out infinite;
@@ -595,10 +597,11 @@ html[data-theme="light"] {
 
   .causal-tape-list {
     display: flex;
+    /* WRAP, not scroll: on a phone four 7.5rem chips overflow the column and
+       the later landmarks hide past the edge with nothing to say so. Wrapping
+       costs one extra row and keeps every beat of the causal story visible. */
+    flex-wrap: wrap;
     gap: 0.35rem;
-    overflow-x: auto;
-    padding-bottom: 0.05rem;
-    scrollbar-width: thin;
   }
 
   .causal-tape-event {

@@ -283,7 +283,7 @@ function MetersRow({
               "relative flex-1 min-w-[110px] rounded-lg px-3 py-2 transition-all duration-200",
               isFocused
                 ? "causal-meter-focus"
-                : "border border-border/40 bg-surface/50 hover:border-border-bright/80 hover:bg-surface/80 hover:shadow-xs shadow-[inset_0_1px_0_0_rgba(255,255,255,0.03)]",
+                : "border border-border/40 bg-surface/50 hover:border-border-bright/80 hover:bg-surface/80 hover:shadow-xs",
             )}
           >
             <Meter
@@ -726,7 +726,7 @@ function FigureBody<L>({
         "sim-figure border-border/80 bg-surface",
         expanded
           ? "fixed inset-0 z-50 m-0 flex flex-col overflow-y-auto rounded-none border-0"
-          : "my-8 overflow-hidden rounded-xl border shadow-xl shadow-black/15 ring-1 ring-white/5",
+          : "my-8 overflow-hidden rounded-xl border shadow-xl shadow-black/15 ring-1 ring-border/60",
       )}
       tabIndex={0}
       onKeyDown={onFigureKeyDown}
