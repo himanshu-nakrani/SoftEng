@@ -184,9 +184,12 @@ function StatsPanel({ stats }: { stats: DeckStats }) {
 }
 
 /** Nothing recorded yet — point at the track rather than at an empty scoreboard. */
+// No `active` ring: an empty scoreboard is absence of data, not a warning,
+// and a saturated hairline around "nothing here yet" was the loudest thing on
+// the page. The primary button carries the emphasis.
 function ColdStart({ total }: { total: number }) {
   return (
-    <GlowCard active className="mb-10 px-5 py-5">
+    <GlowCard className="mb-10 px-5 py-5">
       <div className="flex items-start gap-3">
         <Compass className="mt-0.5 size-5 shrink-0 text-accent" strokeWidth={1.75} />
         <div>

@@ -101,7 +101,7 @@ export function ReviewCard({ item }: { item: ReviewItem }) {
         <div className="min-w-0">
           {/* Kicker: the module in its own accent, then the lesson — the same
               "where am I" line the lesson map uses, in one row. */}
-          <p className="tech-label mb-1 truncate">
+          <p className="tech-label mb-1 truncate" title={`${item.module.title} · ${item.lesson.title}`}>
             <span style={{ color: accentCssVar[accentOf(item.module)] }}>
               {item.module.title}
             </span>
