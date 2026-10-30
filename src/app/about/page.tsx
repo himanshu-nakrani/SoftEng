@@ -36,7 +36,7 @@ export default function AboutPage() {
         <SectionRule className="mb-2">
           <span className="tech-label">about</span>
         </SectionRule>
-        <h1 className="font-display mb-8 text-3xl font-bold tracking-tight">
+        <h1 className="font-display mb-8 text-balance text-3xl font-bold tracking-tight">
           Learn by manipulating systems, not reading about them.
         </h1>
 

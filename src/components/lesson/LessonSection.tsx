@@ -104,7 +104,7 @@ export function LessonSection({ id, children }: LessonSectionProps) {
           <span className="tech-num text-xs text-fg-faint">
             {String(index).padStart(2, "0")}
           </span>
-          <h2 className="font-display text-xl font-bold tracking-tight">
+          <h2 className="font-display text-balance text-xl font-bold tracking-tight">
             {section.title}
           </h2>
           <PermalinkButton id={id} />
@@ -134,14 +134,16 @@ function PermalinkButton({ id }: { id: string }) {
       onClick={copy}
       label="Copy link to this section"
       title="Copy section link"
-      size="sm"
-      className="self-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+      className="self-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-70"
     >
       {copied ? (
         <Check className="size-3.5 text-glow-green" />
       ) : (
         <LinkIcon className="size-3.5" />
       )}
+      <span role="status" className="sr-only">
+        {copied ? "Section link copied to clipboard" : ""}
+      </span>
     </IconButton>
   );
 }

@@ -28,7 +28,7 @@ export function TrackLanding({ trackSlug }: { trackSlug: string }) {
         <SectionRule className="mb-4">
           <span className="tech-label text-accent">{trackLabel(track)}</span>
         </SectionRule>
-        <h1 className="font-display mb-3 text-3xl font-bold tracking-tight">
+        <h1 className="font-display mb-3 text-balance text-3xl font-bold tracking-tight">
           {track.title}
         </h1>
         <p className="max-w-xl leading-relaxed text-fg-muted">

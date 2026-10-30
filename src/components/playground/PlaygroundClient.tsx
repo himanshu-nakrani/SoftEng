@@ -154,7 +154,7 @@ export function PlaygroundClient() {
             </span>
           }
         >
-          <h1 className="font-display text-3xl font-bold tracking-tight">
+          <h1 className="font-display text-balance text-3xl font-bold tracking-tight">
             {title}
           </h1>
           <span className="tech-label hidden md:inline">

@@ -32,7 +32,7 @@ export default function LearnPage() {
             {modules.length} modules · {live} lessons
           </span>
         </SectionRule>
-        <h1 className="font-display mb-3 text-3xl font-bold tracking-tight">
+        <h1 className="font-display mb-3 text-balance text-3xl font-bold tracking-tight">
           Learn systems by breaking them
         </h1>
         <p className="max-w-xl leading-relaxed text-fg-muted">

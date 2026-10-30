@@ -47,7 +47,7 @@ export default function ReviewPage() {
           <SectionRule className="mb-4">
             <span className="tech-label text-accent">review</span>
           </SectionRule>
-          <h1 className="font-display mb-3 text-3xl font-bold tracking-tight">
+          <h1 className="font-display mb-3 text-balance text-3xl font-bold tracking-tight">
             Every prediction, in one deck
           </h1>
           <p className="max-w-xl leading-relaxed text-fg-muted">
