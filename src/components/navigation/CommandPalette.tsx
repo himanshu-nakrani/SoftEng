@@ -22,10 +22,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 /**
  * ⌘K curriculum search.
  *
- * WHY IT EXISTS. The sidebar only ever renders the ACTIVE track, so with five
- * tracks and 49 lessons a lesson in another track is unreachable by browsing.
- * This palette is the cross-track jump: type a few letters, see the matching
- * lessons from EVERY track (title · module · track), Enter to go.
+ * WHY IT EXISTS. The sidebar only ever renders the ACTIVE track, so a lesson
+ * in another track is unreachable by browsing. This palette is the cross-track
+ * jump: type a few letters, see the matching lessons from EVERY track
+ * (title · module · track), Enter to go.
  *
  * The searchable list is derived from `allLessons` — the registry's cross-track
  * flattening, which is exactly its sanctioned use (a global index) — so a new

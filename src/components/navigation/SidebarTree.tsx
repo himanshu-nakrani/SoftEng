@@ -52,6 +52,7 @@ function SidebarLesson({
         aria-current={active ? "page" : undefined}
         aria-label={`${lesson.title} — ${activityLabel[progress.activity]}`}
         onClick={onNavigate}
+        title={lesson.title}
       >
         <span
           className={cn(
@@ -121,7 +122,7 @@ function TrackBranch({
           className="size-3.5 shrink-0 transition-transform group-open:rotate-90"
           strokeWidth={1.75}
         />
-        <span className="min-w-0 truncate">{track.title}</span>
+        <span className="min-w-0 line-clamp-2">{track.title}</span>
       </summary>
 
       <Link
@@ -193,6 +194,21 @@ export function SidebarTree({ onNavigate }: { onNavigate?: () => void }) {
         <Library className="size-4" strokeWidth={1.75} />
         All tracks
       </Link>
+      {/* The practice deck sits with the other cross-track jump, not buried
+          under eleven disclosures: a learner looking for something to
+          practise should not have to scroll the whole curriculum first. */}
+      <Link
+        href="/review"
+        aria-current={pathname === "/review" ? "page" : undefined}
+        onClick={onNavigate}
+        className={cn(
+          ROW,
+          "mb-2 text-fg-faint hover:translate-x-px hover:bg-surface/80 hover:text-fg-muted",
+        )}
+      >
+        <ListChecks className="size-4" strokeWidth={1.75} />
+        Review deck
+      </Link>
 
       {tracks.map((track) => (
         <TrackBranch
@@ -211,17 +227,6 @@ export function SidebarTree({ onNavigate }: { onNavigate?: () => void }) {
           onNavigate={onNavigate}
         />
       ))}
-
-      <div className="mt-1 border-t border-border pt-2">
-        <Link
-          href="/review"
-          onClick={onNavigate}
-          className={cn(ROW, "text-fg-muted hover:translate-x-px hover:bg-surface/80 hover:text-fg")}
-        >
-          <ListChecks className="size-4" strokeWidth={1.75} />
-          Review deck
-        </Link>
-      </div>
     </>
   );
 }

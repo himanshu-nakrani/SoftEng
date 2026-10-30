@@ -1,3 +1,4 @@
+import { CommandPalette } from "@/components/navigation/CommandPalette";
 import { ThemeToggle } from "@/components/navigation/ThemeToggle";
 import { cn } from "@/lib/cn";
 import Link from "next/link";
@@ -65,6 +66,7 @@ export function SiteHeader({
       <Wordmark />
       <nav aria-label="Site" className="flex items-center gap-5">
         {nav}
+        <CommandPalette />
         <ThemeToggle />
       </nav>
     </header>
