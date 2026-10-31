@@ -37,13 +37,14 @@ export function LearningConnections({ meta }: { meta: LessonMeta }) {
           <Link
             key={lesson.slug}
             href={href}
+            title={lesson.title}
             className="group flex min-h-16 items-center justify-between gap-3 rounded-lg border border-border bg-raised/45 px-3.5 py-3 transition-colors hover:border-border-bright hover:bg-raised"
           >
             <span className="min-w-0">
               <span className="block font-mono text-[9px] tracking-widest text-fg-faint uppercase">
                 {relation}
               </span>
-              <span className="mt-0.5 block truncate font-display text-sm font-semibold text-fg">
+              <span className="mt-0.5 block line-clamp-2 font-display text-sm font-semibold text-fg">
                 {lesson.title}
               </span>
             </span>

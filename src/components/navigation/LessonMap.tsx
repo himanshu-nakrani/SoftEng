@@ -113,7 +113,7 @@ export function TrackProgress({ trackSlug }: { trackSlug: string }) {
         <span className="tech-num ml-auto text-[11px] text-fg-faint">
           {track.done} / {track.total} sections
           <span className="hidden sm:inline">
-            {` · ${track.lessonsExplored}/${track.lessons} explored`}
+            {` · ${track.lessonsExplored} of ${track.lessons} lessons explored`}
             {track.lessonsPredicted > 0 && ` · ${track.lessonsPredicted} predicted`}
           </span>
           {track.lessonsMastered > 0 && (

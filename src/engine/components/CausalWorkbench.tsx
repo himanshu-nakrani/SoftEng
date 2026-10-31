@@ -80,6 +80,7 @@ export function CausalEventTape({ focuses, activeId, onSelect }: EventTapeProps)
               type="button"
               onClick={() => onSelect(focus)}
               aria-pressed={active}
+              title={focus.label}
               className={cn("causal-tape-event", active && "is-active")}
             >
               <div className="flex w-full items-center justify-between gap-1">

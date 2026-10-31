@@ -283,7 +283,7 @@ function MetersRow({
               "relative flex-1 min-w-[110px] rounded-lg px-3 py-2 transition-all duration-200",
               isFocused
                 ? "causal-meter-focus"
-                : "border border-border/40 bg-surface/50 hover:border-border-bright/80 hover:bg-surface/80 hover:shadow-xs",
+                : "border border-border/60 bg-surface/70 hover:border-border-bright/80 hover:bg-surface/90 hover:shadow-xs",
             )}
           >
             <Meter

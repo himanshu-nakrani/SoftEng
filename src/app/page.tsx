@@ -56,10 +56,18 @@ export default function Home() {
   const availableCount = allLessons.filter(
     (l) => l.status === "available",
   ).length;
-  const allLive = availableCount === allLessons.length;
   const totalMinutes = allLessons
     .filter((lesson) => lesson.status === "available")
     .reduce((sum, lesson) => sum + lesson.estimatedMinutes, 0);
+  // The manifest below lists ONE track, so its title-block stamp carries that
+  // track's own numbers. The site-wide totals already appear once, in the hero
+  // ledger line; repeating them here — under a single track's heading — read as
+  // this track's size and contradicted the five module rows beneath it.
+  const featuredLessons = featured.modules.flatMap((m) => m.lessons);
+  const featuredLive = featuredLessons.filter(
+    (l) => l.status === "available",
+  ).length;
+  const featuredAllLive = featuredLive === featuredLessons.length;
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
@@ -183,9 +191,9 @@ export default function Home() {
               {featured.title}
             </h2>
             <p className="tech-num text-xs text-fg-faint">
-              {allLive
-                ? `${allLessons.length} lessons · ${modules.length} modules`
-                : `${availableCount}/${allLessons.length} lessons live`}
+              {featuredAllLive
+                ? `${featuredLive} lessons · ${featured.modules.length} modules`
+                : `${featuredLive}/${featuredLessons.length} lessons live`}
             </p>
           </div>
 
