@@ -6,6 +6,7 @@ import { useHydrated } from "@/hooks/use-hydrated";
 
 import { IconButton } from "@/components/ui/IconButton";
 import { Badge } from "@/components/ui/Badge";
+import { Kbd } from "@/components/ui/Kbd";
 import { cn } from "@/lib/cn";
 import {
   allLessons,
@@ -21,10 +22,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 /**
  * ⌘K curriculum search.
  *
- * WHY IT EXISTS. The sidebar only ever renders the ACTIVE track, so with five
- * tracks and 49 lessons a lesson in another track is unreachable by browsing.
- * This palette is the cross-track jump: type a few letters, see the matching
- * lessons from EVERY track (title · module · track), Enter to go.
+ * WHY IT EXISTS. The sidebar only ever renders the ACTIVE track, so a lesson
+ * in another track is unreachable by browsing. This palette is the cross-track
+ * jump: type a few letters, see the matching lessons from EVERY track
+ * (title · module · track), Enter to go.
  *
  * The searchable list is derived from `allLessons` — the registry's cross-track
  * flattening, which is exactly its sanctioned use (a global index) — so a new
@@ -114,9 +115,7 @@ export function CommandPalette() {
   // a second setState-in-effect gate, which the lint rule rightly bans.
   const mounted = useHydrated();
 
-  // `IconButton` renders the button and does not forward a ref, so we hold the
-  // wrapper and focus its button child when restoring focus on close.
-  const triggerRef = useRef<HTMLSpanElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
@@ -160,7 +159,7 @@ export function CommandPalette() {
   useEffect(() => {
     if (!open) return;
 
-    const trigger = triggerRef.current?.querySelector("button");
+    const trigger = triggerRef.current;
     const dialog = dialogRef.current;
 
     // Defer to the paint so the input exists before we focus it.
@@ -238,18 +237,17 @@ export function CommandPalette() {
 
   return (
     <>
-      <span ref={triggerRef} className="contents">
-        <IconButton
-          variant="bordered"
-          onClick={() => setOpen(true)}
-          aria-haspopup="dialog"
-          aria-expanded={open}
-          label="Search lessons"
-          title="Search lessons  (⌘K)"
-        >
-          <Search className="size-4" strokeWidth={1.75} />
-        </IconButton>
-      </span>
+      <IconButton
+        ref={triggerRef}
+        variant="bordered"
+        onClick={() => setOpen(true)}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        label="Search lessons"
+        title="Search lessons  (⌘K)"
+      >
+        <Search className="size-4" strokeWidth={1.75} />
+      </IconButton>
 
       {/*
         PORTALED TO THE BODY. Rendering in place put the dialog inside the
@@ -310,13 +308,10 @@ export function CommandPalette() {
                 onChange={(event) => setQuery(event.target.value)}
                 onKeyDown={onInputKeyDown}
                 className={cn(
-                  "min-w-0 flex-1 bg-transparent text-sm text-fg",
-                  "placeholder:text-fg-faint focus:outline-none",
+                  "focus-own min-w-0 flex-1 appearance-none bg-transparent text-sm text-fg",
+                  "placeholder:text-fg-faint",
                 )}
               />
-              <span className="hidden shrink-0 font-mono text-[9px] tracking-widest text-fg-faint uppercase sm:inline">
-                esc
-              </span>
             </div>
 
             {/* Result count, announced politely; also a visible header row. */}
@@ -357,8 +352,10 @@ export function CommandPalette() {
                       onMouseMove={() => setActiveIndex(i)}
                       className={cn(
                         "mx-1 flex cursor-pointer items-center gap-3 rounded-md px-2.5 py-2",
-                        "transition-[background,color] duration-150",
-                        active ? "bg-accent/10 text-fg" : "text-fg-muted",
+                        "transition-[background,color,box-shadow] duration-150 ease-[var(--ease-out-soft)]",
+                        active
+                          ? "bg-accent/10 text-fg shadow-[inset_2px_0_0_var(--color-accent)]"
+                          : "text-fg-muted",
                       )}
                     >
                       <span className="min-w-0 flex-1">
@@ -382,6 +379,25 @@ export function CommandPalette() {
                 })
               )}
             </ul>
+            {/* Keyboard contract, stated where the keyboard is being used.
+                The input row used to carry a lone `esc` chip — the one hint
+                nobody needs (every dialog closes) — while the hints that
+                make the list usable without a mouse were nowhere. */}
+            <div className="flex items-center gap-4 border-t border-border px-3.5 py-2 font-mono text-[9px] tracking-widest text-fg-faint uppercase">
+              <span className="flex items-center gap-1.5">
+                <Kbd>↑</Kbd>
+                <Kbd>↓</Kbd>
+                navigate
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Kbd>↵</Kbd>
+                open
+              </span>
+              <span className="ml-auto flex items-center gap-1.5">
+                <Kbd>esc</Kbd>
+                close
+              </span>
+            </div>
           </div>
           </div>,
           document.body,

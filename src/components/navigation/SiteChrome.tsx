@@ -1,3 +1,5 @@
+import { CommandPalette } from "@/components/navigation/CommandPalette";
+import { ThemeToggle } from "@/components/navigation/ThemeToggle";
 import { cn } from "@/lib/cn";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -10,7 +12,7 @@ const widths = {
 
 export type SiteWidth = keyof typeof widths;
 
-/** The wordmark: display voice, one phosphor pip, one link home. */
+/** The wordmark: display voice, one accent pip, one link home. */
 export function Wordmark({
   className,
   onClick,
@@ -64,6 +66,8 @@ export function SiteHeader({
       <Wordmark />
       <nav aria-label="Site" className="flex items-center gap-5">
         {nav}
+        <CommandPalette />
+        <ThemeToggle />
       </nav>
     </header>
   );

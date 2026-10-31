@@ -1,0 +1,23 @@
+{
+  "lesson": "http-protocols/http-pipelining-hol",
+  "seed": 42,
+  "runTo": 30,
+  "checkpoints": [
+    {
+      "label": "t=30",
+      "t": 30,
+      "metrics": {
+        "completed": 24,
+        "holDelayMs": 725,
+        "inFlight": 0,
+        "pageMs": 1338
+      },
+      "packets": 0,
+      "nextPacketId": 49,
+      "nodes": {
+        "client": "healthy",
+        "server": "healthy"
+      }
+    }
+  ]
+}

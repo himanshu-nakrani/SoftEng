@@ -1,10 +1,11 @@
 "use client";
 
+import { CONTROL_STRIP, CONTROL_VALUE, INSTRUMENT_BUTTON } from "@/components/ui/control-chrome";
 import { CornerTicks } from "@/components/ui/CornerTicks";
 import { Meter } from "@/components/ui/Meter";
 import { PlateLabel } from "@/components/ui/PlateLabel";
 import { Dices } from "lucide-react";
-import type { ComponentType } from "react";
+import type { ComponentType, CSSProperties } from "react";
 import { useState } from "react";
 import { AlgoTransportBar } from "./AlgoTransportBar";
 import { CodePanel } from "./CodePanel";
@@ -54,7 +55,12 @@ export function AlgoFigure<S, I>({
       <div className="relative grid bg-bg/40 lg:grid-cols-[1fr_240px]">
         <div className="relative flex flex-col">
           <CornerTicks />
-          <PlateLabel className="absolute top-2.5 right-5">
+          {/* Views draw their own title plate at the stage's top-LEFT (the
+              policy, the phase). This marginalia stamp owns the top-RIGHT —
+              until the stage is narrow enough that a long def id reaches
+              across and prints over the view's title, which is exactly what
+              happened at phone widths. Marginalia yields first. */}
+          <PlateLabel className="absolute top-2.5 right-5 hidden sm:block">
             fig · {def.id} · seed {seed}
           </PlateLabel>
           <View state={current.state} />
@@ -86,15 +92,11 @@ export function AlgoFigure<S, I>({
       {/* counters — declared by the def, so a new algorithm adds its own
           (splits, disk reads, retries) without touching the figure */}
       {def.counters.length > 0 && (
-        <div className="flex flex-wrap items-stretch border-t border-border px-4 py-3">
-          {def.counters.map((counter, i) => (
+        <div className="flex flex-wrap items-stretch gap-2.5 border-t border-border px-4 py-3">
+          {def.counters.map((counter) => (
             <div
               key={counter.key}
-              className={
-                i === 0
-                  ? "pr-6"
-                  : "border-l border-border px-6"
-              }
+              className="flex-1 min-w-[120px] rounded-lg border border-border/50 bg-surface/40 p-2.5 transition-all duration-200 hover:border-border"
             >
               <Meter
                 spec={{
@@ -115,12 +117,12 @@ export function AlgoFigure<S, I>({
           lesson def with a `size` was actually rendered. */}
 
       {/* input controls */}
-      <div className="flex flex-wrap items-end gap-x-6 gap-y-3 border-t border-border px-4 py-3">
+      <div className={CONTROL_STRIP}>
         {def.size && (
-          <label className="flex min-w-36 flex-col gap-1.5">
+          <label className="flex flex-1 min-w-[160px] max-w-sm flex-col gap-1.5">
             <span className="tech-label flex items-baseline justify-between gap-3">
-              {def.size.label}
-              <span className="tech-num text-accent normal-case">{size}</span>
+              <span className="truncate">{def.size.label}</span>
+              <span className={CONTROL_VALUE}>{size}</span>
             </span>
             <input
               type="range"
@@ -130,13 +132,19 @@ export function AlgoFigure<S, I>({
               value={size}
               onChange={(e) => setSize(Number(e.target.value))}
               className="sim-slider h-1 w-full cursor-pointer appearance-none rounded-full bg-border accent-accent"
+              style={
+                {
+                  "--fill": `${((size - def.size.min) / Math.max(def.size.max - def.size.min, 1)) * 100}%`,
+                } as CSSProperties
+              }
             />
           </label>
         )}
         <button
+          type="button"
           onClick={() => setSeed((s) => (s * 48271) % 2147483647)}
           title="New random input (deterministic per seed)"
-          className="flex cursor-pointer items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 font-mono text-[11px] text-fg-muted transition-colors hover:border-border-bright hover:text-fg"
+          className={INSTRUMENT_BUTTON}
         >
           <Dices className="size-3.5" />
           shuffle · seed {seed}

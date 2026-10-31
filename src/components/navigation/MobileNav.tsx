@@ -26,9 +26,11 @@ import { createPortal } from "react-dom";
 
 const DRAWER_ID = "mobile-nav-drawer";
 
-/** Tab-order members inside the panel. Kept in one place for the trap. */
+/** Tab-order members inside the panel. Kept in one place for the trap.
+    `summary` is included because a closed track disclosure's summary is the
+    ONLY focusable thing that branch offers. */
 const FOCUSABLE =
-  'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+  'a[href], button:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
 
 /** Tailwind's `md` — where the desktop sidebar takes over from the drawer. */
 const DESKTOP_QUERY = "(min-width: 48rem)";
@@ -85,7 +87,17 @@ export function MobileNav() {
     body.style.overflow = "hidden";
 
     const focusables = () =>
-      Array.from(panel?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []);
+      Array.from(panel?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []).filter(
+        // A closed <details> hides its lesson links from the tab order but
+        // its summary stays focusable — it is the only way to open that
+        // branch. Filter out every descendant of a closed disclosure EXCEPT
+        // the summary itself; otherwise Shift+Tab from the wordmark has no
+        // visible last control to land on.
+        // DOM-based, not layout-based: jsdom has no rectangles.
+        (el) =>
+          el.tagName === "SUMMARY" ||
+          el.closest("details:not([open])") === null,
+      );
 
     // Move focus into the panel: its first link (the wordmark), so the very
     // next Tab walks the tree.
@@ -207,17 +219,16 @@ export function MobileNav() {
 
   return (
     <>
-      <button
+      <IconButton
         ref={triggerRef}
-        type="button"
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
         aria-controls={DRAWER_ID}
-        aria-label="Navigation menu"
-        className="-ml-1.5 flex size-9 shrink-0 items-center justify-center rounded-lg text-fg-muted transition-colors hover:bg-surface hover:text-fg"
+        label="Navigation menu"
+        className="-ml-1.5 size-9"
       >
         <Menu className="size-5" strokeWidth={1.75} />
-      </button>
+      </IconButton>
 
       {/* Portalled only after mount: the static HTML has no document. */}
       {hydrated && createPortal(drawer, document.body)}

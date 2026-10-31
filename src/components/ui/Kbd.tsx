@@ -12,8 +12,8 @@ export function Kbd({
   return (
     <kbd
       className={cn(
-        "inline-flex items-center rounded border border-border bg-raised px-1.5 py-0.5",
-        "font-mono text-[11px] text-fg-muted shadow-[0_1px_0_var(--color-border)]",
+        "inline-flex items-center rounded-md border border-border bg-raised px-1.5 py-0.5",
+        "font-mono text-[11px] text-fg-muted normal-case shadow-[0_1px_0_var(--color-border)]",
         className,
       )}
     >

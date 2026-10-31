@@ -13,6 +13,8 @@ import {
   IBM_Plex_Mono,
   IBM_Plex_Sans,
 } from "next/font/google";
+import { THEME_BOOT } from "@/lib/theme";
+import Script from "next/script";
 import "./globals.css";
 
 /**
@@ -83,10 +85,9 @@ export const metadata: Metadata = {
   keywords: [
     "system design",
     "distributed systems",
+    "operating systems",
+    "concurrency",
     "interactive simulation",
-    "scalability",
-    "caching",
-    "load balancing",
     "learn by doing",
   ],
   category: "education",
@@ -110,10 +111,13 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  // --color-bg oklch(13.5% 0.01 70) as sRGB. One value across the manifest,
-  // the favicon and here, so browser chrome, PWA splash and the app agree.
-  themeColor: "#0b0805",
-  colorScheme: "dark",
+  // Dark mineral / light paper. Browser chrome follows the OS; the PWA
+  // splash and favicon stay on the dark pair (one asset).
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#e7ecf0" },
+    { media: "(prefers-color-scheme: dark)", color: "#1c1f21" },
+  ],
+  colorScheme: "light dark",
 };
 
 export default function RootLayout({
@@ -122,10 +126,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${bricolage.variable} ${plexSans.variable} ${plexMono.variable} font-sans antialiased`}
       >
+        <Script
+          id="syslab-theme"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: THEME_BOOT }}
+        />
         {/* Keyboard-only escape hatch past the nav; invisible until focused. */}
         <a
           href="#main"

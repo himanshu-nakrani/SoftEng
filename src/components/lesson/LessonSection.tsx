@@ -1,5 +1,6 @@
 "use client";
 
+import { IconButton } from "@/components/ui/IconButton";
 import { Check, Link as LinkIcon } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { SectionRule } from "@/components/ui/SectionRule";
@@ -103,7 +104,7 @@ export function LessonSection({ id, children }: LessonSectionProps) {
           <span className="tech-num text-xs text-fg-faint">
             {String(index).padStart(2, "0")}
           </span>
-          <h2 className="font-display text-xl font-bold tracking-tight">
+          <h2 className="font-display text-balance text-xl font-bold tracking-tight">
             {section.title}
           </h2>
           <PermalinkButton id={id} />
@@ -129,17 +130,20 @@ function PermalinkButton({ id }: { id: string }) {
     }
   };
   return (
-    <button
+    <IconButton
       onClick={copy}
-      aria-label="Copy link to this section"
+      label="Copy link to this section"
       title="Copy section link"
-      className="cursor-pointer self-center opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+      className="self-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-70"
     >
       {copied ? (
         <Check className="size-3.5 text-glow-green" />
       ) : (
-        <LinkIcon className="size-3.5 text-fg-faint hover:text-fg-muted" />
+        <LinkIcon className="size-3.5" />
       )}
-    </button>
+      <span role="status" className="sr-only">
+        {copied ? "Section link copied to clipboard" : ""}
+      </span>
+    </IconButton>
   );
 }

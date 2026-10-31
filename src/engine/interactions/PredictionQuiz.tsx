@@ -1,8 +1,9 @@
 "use client";
 
-import { cn } from "@/lib/cn";
+import { Button } from "@/components/ui/Button";
+import { ChoiceOption } from "@/components/ui/ChoiceOption";
 import { CornerTicks } from "@/components/ui/CornerTicks";
-import { ArrowRight, Check, X } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useId, useRef, type KeyboardEvent } from "react";
 import type { QuizCheckpoint } from "../types";
@@ -239,32 +240,18 @@ export function PredictionQuiz({
                 const correct = choice.id === quiz.correctChoiceId;
                 const revealed = answer !== null;
                 return (
-                  <button
+                  <ChoiceOption
                     key={choice.id}
                     ref={(el) => {
                       choiceRefs.current[i] = el;
                     }}
-                    type="button"
-                    disabled={revealed}
+                    revealed={revealed}
+                    chosen={chosen}
+                    correct={correct}
                     onClick={() => onAnswer(choice.id)}
-                    className={cn(
-                      "relative flex cursor-pointer items-center gap-2.5 rounded-sm border px-3.5 py-2.5 text-left text-sm transition-all",
-                      !revealed &&
-                        "border-border hover:border-border-bright hover:bg-raised",
-                      revealed && correct &&
-                        "border-glow-green/60 bg-glow-green-dim text-glow-green",
-                      revealed && chosen && !correct &&
-                        "border-glow-red/60 bg-glow-red-dim text-glow-red",
-                      revealed && !chosen && !correct &&
-                        "border-border opacity-45",
-                    )}
                   >
-                    {revealed && correct && <Check className="size-4 shrink-0" />}
-                    {revealed && chosen && !correct && (
-                      <X className="size-4 shrink-0" />
-                    )}
                     {choice.label}
-                  </button>
+                  </ChoiceOption>
                 );
               })}
             </div>
@@ -287,25 +274,24 @@ export function PredictionQuiz({
                     {quiz.explain}
                   </p>
                   <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                    <button
-                      type="button"
+                    <Button
                       onClick={() => {
                         dismissedRef.current = true;
                         onDismiss();
                       }}
-                      className="cursor-pointer rounded-md border border-border bg-raised px-4 py-2.5 text-sm font-semibold text-fg transition-colors hover:border-border-bright hover:bg-surface"
+                      className="h-auto py-2.5 font-semibold"
                     >
                       Close and inspect
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       ref={resumeRef}
-                      type="button"
+                      variant="primary"
                       onClick={onResume}
-                      className="flex cursor-pointer items-center justify-center gap-2 rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-bg transition-all hover:brightness-110"
+                      className="h-auto py-2.5 font-semibold"
                     >
                       Watch it happen
                       <ArrowRight className="size-4" />
-                    </button>
+                    </Button>
                   </div>
                 </motion.div>
               )}

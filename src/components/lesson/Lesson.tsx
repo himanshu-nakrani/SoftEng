@@ -8,6 +8,7 @@ import { cn } from "@/lib/cn";
 import { difficultyClass } from "@/lib/accent";
 import { getLesson, moduleOf, prerequisiteLabels } from "@/lib/curriculum";
 import { useProgress } from "@/stores/progress";
+import { INSTRUMENT_BUTTON } from "@/components/ui/control-chrome";
 import { SectionRule } from "@/components/ui/SectionRule";
 import { BookOpen, Focus, Sparkles } from "lucide-react";
 import { useCallback, useState, type ReactNode } from "react";
@@ -100,6 +101,7 @@ function LessonProgressStrip({ meta }: { meta: LessonMeta }) {
 
   return (
     <div
+      role="group"
       className="mt-5 rounded-sm border border-border bg-bg/25 px-3.5 py-3"
       aria-label={`Lesson progress: ${progress.done} of ${progress.total} sections, ${activityCopy[progress.activity]}`}
     >
@@ -195,7 +197,7 @@ export function Lesson({ slug, children }: LessonProps) {
               </SectionRule>
 
               <div>
-                <h1 className="font-display mb-3 text-3xl font-bold tracking-tight sm:text-4xl">
+                <h1 className="font-display mb-3 text-balance text-3xl font-bold tracking-tight sm:text-4xl">
                   {meta.title}
               </h1>
               <p className="mb-6 max-w-2xl leading-relaxed text-fg-muted">
@@ -225,17 +227,23 @@ export function Lesson({ slug, children }: LessonProps) {
 
               <LessonProgressStrip meta={meta} />
 
-                <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-xs text-fg-faint">
-                    Read the causal story first, then restore the full instrument.
-                  </p>
-                  <button
-                    type="button"
-                    aria-pressed={calibration}
-                    aria-label={calibration ? "Return to experiment mode" : "Enter reading mode"}
-                    onClick={() => setCalibration((value) => !value)}
-                    className="inline-flex min-h-8 cursor-pointer items-center gap-2 rounded-md border border-border bg-raised px-3 py-1.5 font-mono text-[10px] tracking-widest text-fg-muted uppercase transition-colors hover:border-border-bright hover:bg-surface hover:text-fg"
-                  >
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                <p className="text-xs text-fg-faint">
+                  {calibration
+                    ? "Secondary instruments are hidden; the stage and its captions carry the story."
+                    : "Read the causal story first, then restore the full instrument."}
+                </p>
+                <button
+                  type="button"
+                  aria-pressed={calibration}
+                  aria-label={calibration ? "Return to experiment mode" : "Enter reading mode"}
+                  onClick={() => setCalibration((value) => !value)}
+                  className={cn(
+                    INSTRUMENT_BUTTON,
+                    "tracking-widest uppercase",
+                    calibration && "border-accent/50 bg-accent-dim text-fg",
+                  )}
+                >
                   <Focus className="size-3.5 text-accent" strokeWidth={1.75} />
                   {calibration ? "Return to experiment" : "Reading mode"}
                 </button>

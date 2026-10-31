@@ -1,5 +1,6 @@
 "use client";
 
+import { CLOCK_CHIP, INSTRUMENT_DIVIDER, TRANSPORT_ROW } from "@/components/ui/control-chrome";
 import { IconButton } from "@/components/ui/IconButton";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { cn } from "@/lib/cn";
@@ -265,7 +266,7 @@ export function TransportBar({
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-1 border-t border-border px-3 py-2">
+      <div className={TRANSPORT_ROW}>
         <IconButton
           /**
            * Explicit intent, NOT `controls.toggle`.
@@ -317,7 +318,7 @@ export function TransportBar({
           <RotateCcw className="size-4" />
         </IconButton>
 
-        <div className="mx-2 h-4 w-px bg-border" />
+        <div className={INSTRUMENT_DIVIDER} />
 
         <SegmentedControl
           ariaLabel="Playback speed"
@@ -392,64 +393,60 @@ export function TransportBar({
                 title={m.title}
                 style={{ left: `${(m.at / scrubMax) * 100}%` }}
                 className={cn(
-                  "absolute -translate-x-1/2 -translate-y-1/2 ring-1 ring-bg",
+                  "absolute -translate-x-1/2 -translate-y-1/2 ring-2 ring-surface shadow-xs transition-transform duration-150",
                   m.kind === "checkpoint"
-                    ? "size-1.5 rotate-45 bg-glow-violet"
-                    : "size-1 rounded-full bg-fg-muted",
+                    ? "size-2 rotate-45 bg-glow-violet shadow-[0_0_6px_var(--color-glow-violet)]"
+                    : "size-1.5 rounded-full bg-fg-muted",
                 )}
               />
             ))}
           </div>
         </div>
 
-        <span className="tech-num ml-auto flex items-center gap-2 text-xs text-fg-muted">
-          <span
-            className={cn(
-              "size-1.5 rounded-full",
-              playing
-                ? "animate-pulse bg-glow-green shadow-[0_0_6px_var(--color-glow-green)]"
-                : quizzing
-                  ? "bg-glow-violet"
-                  : "bg-glow-orange",
-            )}
-          />
-          t={t.toFixed(1)}s
-        </span>
-        <span role="status" className="sr-only">
-          {quizzing
-            ? "Checkpoint open. Answer the prediction to continue."
-            : playing
-              ? "Simulation playing."
-              : `Simulation paused at ${t.toFixed(1)} seconds.`}
-        </span>
+        <div className="ml-auto flex items-center gap-1">
+          <span className={CLOCK_CHIP}>
+            <span
+              className={cn(
+                "size-1.5 rounded-full transition-all duration-300",
+                playing
+                  ? "animate-pulse bg-glow-green shadow-[0_0_8px_var(--color-glow-green)]"
+                  : quizzing
+                    ? "bg-glow-violet shadow-[0_0_8px_var(--color-glow-violet)]"
+                    : "bg-glow-orange shadow-[0_0_6px_var(--color-glow-orange)]",
+              )}
+            />
+            t={t.toFixed(1)}s
+          </span>
+          <span role="status" className="sr-only">
+            {quizzing
+              ? "Checkpoint open. Answer the prediction to continue."
+              : playing
+                ? "Simulation playing."
+                : `Simulation paused at ${t.toFixed(1)} seconds.`}
+          </span>
 
-        {/* Transcript toggle — last in the row, right of the clock, because it
-            opens the thing that hangs below the bar rather than acting on the
-            run. The clock keeps its own `ml-auto`; a second auto margin here
-            would split the free space between them and float this into the
-            middle of the row on narrow screens. */}
-        <IconButton
-          onClick={() => setTranscriptOpen((v) => !v)}
-          disabled={transcriptDisabled}
-          aria-expanded={transcriptOpen}
-          aria-controls={transcriptId}
-          label={
-            transcriptOpen ? "Hide caption transcript" : "Show caption transcript"
-          }
-          title={
-            transcriptDisabled
-              ? "Transcript — no captions yet"
-              : transcriptOpen
-                ? "Hide the caption transcript"
-                : "Show the caption transcript (every caption so far, seekable)"
-          }
-          className={cn(
-            "ml-1",
-            transcriptOpen ? "bg-raised text-accent" : undefined,
-          )}
-        >
-          <ListVideo className="size-4" />
-        </IconButton>
+          {/* Transcript toggle — clustered with the clock so a wrap keeps both
+              on the first row; the slider is `order-last` and takes the next. */}
+          <IconButton
+            onClick={() => setTranscriptOpen((v) => !v)}
+            disabled={transcriptDisabled}
+            aria-expanded={transcriptOpen}
+            aria-controls={transcriptId}
+            label={
+              transcriptOpen ? "Hide caption transcript" : "Show caption transcript"
+            }
+            title={
+              transcriptDisabled
+                ? "Transcript — no captions yet"
+                : transcriptOpen
+                  ? "Hide the caption transcript"
+                  : "Show the caption transcript (every caption so far, seekable)"
+            }
+            className={transcriptOpen ? "bg-raised text-accent" : undefined}
+          >
+            <ListVideo className="size-4" />
+          </IconButton>
+        </div>
       </div>
       <TranscriptPanel
         id={transcriptId}

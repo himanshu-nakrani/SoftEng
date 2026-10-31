@@ -1,24 +1,30 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
-   syslab design tokens — dark, technical, refined.
-   Warm graphite surfaces, phosphor-amber primary, hairline borders, glow accents.
-   These CSS variables are shared verbatim by UI *and* SVG visualizations so
-   the whole site speaks one visual language.
+   syslab design tokens.
+
+   Two palettes, one grammar. Dark (default) is mineral gray with an oxidized
+   teal accent. Light (`html[data-theme="light"]`) is pale cool paper with a
+   deep indigo accent. SVG viz and UI share these variables — packet colors,
+   node strokes, meter fills, and overlay hues must reference tokens, never
+   hard-coded colors.
+
+   Hex is the source; OG/PWA copies in src/lib/og.tsx, icon.svg, and the
+   manifest must stay in sync.
 --------------------------------------------------------------------------- */
 
 @theme {
-  /* surfaces — warm graphite, night-shift control room */
-  --color-bg: oklch(13.5% 0.01 70);
-  --color-surface: oklch(16.5% 0.012 70);
-  --color-raised: oklch(20% 0.014 70);
-  --color-overlay: oklch(23% 0.016 70);
+  /* surfaces — mineral shade (theme 4). Overridden for light below. */
+  --color-bg: #1c1f21;
+  --color-surface: #232628;
+  --color-raised: #2a2e30;
+  --color-overlay: #323638;
 
   /* hairlines */
-  --color-border: oklch(27% 0.016 70);
-  --color-border-bright: oklch(36% 0.02 70);
+  --color-border: #34383a;
+  --color-border-bright: #4a5254;
 
-  /* text — warm off-whites. The quiet-text LADDER is a contract:
+  /* text — the quiet-text LADDER is a contract:
      - fg        the sentence itself (prose, active states)
      - fg-muted  support voice — captions, inactive controls, secondary prose
      - fg-faint  marginalia — stamps, timestamps, units, footers. ALWAYS as
@@ -27,35 +33,33 @@
                  (/50, /70, /80) never do; they composite below threshold and
                  are banned for text. Borders and decorative marks may still
                  use alpha. */
-  --color-fg: oklch(93% 0.008 80);
-  --color-fg-muted: oklch(66% 0.014 75);
-  --color-fg-faint: oklch(60% 0.014 75);
+  --color-fg: #e4e6e5;
+  --color-fg-muted: #a3aaa8;
+  --color-fg-faint: #9aa19f;
 
-  /* Radius grammar (plate geometry): near-square PLATES (cards, figure
-     shells, overlays — usually CornerTicks-framed) vs machined CONTROLS
-     (`rounded-md`, buttons/inputs/segments, left at Tailwind's 6px default).
-     Circles keep `rounded-full` (pips, rings, toggles). No other radius
-     values exist; don't reintroduce them. */
-  --radius-sm: 2px;
-  --radius-lg: 2px;
-  --radius-xl: 2px;
-  --radius: 2px;
+  /* Radius grammar: plates/chips/asides at 8px; controls stay rounded-md
+     (6px); circles keep rounded-full. */
+  --radius-sm: 8px;
+  --radius-lg: 8px;
+  --radius-xl: 8px;
+  --radius: 8px;
 
-  /* PRIMARY — phosphor amber: CTAs, request packets, rings, outlined type */
-  --color-accent: oklch(80% 0.15 80);
-  --color-accent-dim: oklch(80% 0.15 80 / 12%);
+  /* PRIMARY — oxidized teal in dark, indigo in light */
+  --color-accent: #8fbfb6;
+  --color-accent-dim: color-mix(in oklab, #8fbfb6 14%, transparent);
 
-  /* semantic glow accents (glow-amber === accent; orange is the WARNING
-     hue so degraded states never impersonate the brand color) */
-  --color-glow-amber: oklch(80% 0.15 80);
+  /* semantic glow accents for simulation data. Orange is the WARNING hue
+     so degraded states never impersonate the brand color. Cyan is info.
+     Red means capacity loss/faults, not policy refusals. Track identity
+     still maps through glow-amber/violet/… — not through --color-accent. */
+  --color-glow-amber: #d4a84b;
   --color-glow-orange: oklch(72% 0.16 50);
-  --color-glow-cyan: oklch(80% 0.11 210); /* demoted: info, misses */
+  --color-glow-cyan: oklch(80% 0.11 210);
   --color-glow-violet: oklch(74% 0.14 300);
   --color-glow-green: oklch(80% 0.15 150);
   --color-glow-red: oklch(66% 0.19 28);
 
-  /* dimmed accent surfaces (chips, badges, meter tracks) */
-  --color-glow-amber-dim: oklch(80% 0.15 80 / 12%);
+  --color-glow-amber-dim: color-mix(in oklab, #d4a84b 12%, transparent);
   --color-glow-orange-dim: oklch(72% 0.16 50 / 12%);
   --color-glow-cyan-dim: oklch(80% 0.11 210 / 12%);
   --color-glow-violet-dim: oklch(74% 0.14 300 / 12%);
@@ -77,9 +81,6 @@
 
 html {
   scroll-behavior: smooth;
-  /* The site is dark-only, so tell the UA: native controls (scrollbars, range
-     inputs, form widgets, the canvas behind the page) render dark chrome
-     instead of light. */
   color-scheme: dark;
 }
 
@@ -92,14 +93,27 @@ body {
 }
 
 ::selection {
-  background: oklch(80% 0.15 80 / 25%);
+  background: color-mix(in oklab, var(--color-accent) 28%, transparent);
   color: var(--color-fg);
 }
 
 :focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
-  border-radius: 2px;
+}
+
+/*
+  Opt out of the global ring. Unlayered so it actually wins (Tailwind
+  utilities sit in a layer and cannot override this file's :focus-visible).
+  Use when the control paints its own focus (slider thumbs, combobox
+  input, a field that uses a box-shadow ring instead).
+*/
+.focus-own:focus-visible,
+.sim-slider:focus-visible,
+input[type="range"].accent-accent:focus-visible,
+.field:focus-visible,
+.causal-node-select:focus-visible {
+  outline: none;
 }
 
 /* thin dark scrollbars */
@@ -108,16 +122,39 @@ body {
   scrollbar-color: var(--color-border-bright) transparent;
 }
 
-/* film grain — kills flat digital surfaces; sits above everything, inert */
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  pointer-events: none;
-  opacity: 0.05;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 180px 180px;
+/* pale cool paper (theme 1). Boot script sets data-theme from storage or OS. */
+.theme-sun { display: block; }
+.theme-moon { display: none; }
+html[data-theme="light"] .theme-sun { display: none; }
+html[data-theme="light"] .theme-moon { display: block; }
+
+html[data-theme="light"] {
+  color-scheme: light;
+  --color-bg: #e7ecf0;
+  --color-surface: #f4f7f9;
+  --color-raised: #ffffff;
+  --color-overlay: #dce3e8;
+  --color-border: #c5ced4;
+  --color-border-bright: #9aa8b0;
+  --color-fg: #1a2328;
+  --color-fg-muted: #3e4c54;
+  --color-fg-faint: #4e5c64;
+  --color-accent: #2c4a6e;
+  --color-accent-dim: color-mix(in oklab, #2c4a6e 12%, transparent);
+
+  --color-glow-amber: #8a5806;
+  --color-glow-orange: #a34509;
+  --color-glow-cyan: #0a687d;
+  --color-glow-violet: #6938ab;
+  --color-glow-green: #1d6e38;
+  --color-glow-red: #a82020;
+
+  --color-glow-amber-dim: color-mix(in oklab, #8a5806 12%, transparent);
+  --color-glow-orange-dim: color-mix(in oklab, #a34509 12%, transparent);
+  --color-glow-cyan-dim: color-mix(in oklab, #0a687d 12%, transparent);
+  --color-glow-violet-dim: color-mix(in oklab, #6938ab 12%, transparent);
+  --color-glow-green-dim: color-mix(in oklab, #1d6e38 12%, transparent);
+  --color-glow-red-dim: color-mix(in oklab, #a82020 12%, transparent);
 }
 
 /* ---------------------------------------------------------------------------
@@ -126,10 +163,7 @@ body::after {
 
 /* dot-grid backdrop — hero, lesson map */
 .dot-grid {
-  background-image: radial-gradient(
-    oklch(36% 0.02 70 / 55%) 1px,
-    transparent 1px
-  );
+  background-image: radial-gradient(var(--color-border) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
@@ -140,9 +174,7 @@ body::after {
 
 /* accent glow ring for cards / nodes */
 .glow-ring {
-  box-shadow:
-    0 0 0 1px var(--glow-color, var(--color-accent)),
-    0 0 24px -6px var(--glow-color, var(--color-accent));
+  box-shadow: 0 0 0 1px var(--glow-color, var(--color-accent));
 }
 
 /* soft ambient glow blob (position absolutely behind content) */
@@ -152,7 +184,7 @@ body::after {
     var(--glow-color, var(--color-accent)) 0%,
     transparent 70%
   );
-  opacity: 0.13;
+  opacity: 0.07;
   filter: blur(40px);
 }
 
@@ -219,7 +251,7 @@ body::after {
 
      FILLED TRACK: ControlPanel sets `--fill` inline (value/min/max as a
      percentage); the gradient below paints the travelled side of the track
-     amber. Scoped to `.sim-slider` so sliders without the inline var (the
+     accent. Scoped to `.sim-slider` so sliders without the inline var (the
      landing vignette) keep their plain track.
   ------------------------------------------------------------------------- */
   .sim-slider,
@@ -258,81 +290,69 @@ body::after {
   input[type="range"].accent-accent::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 16px;
-    height: 16px;
-    /* centre a 16px handle on a 4px track: (4 - 16) / 2 */
-    margin-top: -6px;
+    width: 15px;
+    height: 15px;
+    /* centre a 15px handle on a 4px track: (4 - 15) / 2 */
+    margin-top: -5.5px;
     border: none;
     border-radius: 50%;
     background: var(--color-accent);
-    box-shadow:
-      0 0 0 1px var(--color-bg),
-      0 0 8px -1px var(--color-accent);
+    box-shadow: 0 0 0 2px var(--color-surface), 0 1px 3px rgba(0, 0, 0, 0.18);
     transition:
-      transform 120ms var(--ease-out-soft),
-      box-shadow 120ms linear;
+      transform 140ms var(--ease-out-soft),
+      box-shadow 140ms var(--ease-out-soft);
   }
 
   .sim-slider::-moz-range-thumb,
   input[type="range"].accent-accent::-moz-range-thumb {
     appearance: none;
     box-sizing: border-box;
-    width: 16px;
-    height: 16px;
+    width: 15px;
+    height: 15px;
     border: none;
     border-radius: 50%;
     background: var(--color-accent);
-    box-shadow:
-      0 0 0 1px var(--color-bg),
-      0 0 8px -1px var(--color-accent);
+    box-shadow: 0 0 0 2px var(--color-surface), 0 1px 3px rgba(0, 0, 0, 0.18);
     transition:
-      transform 120ms var(--ease-out-soft),
-      box-shadow 120ms linear;
+      transform 140ms var(--ease-out-soft),
+      box-shadow 140ms var(--ease-out-soft);
   }
 
   .sim-slider:hover::-webkit-slider-thumb,
   input[type="range"].accent-accent:hover::-webkit-slider-thumb {
-    transform: scale(1.15);
+    transform: scale(1.22);
+    box-shadow: 0 0 0 2px var(--color-surface), 0 0 10px var(--color-accent);
   }
   .sim-slider:hover::-moz-range-thumb,
   input[type="range"].accent-accent:hover::-moz-range-thumb {
-    transform: scale(1.15);
+    transform: scale(1.22);
+    box-shadow: 0 0 0 2px var(--color-surface), 0 0 10px var(--color-accent);
   }
 
   .sim-slider:active::-webkit-slider-thumb,
   input[type="range"].accent-accent:active::-webkit-slider-thumb {
-    transform: scale(0.92);
+    transform: scale(0.95);
+    box-shadow: 0 0 0 2px var(--color-surface), 0 0 12px var(--color-accent);
   }
   .sim-slider:active::-moz-range-thumb,
   input[type="range"].accent-accent:active::-moz-range-thumb {
-    transform: scale(0.92);
+    transform: scale(0.95);
+    box-shadow: 0 0 0 2px var(--color-surface), 0 0 12px var(--color-accent);
   }
 
   /* Keyboard focus rings the handle (see the unlayered outline reset below). */
   .sim-slider:focus-visible::-webkit-slider-thumb,
   input[type="range"].accent-accent:focus-visible::-webkit-slider-thumb {
     box-shadow:
-      0 0 0 2px var(--color-bg),
+      0 0 0 2px var(--color-surface),
       0 0 0 4px var(--color-accent);
   }
   .sim-slider:focus-visible::-moz-range-thumb,
   input[type="range"].accent-accent:focus-visible::-moz-range-thumb {
     box-shadow:
-      0 0 0 2px var(--color-bg),
+      0 0 0 2px var(--color-surface),
       0 0 0 4px var(--color-accent);
   }
-}
-
-/*
-  Has to stay UNLAYERED: it overrides the global `:focus-visible` rule at the
-  top of this file, which is itself unlayered — and unlayered always beats a
-  layer. Without it the 44px hit box (not the 4px track) would be outlined, a
-  rectangle that overlaps the control's own label. Focus stays visible: the
-  layered rules above ring the thumb instead.
-*/
-.sim-slider:focus-visible,
-input[type="range"].accent-accent:focus-visible {
-  outline: none;
 }
 
 /* hairline rule that fades at both ends — the section divider language */
@@ -365,10 +385,12 @@ input[type="range"].accent-accent:focus-visible {
 /* breakable-node badge — a slow "you can kill me" pulse on the SVG badge group.
    Base opacity is 1 and the 100% keyframe is 1, so the reduced-motion block at
    the bottom of this file (duration 0.01ms, one iteration) leaves the badge
-   fully visible: the affordance survives, only the pulsing goes. */
+   fully visible: the affordance survives, only the pulsing goes. The pulse
+   floor stays high (0.75) because the badge is a 1px hairline: a deeper dip
+   turns it into a smudge mid-cycle, worst on the pale light ground. */
 @keyframes break-pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.45; }
+  50% { opacity: 0.75; }
 }
 .break-pulse {
   animation: break-pulse 2.6s ease-in-out infinite;
@@ -397,7 +419,7 @@ input[type="range"].accent-accent:focus-visible {
 }
 
 /* ---------------------------------------------------------------------------
-   Release-D feature hooks — phosphor equivalents.
+   Release-D feature hooks — token-based equivalents.
 
    The learning journal, causal workbench and reading-mode features arrive
    with a few semantic class names. These definitions keep them on the token
@@ -409,7 +431,7 @@ input[type="range"].accent-accent:focus-visible {
 @layer components {
   /* learning surfaces (LearningSummary / ReflectionCard / LearningConnections) */
   .surface-card {
-    border-radius: 2px;
+    border-radius: 8px;
   }
 
   /* landing manifest rows: ledger hairlines + quiet hover wash */
@@ -420,6 +442,31 @@ input[type="range"].accent-accent:focus-visible {
   }
   .module-row:hover {
     background: var(--color-surface);
+  }
+
+  /* active lesson/map row in the sidebar tree — a machined inset tick */
+  .sidebar-active-row {
+    box-shadow: inset 2px 0 0 var(--color-accent);
+  }
+
+  /* text fields (journal, confirm inputs) — own their focus ring */
+  .field {
+    border: 1px solid var(--color-border);
+    background: color-mix(in oklab, var(--color-bg) 40%, transparent);
+    color: var(--color-fg);
+    transition:
+      border-color 150ms var(--ease-out-soft),
+      box-shadow 150ms var(--ease-out-soft);
+  }
+  .field::placeholder {
+    color: var(--color-fg-faint);
+  }
+  .field:hover {
+    border-color: var(--color-border-bright);
+  }
+  .field:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 2px color-mix(in oklab, var(--color-accent) 25%, transparent);
   }
 
   .lesson-shell {
@@ -434,11 +481,388 @@ input[type="range"].accent-accent:focus-visible {
     background: transparent;
   }
 
-  /* the meter a workbench focus is about — one amber outline, nothing more */
+  /* ------------------------------------------------------------------ *
+   * Causal workbench — experiment CTA, event tape, inspector, static
+   * toggle. These class names are the component's contract; without the
+   * rules, Tailwind preflight leaves a pile of unstyled buttons.
+   * ------------------------------------------------------------------ */
+
+  .causal-experiment {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    border-top: 1px solid var(--color-border);
+    padding: 0.45rem 1rem;
+    background: linear-gradient(
+      90deg,
+      var(--color-accent-dim),
+      color-mix(in oklab, var(--color-surface) 25%, transparent)
+    );
+  }
+
+  .causal-experiment-copy {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .causal-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  }
+
+  .causal-experiment h3,
+  .causal-inspector h3 {
+    color: var(--color-fg);
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  .causal-experiment p {
+    max-width: 44rem;
+    margin-top: 0.1rem;
+    color: var(--color-fg-muted);
+    font-size: 0.72rem;
+    line-height: 1.35;
+  }
+
+  .causal-experiment-claim {
+    color: var(--color-fg) !important;
+    font-weight: 500;
+  }
+
+  .causal-action {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 1.85rem;
+    border: 1px solid var(--color-border-bright);
+    border-radius: 6px;
+    padding: 0.25rem 0.65rem;
+    background: linear-gradient(180deg, var(--color-raised), var(--color-surface));
+    color: var(--color-fg);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    transition:
+      border-color 140ms var(--ease-out-soft),
+      background 140ms var(--ease-out-soft),
+      color 140ms var(--ease-out-soft),
+      box-shadow 140ms var(--ease-out-soft),
+      transform 140ms var(--ease-out-soft);
+  }
+
+  .causal-action:hover {
+    border-color: var(--color-accent);
+    background: linear-gradient(180deg, var(--color-accent-dim), var(--color-surface));
+    color: var(--color-fg);
+    box-shadow: 0 2px 6px -1px var(--color-accent-dim), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .causal-action:active {
+    transform: scale(0.96);
+  }
+
+  .causal-tape {
+    border-top: 1px solid var(--color-border);
+    padding: 0.35rem 1rem 0.4rem;
+    background: color-mix(in oklab, var(--color-surface) 20%, transparent);
+  }
+
+  .causal-tape-heading {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--color-fg-faint);
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  }
+
+  .causal-tape-list {
+    display: flex;
+    /* WRAP, not scroll: on a phone four 7.5rem chips overflow the column and
+       the later landmarks hide past the edge with nothing to say so. Wrapping
+       costs one extra row and keeps every beat of the causal story visible. */
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .causal-tape-event {
+    display: flex;
+    flex: 1 1 8.5rem;
+    min-width: 7.5rem;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.1rem;
+    min-height: 2.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    padding: 0.3rem 0.5rem;
+    background: color-mix(in oklab, var(--color-bg) 40%, transparent);
+    color: var(--color-fg-muted);
+    text-align: left;
+    cursor: pointer;
+    transition:
+      background 140ms var(--ease-out-soft),
+      border-color 140ms var(--ease-out-soft),
+      box-shadow 140ms var(--ease-out-soft),
+      transform 140ms var(--ease-out-soft);
+  }
+
+  .causal-tape-event:hover {
+    border-color: var(--color-border-bright);
+    background: var(--color-raised);
+    color: var(--color-fg);
+  }
+
+  .causal-tape-event:active {
+    transform: scale(0.97);
+  }
+
+  .causal-tape-event.is-active {
+    border-color: var(--color-accent);
+    background: linear-gradient(180deg, var(--color-accent-dim), var(--color-surface));
+    color: var(--color-fg);
+    box-shadow: 0 0 0 1px var(--color-accent), 0 2px 10px -2px var(--color-accent-dim);
+  }
+
+  .causal-tape-event.is-active .causal-tape-meta {
+    color: var(--color-accent);
+  }
+
+  .causal-tape-meta {
+    color: var(--color-fg-faint);
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: color 140ms;
+  }
+
+  .causal-tape-label {
+    overflow: hidden;
+    color: inherit;
+    font-size: 0.68rem;
+    font-weight: 600;
+    line-height: 1.2;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    text-overflow: ellipsis;
+  }
+
+  .causal-tape-time {
+    color: var(--color-fg-faint);
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.04em;
+  }
+
+  .causal-inspector {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    border-top: 1px solid var(--color-border);
+    padding: 0.4rem 1rem 0.45rem;
+    background: color-mix(in oklab, var(--color-surface) 25%, transparent);
+  }
+
+  .causal-inspector-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .causal-node-select-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--color-fg-faint);
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  .causal-node-select {
+    appearance: none;
+    min-height: 1.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    padding: 0.2rem 1.4rem 0.2rem 0.5rem;
+    background-color: var(--color-surface);
+    background-image: linear-gradient(45deg, transparent 50%, var(--color-fg-muted) 50%),
+      linear-gradient(135deg, var(--color-fg-muted) 50%, transparent 50%);
+    background-position: calc(100% - 11px) calc(50% - 1.5px), calc(100% - 7px) calc(50% - 1.5px);
+    background-size: 4px 4px, 4px 4px;
+    background-repeat: no-repeat;
+    color: var(--color-fg);
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 140ms var(--ease-out-soft), box-shadow 140ms var(--ease-out-soft);
+  }
+
+  .causal-node-select:hover {
+    border-color: var(--color-border-bright);
+  }
+
+  .causal-node-select:focus-visible {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 2px color-mix(in oklab, var(--color-accent) 25%, transparent);
+  }
+
+  .causal-inspector-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    border: 1px solid var(--color-border);
+    border-radius: 5px;
+    padding: 0.15rem 0.45rem;
+    background: var(--color-surface);
+  }
+
+  .causal-inspector-state > div {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .causal-inspector-state > div:not(:last-child)::after {
+    content: "·";
+    color: var(--color-border-bright);
+    margin-left: 0.25rem;
+  }
+
+  .causal-inspector-state span {
+    color: var(--color-fg-faint);
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  .causal-inspector-state strong {
+    color: var(--color-fg);
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 600;
+  }
+
+  .causal-inspector-explanation {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+    color: var(--color-fg-muted);
+    font-size: 0.72rem;
+    line-height: 1.35;
+  }
+
+  .causal-next-action {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 4px;
+    border: 1px solid var(--color-border-bright);
+    background: var(--color-surface);
+    padding: 0.05rem 0.35rem;
+    color: var(--color-fg-muted);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    line-height: 1.3;
+  }
+
+  .causal-static-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 1.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    padding: 0.3rem 0.55rem;
+    background: var(--color-surface);
+    color: var(--color-fg-muted);
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition:
+      background 140ms var(--ease-out-soft),
+      color 140ms var(--ease-out-soft),
+      border-color 140ms var(--ease-out-soft),
+      box-shadow 140ms var(--ease-out-soft),
+      transform 140ms var(--ease-out-soft);
+  }
+
+  .causal-static-toggle:hover {
+    border-color: var(--color-border-bright);
+    color: var(--color-fg);
+  }
+
+  .causal-static-toggle:active {
+    transform: scale(0.97);
+  }
+
+  .causal-static-toggle.is-active {
+    border-color: var(--color-accent);
+    background: linear-gradient(180deg, var(--color-accent-dim), var(--color-surface));
+    color: var(--color-fg);
+    box-shadow: 0 0 0 1px var(--color-accent), 0 2px 6px -1px var(--color-accent-dim);
+  }
+
+  /* the meter a workbench focus is about — subtle luminous card treatment without outline clipping/overlap */
   .causal-meter-focus {
-    outline: 1px solid var(--color-accent);
-    outline-offset: 4px;
-    border-radius: 2px;
+    background: linear-gradient(
+      180deg,
+      var(--color-accent-dim),
+      color-mix(in oklab, var(--color-surface) 40%, transparent)
+    ) !important;
+    border-color: var(--color-accent) !important;
+    box-shadow: 0 0 0 1px var(--color-accent), 0 0 16px -2px var(--color-accent-dim) !important;
+    border-radius: 8px;
+  }
+
+  @media (max-width: 40rem) {
+    .causal-experiment {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .causal-action {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .causal-inspector {
+      grid-template-columns: 1fr;
+    }
+
+    .causal-node-select-label {
+      grid-row: auto;
+    }
   }
 }
 

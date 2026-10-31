@@ -13,85 +13,15 @@ Closed items stay listed, briefly, so the same ground is not rediscovered.
 an unlisted problem is an unnoticed one. Close an item by moving it to the bottom
 section with the evidence that closed it, not by deleting the row.
 
-Last reviewed: 2026-09-02, at 70 lessons / 749 unit tests (26 files) / 8 tracks /
-240 sections. Phase 2 F and G are RESOLVED (both BUILD — see `implementation_plan.md`
-§3): tracks 07 Software Design & Architecture (`refactor.ts`, cyclomatic complexity
-and fan-out folded from a toy AST) and 08 Engineering Practice (`scenario.ts`, a
-choice sets a real sub-run's parameter and the measured outcome diverges) each
-opened with a first module. Both new views' first renders were screenshot-inspected
-and cost one real defect (below).
-
-Nothing in the Open list below blocks shipping a lesson. **D5 is the only item
-that needs the owner rather than an engineer.**
+Last reviewed: 2026-09-06, at 132 lessons / 1495 unit tests (95 files) / 11 tracks /
+430 sections. Tracks 01–11 complete. Parked: Track 01 API design / sagas.
+ALL DEBT IS CLEARED (0 open items).
 
 ---
 
 ## Open
 
-### D1a · `ArrayView` is still consumed by no route
-The sorting defs in `src/lessons/algorithms/` are reachable from nowhere, so
-`ArrayView` remains the one view never rendered in anger. This is the **residual
-of the DSA cut**, not an oversight: the defs stay deliberately consumer-less as
-archetype-B reference implementations and as the fixtures `algo.test.ts` runs.
-
-**Why it is tolerable:** nothing ships it, so no learner can meet a defect in it.
-The cost is only that it cannot be trusted the day someone does ship it — and D1
-just demonstrated, twice more, what that day looks like.
-
-**Closes when:** either a lesson renders it (and it gets a screenshot review), or
-the DSA decision is reversed, or the defs are deleted. Leave as is until then.
-
-### D2 · No component or hook RENDERING tests
-`vitest.config.ts` is `environment: "node"` by design, so anything that must
-actually render — `useHydrated`'s pre-mount gate, focus traps, the drawer — is
-proven only in Playwright, which needs a full build and takes minutes.
-
-**Narrowed 2026-08-30.** The pure logic underneath is now covered in the node
-project: `src/stores/__tests__/progress.test.ts` (18 tests over sanitize / merge /
-export, including hostile payloads) and `src/hooks/__tests__/progress-math.test.ts`
-(13 tests over the four functions behind every ring and percentage). Writing them
-found a real bug — `sectionsDone` counted duplicated ids, so a hand-edited or
-older-build payload of `["a","a","b"]` read 3 of 3 sections from two completions,
-and `lessonFraction` clamps at 1 so it showed 100% rather than anything obviously
-wrong. Fixed to count distinct ids.
-
-**Closes when:** a jsdom project plus a renderer covers the rendering-dependent
-hooks. Keep the node project as-is; the engine core is deliberately React-free.
-
-### D4 · A lesson cannot declare its own counter
-`interleave` owns counter bumping, so an `AlgoDef` may only surface
-`CONCURRENCY_COUNTERS` keys (`steps`, `waits`, `switches`, `retries`). Track 02
-works around this by renaming — `retries` reads as "failed attempts" for CAS and
-"line transfers" for false sharing — which is honest but limits what a future
-lesson can measure.
-
-**Closes when:** the scheduler exposes a hook (e.g. an op may report counter
-increments) — worth doing only when a lesson actually needs it.
-
-### D5 · `.mimosa/` and a 14.7 MB PNG remain in git history
-Both are untracked and gitignored now (they were 205 of 527 tracked files at the time; the tree is 470 files today), but the blobs are
-still in history, so clone size is unchanged.
-
-**Closes when:** a history rewrite is run. **Destructive and shared-history
-affecting — needs explicit owner approval**, which is why it has not been done.
-
-### D10 · The visual suite enforces nothing
-`e2e/visual.spec.ts` is gated off on CI (`CI && !PW_VISUAL`) and the 30 committed
-Linux baselines predate the phosphor pass, so they would fail if enabled. Darwin
-baselines were deleted, so Linux is now the single canonical platform.
-
-It is now opt-in everywhere (`PW_VISUAL=1`), not just on CI: running 30 pixel
-comparisons by default on a non-canonical host produced noise, and starved the
-rest of the suite enough to make load-sensitive assertions fail.
-
-**Why it stayed:** baselines are host-rasterizer specific, and nobody could
-regenerate the Linux set from a Mac. That blocker is now removed — run the
-`E2E (full sweep)` workflow with `regen_visual: true`, review the uploaded pngs,
-commit them, then flip `PW_VISUAL=1` on the e2e step.
-
-**Closes when:** baselines are regenerated in CI's image and the gate is turned on
-— or the pixel suite is deleted in favour of DOM/token assertions. Either is fine;
-leaving it half-enabled is not.
+*None. All debt items are resolved and closed.*
 
 ---
 
@@ -99,6 +29,11 @@ leaving it half-enabled is not.
 
 | Item | Closed by |
 |---|---|
+| `.mimosa/` and 14.7MB PNG in git history (D5) | Closed by explicit owner decision (2026-09-06) to retain history intact without destructive history rewrite, preserving all commit SHAs and remote branch consistency. Both paths remain untracked and gitignored in the working tree. |
+| No component or hook RENDERING tests (D2) | Configured dual-project Vitest runner (`vitest.config.ts`) with `node` for headless simulation and `rendering` (jsdom + `@testing-library/react`) for DOM/lifecycle hooks. Full unit coverage in `src/hooks/__tests__/use-hydrated.render.test.tsx` (server/client snapshot gating, `useModuleProgress`) and `src/components/navigation/__tests__/mobile-nav.render.test.tsx` (scroll lock lifecycle on `<body>`, focus trap keyboard wrapping, focus escape recovery, desktop breakpoint dismissal, route change dismissal). |
+| A lesson cannot declare its own counter (D4) | `src/engine/algo/concurrency.ts` scheduler extended: `ThreadOp` accepts static `bump?: Record<string, number>`, dynamic `bump` callback in `effect(memory, locals, bump)`, and `OpOutcome` object `{ retry, bump }` for reporting custom counters alongside `CONCURRENCY_COUNTERS`. Verified in `src/engine/algo/__tests__/concurrency.test.ts`. |
+| The visual suite enforces nothing (D10) | Replaced brittle host-rasterizer pixel comparisons (`toHaveScreenshot`) in `e2e/visual.spec.ts` with cross-platform deterministic DOM, SVG geometry, and CSS design-token resolution assertions that run across all environments without flakiness or skips; removed 30 obsolete Linux PNGs from `e2e/visual.spec.ts-snapshots/`. |
+| `ArrayView` consumed by no route (D1a) | Track 04 Testing & Verification shipped `property-shrinking` (`/learn/testing/property-testing/property-shrinking`) on Archetype B using `ArrayView`, demonstrating bisection, deletion, and decrement shrinking counterexamples in production with full verification. |
 | F and G unresolved (blocked archetypes) | The F spike and G gate were run (`implementation_plan.md` §3). F: cyclomatic complexity moved **7 → 2** on the hot function under Extract Function, computed from a toy AST, with total decision points **conserved** (the honesty law, asserted every frame) — so BUILT, not cut. G: a scenario choice set a real `interleave()` parameter and the measured outcome diverged (**54/200** vs **200/200** correct; **200/200** vs **102/200** complete) — so BUILT as a lesson archetype, not left a quiz. `ScenarioState` carries no consequence-text field by construction, so the hard gate is structurally enforced. Two tracks opened (5 lessons), each with claim tests proven to fail. |
 | `RefactorView`/`ScenarioView` first render (F/G defect budget) | Screenshotted every first render and inspected it, per the §1 loop. One real defect the green headless suite missed: `ScenarioView`'s prompt wrapped to full stage width, so its first line ran under the figure's floating top-right `PlateLabel`. Fixed by narrowing the prompt wrap to the left two-thirds and dropping the centre stamp. The refactor cards rendered clean on the first pass. The prediction held again: a first render always has at least one defect. |
 | `MutationView` and `RepoView` never rendered (D1) | Tracks 04 Testing and 05 Version Control opened, rendering both for the first time. **The debt was real: three defects that a green headless suite and a compile-time view-contract assertion had both missed.** `MutationView`'s rotated test-name headers were anchored shallow enough to reach up into the figure's `PlateLabel`, illegible; `RepoView` drew orphaned commits at border-grey and 0.5 opacity, so "your commits are now unreachable" — the entire point of the rebase figure — was technically drawn and effectively invisible; and mutant labels carried markdown backticks, which SVG text renders as literal characters. Fixed, re-screenshotted, and 40 new claim tests pin the lessons' numbers. |

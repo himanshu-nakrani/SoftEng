@@ -4,6 +4,7 @@ import {
 } from "@/components/navigation/MobileNav";
 import { Wordmark } from "@/components/navigation/SiteChrome";
 import { Sidebar } from "@/components/navigation/Sidebar";
+import { ThemeToggle } from "@/components/navigation/ThemeToggle";
 
 export default function LearnLayout({
   children,
@@ -20,6 +21,7 @@ export default function LearnLayout({
           <MobileNav />
           <Wordmark className="shrink-0" />
           <MobileCurrentLesson />
+          <ThemeToggle />
         </header>
         <main id="main" className="lesson-shell mx-auto w-full max-w-3xl px-4 py-10 md:px-8">
           {children}

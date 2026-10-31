@@ -12,6 +12,7 @@
 # agent tooling scratch state (session hook-state, baselines, finding ledger).
 # Never useful to another clone, and it was 204 tracked files before this line.
 .mimosa/
+graphify-out/
 
 # Design SOURCES, not design decisions. The reference plate is ~15 MB, which
 # every clone would pay for forever; the derived mockups in design/mockups/ are

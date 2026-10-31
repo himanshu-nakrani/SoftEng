@@ -1,10 +1,11 @@
 "use client";
 
+import { Button } from "@/components/ui/Button";
 import type { LessonMeta } from "@/curriculum/types";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { cn } from "@/lib/cn";
 import { JOURNAL_NOTE_LIMIT, type Confidence, useJournal } from "@/stores/journal";
-import { Check, LockKeyhole, NotebookPen, Save } from "lucide-react";
+import { LockKeyhole, NotebookPen, Save } from "lucide-react";
 import { useState } from "react";
 
 const confidenceOptions: Array<{
@@ -66,7 +67,7 @@ export function ReflectionCard({ meta }: { meta: LessonMeta }) {
             maxLength={JOURNAL_NOTE_LIMIT}
             onChange={(event) => setEntry(meta.slug, { note: event.target.value })}
             placeholder="When capacity is concentrated, one failure can remove everything…"
-            className="min-h-24 w-full resize-y rounded-lg border border-border bg-bg/35 px-3.5 py-3 text-sm leading-relaxed text-fg outline-none transition-colors placeholder:text-fg-faint focus:border-accent focus:ring-2 focus:ring-accent/25"
+            className="field min-h-24 w-full resize-y rounded-lg px-3.5 py-3 text-sm leading-relaxed outline-none"
             aria-describedby={`${meta.slug}-reflection-help`}
           />
           <div className="mt-1 flex items-center justify-between gap-3">
@@ -92,7 +93,6 @@ export function ReflectionCard({ meta }: { meta: LessonMeta }) {
                   aria-checked={selected}
                   onClick={() => setEntry(meta.slug, { confidence: option.value })}
                   className={cn(
-                    "flex min-h-11 items-center gap-2 rounded-lg border px-3 py-2 text-left transition-colors",
                     selected
                       ? "border-accent/70 bg-accent/10 text-fg"
                       : "border-border bg-raised/35 text-fg-muted hover:border-border-bright hover:text-fg",
@@ -105,7 +105,10 @@ export function ReflectionCard({ meta }: { meta: LessonMeta }) {
                       selected ? "border-accent bg-accent text-bg" : "border-border-bright",
                     )}
                   >
-                    {selected && <Check className="size-3" strokeWidth={2.5} />}
+                    {/* A radio's selected glyph is a DOT: the circle already
+                        says "one of these", and a tick inside it is the
+                        checkbox grammar wearing a radio's clothes. */}
+                    {selected && <span className="size-1.5 rounded-full bg-bg" />}
                   </span>
                   <span>
                     <span className="block text-xs font-medium">{option.label}</span>
@@ -132,15 +135,15 @@ export function ReflectionCard({ meta }: { meta: LessonMeta }) {
           <span role="status" className="text-xs text-glow-green" aria-live="polite">
             {notice}
           </span>
-          <button
-            type="button"
+          <Button
+            variant="primary"
+            size="sm"
             onClick={save}
             disabled={!hydrated}
-            className="inline-flex min-h-9 items-center gap-2 rounded-md bg-accent px-3.5 py-2 text-xs font-semibold text-bg transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Save className="size-3.5" strokeWidth={1.75} />
             Save reflection
-          </button>
+          </Button>
         </div>
       </div>
     </section>

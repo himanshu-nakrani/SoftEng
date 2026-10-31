@@ -34,7 +34,7 @@ export function LegacyRedirect({
   return (
     <div className="mx-auto max-w-3xl py-16">
       <p className="tech-label mb-2">this lesson moved</p>
-      <h1 className="font-display mb-3 text-2xl font-bold tracking-tight">
+      <h1 className="font-display mb-3 text-balance text-2xl font-bold tracking-tight">
         {title}
       </h1>
       <p className="mb-6 leading-relaxed text-fg-muted">

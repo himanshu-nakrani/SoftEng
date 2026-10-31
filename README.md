@@ -2,7 +2,9 @@
 
 **Learn systems by breaking them.**
 
-An interactive system-design learning site. Not articles — every concept is a running simulation: request packets you can watch, parameters you can drag, servers you can kill. Predict what a system will do, then watch the deterministic simulation prove you right or wrong.
+Not articles. Every concept is a running simulation you can drive, break, and replay — request packets, thread interleavings, write-ahead logs, parsers. Predict what happens, then watch the same seeded run prove you right or wrong.
+
+Eleven tracks, from system design through operating systems, security, and language runtimes. No account; progress stays in the browser.
 
 ## Curriculum
 
@@ -30,61 +32,100 @@ An interactive system-design learning site. Not articles — every concept is a 
 
 ### Track 03 — Databases & Transactions
 
-9 lessons across 3 modules, about 1h 48m end to end.
+11 lessons across 5 modules, about 2h 14m end to end.
 
 | Module | Lessons |
 |---|---|
 | **Transactions** | Dirty Reads and Read Committed · Non-Repeatable Reads · Write Skew · Lost Update · Two-Phase Locking |
 | **Durability & Recovery** | Write-Ahead Logging · Checkpoints · Group Commit |
 | **Multi-Version Concurrency Control** | Multi-Version Reads |
+| **Storage Engines** | B-Tree vs LSM |
+| **Indexes & Query Plans** | Indexes and Query Plans |
 
 ### Track 04 — Testing & Verification
 
-5 lessons across 2 modules, about 1h 0m end to end.
+9 lessons across 3 modules, about 1h 48m end to end.
 
 | Module | Lessons |
 |---|---|
-| **What a Suite Actually Checks** | Coverage Is Not Correctness · Boundaries and Off-By-One · Not Every Survivor Is a Bug |
-| **Tests That Lie** | Why Suites Go Flaky · Tests That Depend on Each Other |
+| **What a Suite Actually Checks** | Coverage Is Not Correctness · Boundaries and Off-By-One · Not Every Survivor Is a Bug · Assertion-Free Tests · Brittle Mocks vs State Verification |
+| **Tests That Lie** | Why Suites Go Flaky · Tests That Depend on Each Other · Async Timing and Sleep Flakes |
+| **Property-Based Testing** | Property Shrinking |
 
 ### Track 05 — Version Control & Delivery
 
-7 lessons across 2 modules, about 1h 22m end to end.
+8 lessons across 2 modules, about 1h 34m end to end.
 
 | Module | Lessons |
 |---|---|
-| **Shaping History** | Merge vs Rebase · Fast-Forward · Cherry-Pick and Revert · Reset |
+| **Shaping History** | Merge vs Rebase · Fast-Forward · Cherry-Pick and Revert · Reset · Three-Way Merge & Conflicts |
 | **Shipping It** | Canary Releases · Blue-Green Deploys · Feature Flags |
 
 ### Track 06 — Networking & the Web
 
-4 lessons across 1 module, about 48 minutes end to end.
+10 lessons across 3 modules, about 2h 0m end to end.
 
 | Module | Lessons |
 |---|---|
 | **Making a Web Request** | DNS Resolution · The TCP Handshake · HTTP Request & Response · Keep-Alive & Connection Reuse |
+| **HTTP Protocols & Multiplexing** | HTTP/1.1 Pipelining & Head-of-Line Blocking · HTTP/2 Multiplexing & Framing · QUIC & HTTP/3: Independent UDP Streams |
+| **Caching & Security** | HTTP Caching & Revalidation · Conditional Requests & ETags · The TLS Handshake: 1-RTT to 0-RTT |
 
 ### Track 07 — Software Design & Architecture
 
-3 lessons across 1 module, about 35 minutes end to end.
+10 lessons across 3 modules, about 1h 59m end to end.
 
 | Module | Lessons |
 |---|---|
-| **Refactoring by the Numbers** | Extract Function · Inline & Rename · Duplicated Logic |
+| **Refactoring by the Numbers** | Extract Function · Inline & Rename · Duplicated Logic · Extract Class · Replace Conditional with Polymorphism |
+| **Modularity & Coupling** | Afferent & Efferent Coupling · Instability & Abstractness · Cyclic Dependencies & ADP |
+| **Architecture Boundaries** | Dependency Inversion & Clean Architecture · The Strangler Fig Pattern |
 
 ### Track 08 — Engineering Practice
 
-2 lessons across 1 module, about 24 minutes end to end.
+8 lessons across 2 modules, about 1h 36m end to end.
 
 | Module | Lessons |
 |---|---|
-| **On-Call Decisions** | The Mutex Call · Retry or Back Off |
+| **On-Call Decisions** | The Mutex Call · Retry or Back Off · Thread Pool vs Bounded Queue · Circuit Breaker Hysteresis · Zero-Downtime Schema Migration |
+| **Resilience Engineering** | Cascading Failure and Thundering Herd · Memory Leak and Buffer Bloat · Split-Brain and Network Partitions |
+
+### Track 09 — Operating Systems
+
+12 lessons across 3 modules, about 2h 28m end to end.
+
+| Module | Lessons |
+|---|---|
+| **Virtual Memory** | Address Translation · The TLB · Page Faults and Demand Paging · Page Replacement |
+| **CPU Scheduling** | Preemptive vs Cooperative Scheduling · Round-Robin and Time Slices · Multi-Level Feedback Queues · Priority Inversion |
+| **Storage and System Calls** | The Inode · File System Journaling · The Buffer Cache · System Calls |
+
+### Track 10 — Security Engineering
+
+12 lessons across 4 modules, about 2h 28m end to end.
+
+| Module | Lessons |
+|---|---|
+| **Cryptography** | Hash Functions · Diffie-Hellman · Digital Signatures |
+| **Identity & Access** | Session Cookies · JWT Pitfalls · OAuth and PKCE |
+| **Application Security** | SQL Injection · Cross-Site Scripting · Server-Side Request Forgery |
+| **Defense in Depth** | RBAC vs ABAC · Credential Stuffing · Mutual TLS |
+
+### Track 11 — Languages & Runtimes
+
+12 lessons across 3 modules, about 2h 24m end to end.
+
+| Module | Lessons |
+|---|---|
+| **Parsing & Execution** | Lexical Analysis · Recursive Descent · Tree Walk vs Bytecode · The Call Stack |
+| **Memory Management** | Reference Counting · Mark and Sweep · Incremental GC · Generational GC |
+| **Runtime Systems** | The Event Loop · JIT Compilation · Deoptimization · Virtual Method Tables |
 
 <!-- CURRICULUM:END -->
 
 Nothing is locked; start anywhere.
 
-Each lesson follows the same arc: **observe** (narrated autoplay) → **manipulate** (live sliders) → **predict** (the sim pauses, asks, then resumes to prove the answer) → **break** (click servers to kill them).
+Each lesson follows the same arc: **observe** (narrated autoplay) → **manipulate** (live sliders or a step list) → **predict** (the run pauses, asks, then proves the answer) → **break** (kill a node, reseat an interleaving, crash before the fsync).
 
 Beyond the lessons: `/review` is a practice deck over every prediction checkpoint that deep-links back into the exact second of the sim that answers it, and `/playground` runs any lesson's simulation on its own.
 

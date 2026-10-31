@@ -1,11 +1,4 @@
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
-
-/**
- * Class-name composition. tailwind-merge resolves conflicts by utility group
- * (later wins), so a caller appending e.g. `rounded-md` over a base
- * `rounded-lg` overrides it deterministically instead of by CSS-order luck.
- */
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+/** Join class names. Falsy entries drop. Later strings do not un-set earlier utilities. */
+export function cn(...xs: Array<string | false | null | undefined>): string {
+  return xs.filter(Boolean).join(" ");
 }

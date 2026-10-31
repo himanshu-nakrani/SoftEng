@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**syslab** — an interactive system-design learning site. Every lesson is built around a running simulation (animated request packets, live sliders, killable servers) rather than prose. Next.js 16 App Router + React 19 + TypeScript, Tailwind CSS v4, `motion` (import from `"motion/react"`, NOT legacy `framer-motion` — lint-enforced), zustand. Static export (`output: "export"`) — no server, no accounts; progress lives in localStorage. Five tracks: **01 System Design Fundamentals** (31 lessons, five modules — scaling, data, resilience, distributed, observability) on the packet engine; and on the discrete-step engine **02 Concurrency** (9, complete), **03 Databases & Transactions** (8, open), **04 Testing & Verification** (4, open — `test-quality` on the mutation harness plus `flakiness`, which reuses the CONCURRENCY scheduler to model order-dependent tests), **05 Version Control & Delivery** (6, open — `history` on archetype E plus `delivery` on the PACKET engine, so a track is not tied to one archetype). A track's NUMBER is its position in the registry array, not an identity — refer to tracks by slug in code. Beyond lessons: `/review` (a practice deck over every prediction checkpoint, deep-linking `?t=<sim-second>` into lessons via the transport scrubber — practice answers never write to the store; deck ordering is confidence-aware via the learning journal in `src/stores/journal.ts`), lesson-page reading mode + reflection surfaces (the causal workbench: `engine/components/CausalWorkbench.tsx`, `LessonUiContext`), a per-figure caption transcript whose rows seek, a ⌘K command palette (`components/navigation/CommandPalette.tsx`, registry-derived, portaled to `document.body` because rendering inside the sidebar put it in that element's stacking context), and a hand-rolled service worker (`public/sw.js`) making visited lessons work offline.
+**syslab** — an interactive systems lab, not an article site. Every lesson is a running simulation (packet flows, discrete-step machines, live sliders, killable servers) rather than prose. The name is the pedagogy: a lab you break. The curriculum is broader than system design. Next.js 16 App Router + React 19 + TypeScript, Tailwind CSS v4, `motion` (import from `"motion/react"`, NOT legacy `framer-motion` — lint-enforced), zustand. Static export (`output: "export"`) — no server, no accounts; progress lives in localStorage. Eleven tracks: **01 System Design Fundamentals** (31 lessons, complete) on the packet engine; and on the discrete-step engine **02 Concurrency** (9, complete), **03 Databases & Transactions** (11, complete — transactions, durability, mvcc, storage, indexing), **04 Testing & Verification** (9, complete — test-quality, flakiness, property-testing with `ArrayView`), **05 Version Control & Delivery** (8, complete — history on archetype E plus delivery on archetype A), **06 Networking & the Web** (10, complete — web-requests, http-protocols, caching-and-security), **07 Software Design & Architecture** (10, complete — refactoring, modularity-coupling, architecture-boundaries), **08 Engineering Practice** (8, complete — on-call, resilience-engineering on archetype G), **09 Operating Systems** (12, complete — virtual-memory, cpu-scheduling, storage-io), **10 Security Engineering** (12, complete — cryptography, identity-access, application-security, defense-in-depth), and **11 Languages & Runtimes** (12, complete — parsing-execution, memory-management, runtime-systems). A track's NUMBER is its position in the registry array, not an identity — refer to tracks by slug in code. Beyond lessons: `/review` (a practice deck over every prediction checkpoint, deep-linking `?t=<sim-second>` into lessons via the transport scrubber — practice answers never write to the store; deck ordering is confidence-aware via the learning journal in `src/stores/journal.ts`), lesson-page reading mode + reflection surfaces (the causal workbench: `engine/components/CausalWorkbench.tsx`, `LessonUiContext`), a per-figure caption transcript whose rows seek, a ⌘K command palette (`components/navigation/CommandPalette.tsx`, registry-derived, portaled to `document.body` because rendering inside the sidebar put it in that element's stacking context), and a hand-rolled service worker (`public/sw.js`) making visited lessons work offline.
 
 ## Commands
 
@@ -12,15 +12,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run build` — static export to `out/`. Honors optional `BASE_PATH` (project-site hosting) and `NEXT_PUBLIC_SITE_URL` (canonical origin for metadata/sitemap).
 - `npm run check` — `tsc --noEmit && eslint . && npx tsx scripts/check-curriculum.mts && vitest run`. Run before considering any change done.
   - The curriculum check also pins README's lesson table to the registry. After adding a lesson or track: `npx tsx scripts/check-curriculum.mts --write-readme` regenerates the fenced `CURRICULUM` block; without it the check fails with the first differing line.
-- `npm run test` — vitest alone (node environment, 18 files). The packet engine: invariant suite (determinism, packet cap, topology integrity, meter coverage, quiz semantics for every FLOW lesson) + golden-run regression + seek/workbench. Archetype B: `src/engine/algo/__tests__/` per producer. Lesson PROSE: `src/lessons/__tests__/*-claims.test.ts`. Pure app logic: the progress store and progress math.
+- `npm run test` — vitest (two projects: node environment for headless sim tests, jsdom project for rendering tests; 95 files, 1495 tests). The packet engine: invariant suite (determinism, packet cap, topology integrity, meter coverage, quiz semantics for every FLOW lesson) + golden-run regression + seek/workbench. Archetype B: `src/engine/algo/__tests__/` per producer. Lesson PROSE: `src/lessons/__tests__/*-claims.test.ts`. Pure app logic: the progress store and progress math. Component & hook rendering: `src/hooks/__tests__/` and `src/components/navigation/__tests__/`.
   - Goldens live in `src/lessons/__tests__/goldens/`; a missing golden bootstraps on first run. After a DELIBERATE behavior change: `UPDATE_GOLDENS=1 npx vitest run`, then eyeball the diff.
   - A new FLOW lesson needs one line in `SIM_BY_KEY` in `src/engine/__tests__/harness.ts` — the matrix guard fails loudly if you forget. `engine: "steps"` lessons are excluded by the harness and must NOT be added there.
-- `npm run test:e2e` — Playwright over the built export: desktop smoke (registry-derived routes, zero console/hydration errors, sim drive, reduced-motion), mobile (drawer, fullscreen no-remount, overflow, touch targets), axe (wcag2a/aa on the sampled routes; both former findings are FIXED and enforced — faint-text contrast via the token ladder, interactive-stage semantics via labelled `role="group"` stages), and visual regression (`e2e/visual.spec.ts` — per-lesson stage screenshots at seeked sim-seconds; **opt-in everywhere via `PW_VISUAL=1`**, not just on CI, because Linux is the only canonical baseline platform). Needs `npm run build` first.
+- `npm run test:e2e` — Playwright over the built export: desktop smoke (registry-derived routes, zero console/hydration errors, sim drive, reduced-motion), mobile (drawer, fullscreen no-remount, overflow, touch targets), axe (wcag2a/aa on the sampled routes; both former findings are FIXED and enforced — faint-text contrast via the token ladder, interactive-stage semantics via labelled `role="group"` stages), and visual regression (`e2e/visual.spec.ts` — stage visual structure, geometry, and design-token resolution across seeked moments on all platforms). Needs `npm run build` first.
   - **Routes are SAMPLED**: `e2e/_selection.ts` picks one lesson per module on a pull request (an axe scan costs ~5s per lesson). `E2E_FULL=1 npx playwright test` sweeps every lesson — that is what the nightly runs.
   - If port 4173 is occupied, set `E2E_PORT=<free port>` — otherwise Playwright's `reuseExistingServer` tests the wrong app.
   - `PW_CHROMIUM_PATH=<binary>` overrides the browser, but should not be needed: run `npx playwright install chromium` to fetch the build the pinned `@playwright/test` expects.
-  - **Baselines are stale and the suite enforces nothing** (tracked as D10 in `debt.md`). They predate the phosphor pass, and Linux is the only canonical platform — the darwin set was deleted rather than half-maintained. To fix: run the `E2E (full sweep)` workflow with `regen_visual: true`, which produces baselines in the same ubuntu image that verifies them and uploads them as an artifact; review every png, commit, then enable `PW_VISUAL=1` on the e2e step.
-- `npm run monitor:routes` — checks the DEPLOYED site (91 routes derived from the registry — statics, track landings, every lesson, and the 26 legacy stubs — plus content markers). The only thing that tests what Pages actually serves; `ci.yml` only tests a local export.
+- `npm run monitor:routes` — checks the DEPLOYED site (routes derived from the registry — statics, track landings, every lesson, and the 26 legacy stubs — plus content markers). The only thing that tests what Pages actually serves; `ci.yml` only tests a local export.
 - Three workflows:
   - `ci.yml` — audit (`npm audit --audit-level=high`) → check → build → **sampled** e2e, on every push/PR. Pushes to `main` deploy to Pages with `BASE_PATH=/SoftEng`.
   - `e2e-full.yml` — nightly full sweep (`E2E_FULL=1`), plus a `regen_visual` input that regenerates visual baselines in CI's own image and uploads them for review.
@@ -119,9 +118,7 @@ Not a separate engine: an interleaving IS a step list, so concurrency rides on a
 - `views/ThreadsView.tsx` draws lanes per thread with shared memory and lock ownership above; its `aria-label` is rebuilt per frame so the interleaving is narrated, not just drawn.
 - **Control flow.** A thread's ops are a static list, so two escape hatches carry everything that repeats:
   - an `effect` returning `"retry"` re-runs the SAME op (the program counter does not advance) — the honest shape of compare-and-swap, whose attempt count depends on contention and is unbounded;
-  - `op.await = { label, ready }` parks the thread until a predicate holds — a condition wait, not a spin, so it consumes no steps. Bounded buffers wait for space or for an item this way.
-- **Counters are the scheduler's.** A def may only declare keys `interleave` bumps (`steps`, `waits`, `switches`, `retries`); there is no hook for a lesson-specific counter yet. Track 02 surfaces domain meaning by RENAMING them — `retries` is "failed attempts" for CAS and "line transfers" for false sharing.
-- **Two failure outcomes, and they are different.** `deadlocked` means nothing is runnable (every thread is waiting for something nobody will provide). `livelocked` means threads are still running but the step budget (`totalOps * 12 + 64`) expired — optimistic retries knocking each other back. Both are recorded as a final frame and shown, never swallowed.
+- **Counters and custom metric hooks.** `interleave` maintains default `CONCURRENCY_COUNTERS` (`steps`, `waits`, `switches`, `retries`). Lessons can also declare and bump custom domain counters via static `op.bump: Record<string, number>`, a dynamic `bump(counter, by)` callback passed to `effect`, or an `OpOutcome` object `{ retry, bump }`.
 
 Because of C, `AlgoDef.run` receives the seeded RNG as a second argument (`run(input, rng)`), continuing the same stream `generateInput` drew from. Pure algorithms ignore it. Consequence worth knowing: changing an input generator also reshuffles a scheduler's decisions, so a golden can move for no visible reason.
 
@@ -136,8 +133,8 @@ Track 03's step producer, and the fourth thing to ride archetype B. A transactio
 - `TxnProgram` is `{ rows, txns, isolation, mechanism? }`; a `Statement` has a `label`, a `codeLine`, an optional `run(ctx)`, an optional `commit: true`, and optional `locks` (2PL only). Returning `"abort"` rolls the transaction back, discarding its pending writes.
 - **Adding an isolation level touches exactly three places** in `transactions.ts`: the `Isolation` union, `visibleTo` (the read rule), and the commit-time read-set check. A *mechanism* rather than a level additionally sets a flag near the top of `runTransactions` and declares `Statement.locks`. That is what makes "read uncommitted sees a dirty value" something the run demonstrates rather than something the prose claims — and it is why the same program at a stronger level cannot produce the anomaly. All four levels are implemented: `read uncommitted` (other transactions' pending writes are visible), `read committed` (committed only), `repeatable read` (answered from a snapshot taken at the transaction's first statement), `serializable` (snapshot reads PLUS a commit refused when any row in the transaction's read set has changed since).
 - `mechanism: "2pl"` on a `TxnProgram` switches serializable from optimistic to pessimistic: a statement declares the rows it needs via `Statement.locks`, takes them exclusively, and holds them until the transaction ends. A blocked transaction WAITS instead of failing, and an all-blocked run picks a seeded deadlock victim. Measured contrast, pinned as tests: optimistic commits both transactions in 49 of 200 runs with nobody ever waiting; 2PL commits both in 200 of 200 with something waiting in every run.
-- The read set is what catches write skew. Two transactions writing DIFFERENT rows have no overwrite to detect, so the conflict is between one's reads and the other's writes — invisible to a snapshot by design. Measured consequence, pinned as a test: at repeatable read the on-call invariant breaks in 151 of 200 seeds, and serializable refuses a commit in exactly those 151 runs, never more and never fewer.
 - `TableState` splits every row into `committed` and `pending` (by transaction). That gap is where every read anomaly lives, and it is why this needed a new view: a thread lane diagram cannot show it. `TableView` draws pending values dashed and hollow so an uncommitted number never reads as fact, and surfaces `state.anomaly` as a banner so the reader is not left to infer it.
+- **Generalization for Modularity & Boundaries:** `TableView` (`TableView.tsx`, `table.ts`) also powers structured multi-column tables via `MultiColumnTableView` (`columns: TableColumn[]` with `values` per row) for modularity metrics and architectural cuts (`coupling-metrics`, `cyclic-dependencies`, `dependency-inversion`, `strangler-fig`), as well as Martin package metrics via `PackageMetricsView` (`kind: "package-metrics"`, displaying $C_a, C_e, I, A, D$, and zone badges in `instability-abstractness`). Generic parameter `V = number` defaults safely so all database transaction lessons retain full backward compatibility.
 
 ### Durability (`algo/wal.ts`, `views/WalView.tsx`)
 
@@ -210,6 +207,60 @@ transactions cost ONE force instead of three for the same six log records, and T
 is answered five crash points later — latency traded for throughput, with
 correctness unchanged at every crash point.
 
+### Storage engines (`algo/storage.ts`, `views/StorageView.tsx`)
+
+Track 03's third producer that is not an interleaving: a fixed sequence of writes
+and reads over a B-tree or an LSM. The size slider is how many keys are written
+(4–12). A B-tree write rewrites a whole leaf (height 2 paid every time); an LSM
+write appends to a memtable of 4 and flushes, compacting at 3 SSTables. Measured
+at 8 keys: B-tree 8 page writes / 24 page reads; LSM 2 page writes / 3 page reads
+/ 4 bloom misses. At 12 keys the LSM's first compaction makes page writes 4 and
+page reads 6. Pinned in `storage-claims.test.ts`.
+
+### Query plans (`algo/queryPlan.ts`, `views/QueryPlanView.tsx`)
+
+An 8-page heap, three access paths. A scan always reads 8 pages. A secondary
+index seeks (2) then bookmarks once per match. A clustered index seeks then reads
+`ceil(matches / 4)` contiguous pages. The secondary path ties the scan at 6
+matches (8 pages) and loses at 7 (9 vs 8); clustered at 7 still reads 4. Pinned
+in `indexing-claims.test.ts`.
+
+### Paging (`algo/paging.ts`, `views/PagingView.tsx`)
+
+Track 09's first producer. VPN 0–15, two-level walk (directory then table), `walks` bumps by 2 per translation that misses the TLB. Optional fully-associative FIFO TLB, demand paging, FIFO/LRU/CLOCK replacement. Measured: identity `[0,4,8]` → 6 table refs; TLB of 4 on `[0,0,0]` → 1 miss 2 hits; FIFO vs LRU on `[0,1,2,0,3]` with 3 frames evict 0 vs 1. Pinned in the virtual-memory claim tests.
+
+### CPU scheduling (`algo/scheduler.ts`, `views/SchedulerView.tsx`)
+
+Cooperative FIFO vs preemptive quantum. Convoy A=8, B=2, C=2: cooperative waits B=8 C=10; quantum 1 waits B=3 with 4 preemptions; quantum 8 is the convoy again. `switchCost` charges waste on later dispatches (quantum 1 with cost 1: waste 6, B waits 7). `policy: "mlfq"` is three queues, quanta 1/2/4; a full slice demotes. `waitTime(state, id)` is `finishedAt - burst`. Pinned in the cpu-scheduling claim tests.
+
+### Priority inversion (`algo/priority.ts`, `views/PriorityView.tsx`)
+
+Low holds a lock, High needs it, Medium does not. Without inheritance High waits 9 (Medium ran over Low); with inheritance High waits 5 and Medium waits 7. Pinned in `priority-inversion-claims.test.ts`.
+
+### Inodes and FS journaling (`algo/inode.ts`, `algo/journal.ts`)
+
+An inode has 4 direct pointers plus one indirect block of 4. Size 4: 0 pointer reads; size 5: 1. Journaling is WAL's ordering rule on metadata: unordered crash after the data write orphans block 0; a journal force before the inode write recovers it. Pinned in `inode-claims.test.ts` and `fs-journaling-claims.test.ts`.
+
+### Buffer cache and syscalls (`algo/cache.ts`, `algo/syscall.ts`)
+
+Write-back crash after two dirty writes loses both (disk still 0); fsync or write-through loses nothing. Eight one-byte writes trap 8 times; one eight-byte write traps once. Pinned in `buffer-cache-claims.test.ts` and `syscalls-claims.test.ts`.
+
+### Cryptography (`algo/crypto.ts`, `views/CryptoView.tsx`)
+
+Toys, on purpose: `mix8` is 8-bit (flip bit 0 of 42 moves 6/8 output bits); DH uses `p=23, g=5` (a=6,b=7 shared secret 12); signatures are RSA `n=55` (message 5 verifies, tampered 6 rejects). Real hashes and moduli are named as the scale-up, not simulated. Pinned in the cryptography claim tests.
+
+### Identity, injection, policy (`algo/auth.ts`, `inject.ts`, `policy.ts`, `stuffing.ts`, `mtls.ts`)
+
+Session cookie `S7`: flags 0 stolen 0 csrf 0; HttpOnly off or Secure off stolen 1; SameSite=None csrf 1. JWT `now=10`: naive accepts alg=none / exp=5 / tampered sub; strict accepts only the signed unexpired token (sig 56). OAuth code `C9`: without PKCE intercept stolen 1 issued 0; with challenge 77 rejected 1 issued 1 stolen 0. SQLi: concat `7 OR 1=1` is 3 rows; bind it as a literal is 0. XSS: raw `<script>` scripts 1; encoded stays text. SSRF: open fetch of `169.254.169.254` leaked 1; allowlist blocked 1. RBAC mallory writes doc1 (escalation 1); ABAC denies her. Stuffing: six guesses, password on attempt 5; no limit and IP cap 3 stolen 1; username cap 3 blocked 3 stolen 0. Perimeter connects with no client cert; mTLS rejects missing and other-ca. Pinned in the identity-access, application-security, and defense-in-depth claim tests.
+
+### Lexer (`algo/lexer.ts`, `views/LexerView.tsx`)
+
+Four sources. `let n=2` is 4 tokens 1 skipped; `let n = 2` is the same four with 3 skipped; `let 'n=2'` is 2 tokens (the string is one chip); `letn=2` is ident `letn`, not the keyword (3 tokens 0 skipped). Pinned in `lexical-analysis-claims.test.ts`.
+
+### Parser, runtime, GC, event loop, JIT
+
+`parser.ts`: flat `1+2*3` is 9; prec is 7. `runtime.ts`: both machines get 7 for `1+2*3` (walk visits 5, bytecode ops 5 stack max 3); `f(3)` returns 6 at depth 4, `f(4)` overflows cap 4. `gc.ts`: refcount A↔B leaks 2; mark-sweep still sweeps an unrooted cycle; STW pause 4 vs incremental budget 1 pause 1; old→young without a barrier loses Y1. Event loop log `1,4,2,3`; nested micro `1,3,A,B,2`. JIT hot 4: 8 iters are interp 4 compiled 4; deopt at 6 is interp 7 compiled 1 deopts 1. Vtables: a named call is 0 lookups; a class vtable is 2; an itable with speak at slot 2 is 4 scans/lookups, same woof. Pinned in the languages claim tests.
+
 ### Archetypes D and E — also step lists (`algo/mutation.ts`, `algo/repo.ts`)
 
 Three archetypes in a row have collapsed into archetype B. The pattern to apply before building any new engine: **ask whether the thing is a finite sequence of states.** If it is, it is a state contract in `algo/views/<name>.ts`, a step producer in `algo/<name>.ts`, a view component, and a test file — not new machinery.
@@ -238,16 +289,16 @@ Three archetypes in a row have collapsed into archetype B. The pattern to apply 
 
 ### Design system
 
-The governing direction is **Phosphor Cartography** (`design/phosphor-cartography.md`, plan: `design/ui-uplift-plan.md`): warm darkness, one amber light, hierarchy by luminance, hairlines and tick-scales, mono marginalia, scientific-plate composition. All tokens are CSS custom properties in `@theme` in `src/app/globals.css` (Tailwind v4 CSS-first — no tailwind.config). Theme: warm-graphite "amber console" — `--color-accent` (phosphor amber) is the PRIMARY; `--color-glow-orange` is the warning/degraded hue (never brand amber for warnings); cyan is demoted to info/misses; red means capacity loss/faults, not policy refusals. SVG viz and UI share the same variables — packet colors, node strokes, meter fills, and overlay hues must reference tokens, never hard-coded colors.
+The governing direction is still scientific-plate composition (hairlines, mono marginalia, hierarchy by luminance) but the palette is dual: **mineral gray** in dark (`--color-accent` oxidized teal `#8fbfb6`) and **pale cool paper** in light (indigo `#2c4a6e`), switched by `html[data-theme]` (header/sidebar toggle; first visit follows `prefers-color-scheme`). Tokens live in `@theme` in `src/app/globals.css`. `--color-glow-orange` is the warning/degraded hue; cyan is info/misses; red means capacity loss/faults, not policy refusals. Track identity uses `glow-amber/violet/…`, not `--color-accent`. SVG viz and UI share the same variables — never hard-coded colors.
 
 Conventions that keep it coherent (violating them is how the drift this branch fixed crept back in):
 
 - **Quiet-text ladder**: `fg` = sentences; `fg-muted` = support voice; `fg-faint` = marginalia (stamps, timestamps, units). `fg-faint` as TEXT must be solid and only on bg/surface/raised (AA holds there; alpha variants `/50 /70 /80` composite below threshold and are banned for text). On tinted grounds (e.g. `bg-accent/10` selections) step up to `fg-muted`.
-- **Radius grammar**: plates/chips/asides are 2px (`rounded-sm/lg/xl` are all remapped to 2px), controls are `rounded-md` (6px), circles keep `rounded-full`. No other radii.
-- **Chrome color budget**: outside simulation data encodings, hue never carries hierarchy — chrome is fg-ladder + amber + red-as-wound. Multi-hue belongs to packets/legends/meter semantics inside stages.
+- **Radius grammar**: plates/chips/asides are 8px (`rounded-sm/lg/xl` remap to 8px), controls are `rounded-md` (6px), circles keep `rounded-full`.
+- **Chrome color budget**: outside simulation data encodings, hue never carries hierarchy — chrome is fg-ladder + accent + red-as-wound. Multi-hue belongs to packets/legends/meter semantics inside stages.
 - **Primitives are the kit**: `SiteHeader/SiteFooter/Wordmark` (never inline a wordmark), `IconButton` (no hand-rolled icon buttons), `PlateLabel` (fig stamps), `SectionRule` (kicker + fading rule rows; children may wrap — never force-shrink headings), `Button`/`buttonClasses` (all CTAs), `Badge` (tick-tags). Containers are only ever `max-w-3xl` (read) or `max-w-6xl` (app).
 - **Motion**: CSS transitions with `--ease-out-soft`; there is no motion-tokens module (`lib/motion.ts` was deleted — engine timing lives in the snapshot discipline).
-- **Release-D feature hooks** (journal cards, causal workbench, reading mode) ride semantic classes (`.surface-card`, `.module-row`, `.sim-figure`, `.calibration-secondary`, `.causal-meter-focus`) defined as phosphor-styled equivalents at the bottom of globals.css — keep them token-based; don't reintroduce literal colors.
+- **Release-D feature hooks** (journal cards, causal workbench, reading mode) ride semantic classes in `globals.css` (`.surface-card`, `.module-row`, `.sim-figure`, `.calibration-secondary`, `.causal-experiment` / `.causal-action` / `.causal-tape-*` / `.causal-inspector*` / `.causal-static-toggle`, `.causal-meter-focus`). Keep them token-based; don't reintroduce literal colors. Dropping the workbench rules leaves every packet figure as unstyled buttons.
 - **OG/PWA color sync**: keep the hex copies in `src/lib/og.tsx`, `src/app/opengraph-image/route.tsx`, `icon.svg`, and `manifest.webmanifest` in sync with the tokens when the palette moves.
 
 `.tech-label`/`.tech-num` live in `@layer components` so color utilities can override them; effect classes (`.text-outline`, `.glow-blob`, …) are deliberately unlayered. Range inputs get the `sim-slider` treatment (thumb + 44px hit area + `--fill` gradient). Fonts: Bricolage Grotesque (display, once per page), IBM Plex Sans (body), IBM Plex Mono (technical labels).
@@ -281,3 +332,13 @@ Set `engine: "steps"` on the registry entry and the contract changes:
 5. Pseudocode lines must be **≤ 27 characters**, indent and trailing comment included. Derived from the component (240px panel − padding − line-number gutter − gap = 185px, at 6.62px per mono character) and ENFORCED by `check-curriculum`'s `algo integrity` check. A longer line does not wrap — it slides under the panel edge, where the author never sees it, because defs are written in a `.ts` file and the clipping only appears at `lg` and above. Drop the trailing comment before shortening the code: the lanes and step captions already carry that detail.
 6. A learning guide entry in `src/curriculum/learning.ts` is required for EVERY lesson regardless of engine — `learning.test.ts` fails on a missing one.
 7. `def.size` need not be a size. `write-ahead-logging` uses it as the crash point, which is what makes the lesson interactive at all. If you do that, make every position meaningful — the WAL range deliberately stops one short of the script, because letting the run finish would leave a transaction in flight and the figure would be giving a verdict it has no standing to give. Note `write-ahead-logging` was the FIRST rendered lesson def to declare a `size`, and rendering it found a latent `AlgoFigure` bug (the size was reported twice, as a counter and on its own slider).
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

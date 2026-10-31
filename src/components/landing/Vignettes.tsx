@@ -3,7 +3,7 @@
 import { cn } from "@/lib/cn";
 import { Check, X } from "lucide-react";
 import { useReducedMotion } from "motion/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 
 /* Live micro-widgets — each vignette demonstrates its verb by being it. */
 
@@ -67,7 +67,8 @@ function ManipulateWidget() {
         value={value}
         onChange={(e) => setValue(Number(e.target.value))}
         aria-label="Demo load slider"
-        className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-border accent-accent"
+        className="sim-slider h-1 flex-1 cursor-pointer appearance-none rounded-full bg-border accent-accent"
+        style={{ "--fill": `${value}%` } as CSSProperties}
       />
       <span className="tech-num w-9 text-right text-xs text-fg-muted">
         {value}%

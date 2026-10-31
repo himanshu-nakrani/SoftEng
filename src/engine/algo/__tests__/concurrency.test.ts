@@ -490,4 +490,41 @@ describe("archetype C rides on archetype B", () => {
     const view: ComponentType<{ state: ConcurrencyState }> = ThreadsView;
     expect(view).toBe(ThreadsView);
   });
+
+  it("supports custom counters declared via static bump, effect callback, or outcome", () => {
+    const customProgram: Program = {
+      threads: [
+        {
+          id: "t1",
+          name: "T1",
+          ops: [
+            {
+              label: "static bump op",
+              bump: { lineTransfers: 2 },
+            },
+            {
+              label: "dynamic callback op",
+              effect: (_mem, _loc, bump) => {
+                bump("cacheMisses", 3);
+              },
+            },
+            {
+              label: "outcome bump op",
+              effect: () => ({
+                bump: { customMetric: 5 },
+              }),
+            },
+          ],
+        },
+      ],
+      memory: {},
+    };
+
+    const steps = interleave(customProgram, mulberry32(42));
+    const finalCounters = steps[steps.length - 1].counters;
+    expect(finalCounters.lineTransfers).toBe(2);
+    expect(finalCounters.cacheMisses).toBe(3);
+    expect(finalCounters.customMetric).toBe(5);
+    expect(finalCounters[CONCURRENCY_COUNTERS.steps]).toBe(3);
+  });
 });

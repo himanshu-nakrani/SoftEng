@@ -8,14 +8,14 @@ import type { ReactNode } from "react";
 
 export function P({ children }: { children: ReactNode }) {
   return (
-    <p className="mb-4 text-[15px] leading-relaxed text-fg-muted">{children}</p>
+    <p className="mb-4 text-pretty text-[15px] leading-relaxed text-fg-muted">{children}</p>
   );
 }
 
 /** Opening paragraph of a lesson/section — slightly larger, brighter. */
 export function Lead({ children }: { children: ReactNode }) {
   return (
-    <p className="mb-4 text-[17px] leading-relaxed text-fg">{children}</p>
+    <p className="mb-4 text-pretty text-[17px] leading-relaxed text-fg">{children}</p>
   );
 }
 

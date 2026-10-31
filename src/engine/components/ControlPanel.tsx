@@ -1,5 +1,6 @@
 "use client";
 
+import { CONTROL_STRIP, CONTROL_VALUE } from "@/components/ui/control-chrome";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { cn } from "@/lib/cn";
 import { Zap } from "lucide-react";
@@ -66,10 +67,10 @@ function ButtonParam({
         type="button"
         onClick={press}
         className={cn(
-          "flex min-h-8 cursor-pointer items-center gap-1.5 rounded-md border border-glow-amber/40 bg-glow-amber-dim px-3 py-1.5 font-mono text-[11px] font-medium text-accent transition-all hover:brightness-125 active:scale-95",
+          "flex min-h-8 cursor-pointer items-center gap-1.5 rounded-md border border-accent/40 bg-accent-dim px-3 py-1.5 font-mono text-[11px] font-medium text-accent transition-[filter,box-shadow,transform] duration-150 ease-[var(--ease-out-soft)] hover:brightness-125 active:scale-95",
           // Reduced motion keeps the state change (information) and drops the
           // pulsing (decoration).
-          fired && "ring-2 ring-glow-amber/70 brightness-150",
+          fired && "ring-2 ring-accent/70 brightness-150",
           fired && !reduced && "animate-pulse",
         )}
       >
@@ -93,16 +94,16 @@ export function ControlPanel({
   if (specs.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap items-end gap-x-6 gap-y-3 border-t border-border px-4 py-3">
+    <div className={CONTROL_STRIP}>
       {specs.map((spec) => {
         const value = values[spec.key];
 
         if (spec.kind === "slider") {
           return (
-            <label key={spec.key} className="flex min-w-36 flex-col gap-1.5">
+            <label key={spec.key} className="flex flex-1 min-w-[160px] max-w-sm flex-col gap-1.5">
               <span className="tech-label flex items-baseline justify-between gap-3">
-                {spec.label}
-                <span className="tech-num text-accent normal-case">
+                <span className="truncate">{spec.label}</span>
+                <span className={CONTROL_VALUE}>
                   {value}
                   {spec.unit}
                 </span>
@@ -138,22 +139,24 @@ export function ControlPanel({
               role="switch"
               aria-checked={on}
               onClick={() => onChange(spec.key, !on)}
-              className="flex min-h-8 cursor-pointer items-center gap-2"
+              className="group focus-own flex min-h-8 cursor-pointer items-center gap-2"
             >
               <span className="tech-label">{spec.label}</span>
               {/* instrument switch: a machined slide, not an OS pill — square
-                  travel, amber state, hairline frame */}
+                  travel, accent state, hairline frame */}
               <span
                 className={cn(
-                  "relative h-4.5 w-8 rounded-sm border transition-colors duration-150",
+                  "relative h-5 w-9 rounded-md border shadow-xs transition-colors duration-150 ease-[var(--ease-out-soft)]",
+                  "group-hover:border-border-bright",
+                  "group-focus-visible:ring-2 group-focus-visible:ring-accent/70",
                   on ? "border-accent/60 bg-accent-dim" : "border-border bg-raised",
                 )}
               >
                 <span
                   className={cn(
-                    "absolute top-[3px] left-0.5 size-3 rounded-[2px] transition-transform duration-150",
+                    "absolute top-[3px] left-[3px] size-3.5 rounded-[3px] transition-transform duration-150 ease-[var(--ease-out-soft)]",
                     on
-                      ? "translate-x-3.5 bg-accent shadow-[0_0_6px_var(--color-accent)]"
+                      ? "translate-x-4 bg-accent shadow-[0_0_8px_var(--color-accent)]"
                       : "bg-fg-muted",
                   )}
                 />

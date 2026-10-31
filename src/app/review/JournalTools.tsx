@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/Button";
 import { buildJournalExport, useJournal } from "@/stores/journal";
 import { Download, Import, LockKeyhole } from "lucide-react";
 import { useRef, useState } from "react";
@@ -61,23 +62,21 @@ export function JournalTools() {
             if (file) void importJournalFile(file);
           }}
         />
-        <button
-          type="button"
+        <Button
+          size="sm"
           onClick={() => inputRef.current?.click()}
-          className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs text-fg-muted transition-colors hover:border-border-bright hover:text-fg"
         >
           <Import className="size-3.5" strokeWidth={1.75} />
           Import
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          size="sm"
           onClick={exportJournal}
           disabled={count === 0}
-          className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs text-fg-muted transition-colors hover:border-border-bright hover:text-fg disabled:cursor-not-allowed disabled:opacity-45"
         >
           <Download className="size-3.5" strokeWidth={1.75} />
           Export
-        </button>
+        </Button>
       </div>
     </section>
   );

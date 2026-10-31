@@ -15,6 +15,10 @@ import {
   revertAlgo,
 } from "@/lessons/history/cherry-pick-revert";
 import { resetAlgo, resetSurviveAlgo } from "@/lessons/history/reset";
+import {
+  threeWayMergeCleanAlgo,
+  threeWayMergeFastForwardAlgo,
+} from "@/lessons/history/three-way-merge";
 import { describe, expect, it } from "vitest";
 
 /**
@@ -433,5 +437,108 @@ describe("reset · reset versus revert", () => {
     expect(
       wasReset.state.commits.every((c) => c.revertOf === undefined),
     ).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// three-way-merge
+// ---------------------------------------------------------------------------
+
+describe("three-way-merge · clean three-way merge", () => {
+  it("has four commits before merge touches the DAG", () => {
+    // "The commit count grows from 4 to 5, and the merge commits meter ticks to 1."
+    const { steps } = run(threeWayMergeCleanAlgo);
+    const beforeMerge = steps[steps.length - 2].state;
+    expect(beforeMerge.commits).toHaveLength(4);
+    expect(beforeMerge.branches.main).toBe("c4");
+    expect(beforeMerge.branches.feature).toBe("c3");
+  });
+
+  it("grows from four commits to five with exactly one merge commit", () => {
+    // "The commit count grows from 4 to 5, and the merge commits meter ticks to 1."
+    const { state, counters } = run(threeWayMergeCleanAlgo);
+    expect(state.commits).toHaveLength(5);
+    expect(counters[C.commits]).toBe(5);
+    expect(counters[C.merges]).toBe(1);
+  });
+
+  it("creates a two-parent merge commit pointing at main 1 and feat 2 tips", () => {
+    // "Inspect the new commit: it points at both main 1 (c4) and feat 2 (c3)."
+    const { merges, state } = run(threeWayMergeCleanAlgo);
+    expect(merges).toHaveLength(1);
+    expect(merges[0].parents).toEqual(["c4", "c3"]);
+    expect(state.branches.main).toBe(merges[0].id);
+  });
+
+  it("shares common ancestor c1 (base) across both branches", () => {
+    // Both feature and main branched from base (c1)
+    const { state } = run(threeWayMergeCleanAlgo);
+    const c1 = state.commits.find((c) => c.id === "c1")!;
+    const c2 = state.commits.find((c) => c.id === "c2")!;
+    const c3 = state.commits.find((c) => c.id === "c3")!;
+    const c4 = state.commits.find((c) => c.id === "c4")!;
+    expect(c1.message).toBe("base");
+    expect(c1.parents).toEqual([]);
+    expect(c2.message).toBe("feat 1");
+    expect(c2.parents).toEqual(["c1"]);
+    expect(c3.message).toBe("feat 2");
+    expect(c3.parents).toEqual(["c2"]);
+    expect(c4.message).toBe("main 1");
+    expect(c4.parents).toEqual(["c1"]);
+  });
+
+  it("orphans nothing — every commit remains reachable", () => {
+    // "Both lines of history remain reachable and untouched"
+    const { state } = run(threeWayMergeCleanAlgo);
+    expect(state.unreachable).toEqual([]);
+    expect(state.commits.every((c) => c.rewriteOf === undefined)).toBe(true);
+  });
+
+  it("retains the exact commit parent relationships across all steps", () => {
+    const { steps } = run(threeWayMergeCleanAlgo);
+    // Step 0: initial empty repo
+    expect(steps[0].state.commits).toHaveLength(0);
+    // Step 1: commit base
+    expect(steps[1].state.commits).toHaveLength(1);
+    expect(steps[1].state.commits[0].id).toBe("c1");
+    // Step 2: branch feature (no new commit)
+    expect(steps[2].state.commits).toHaveLength(1);
+    expect(steps[2].state.branches.feature).toBe("c1");
+    // Step 3: checkout feature
+    expect(steps[3].state.head).toBe("feature");
+    // Step 4: commit feat 1
+    expect(steps[4].state.commits).toHaveLength(2);
+    expect(steps[4].state.branches.feature).toBe("c2");
+    // Step 5: commit feat 2
+    expect(steps[5].state.commits).toHaveLength(3);
+    expect(steps[5].state.branches.feature).toBe("c3");
+    // Step 6: checkout main
+    expect(steps[6].state.head).toBe("main");
+    // Step 7: commit main 1
+    expect(steps[7].state.commits).toHaveLength(4);
+    expect(steps[7].state.branches.main).toBe("c4");
+    // Step 8: git merge feature
+    expect(steps[8].state.commits).toHaveLength(5);
+    expect(steps[8].state.branches.main).toBe("c5");
+    expect(steps[8].state.commits[4].parents).toEqual(["c4", "c3"]);
+  });
+});
+
+describe("three-way-merge · fast-forward comparison", () => {
+  it("stays at three commits and makes zero merge commits", () => {
+    // "when main never diverged past base, Git slid the pointer directly to feat 2 with 0 merge commits, keeping the count at 3."
+    const { state, counters, merges } = run(threeWayMergeFastForwardAlgo);
+    expect(state.commits).toHaveLength(3);
+    expect(counters[C.commits]).toBe(3);
+    expect(counters[C.merges] ?? 0).toBe(0);
+    expect(merges).toHaveLength(0);
+  });
+
+  it("slides main pointer to the feature tip", () => {
+    // "advancing main's pointer to feature's tip with zero new commits created"
+    const { state } = run(threeWayMergeFastForwardAlgo);
+    expect(state.branches.main).toBe("c3");
+    expect(state.branches.feature).toBe("c3");
+    expect(state.note).toBe("fast-forward — no merge commit");
   });
 });

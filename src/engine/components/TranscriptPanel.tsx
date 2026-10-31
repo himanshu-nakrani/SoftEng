@@ -129,7 +129,7 @@ export function TranscriptPanel({
                 title={`Scrub to t=${entry.at.toFixed(1)}s`}
                 aria-current={isCurrent ? "true" : undefined}
                 className={cn(
-                  "flex min-h-8 w-full cursor-pointer items-baseline gap-2.5 px-3 py-1 text-left transition-colors hover:bg-raised disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent",
+                  "flex min-h-8 w-full cursor-pointer items-baseline gap-2.5 px-3 py-1 text-left transition-colors duration-150 ease-[var(--ease-out-soft)] hover:bg-raised disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent",
                   isCurrent && "bg-accent-dim",
                 )}
               >
@@ -143,7 +143,11 @@ export function TranscriptPanel({
                 </span>
                 <span
                   className={cn(
-                    "font-mono text-xs leading-snug",
+                    /* Captions are sentences, not labels: mono is the
+                       technical-voice face (stamps, units, code), and a
+                       column of 12px mono prose is the one place the
+                       transcript fought its own reader. */
+                    "text-xs leading-snug",
                     isCurrent ? "text-fg" : "text-fg-muted",
                   )}
                 >
