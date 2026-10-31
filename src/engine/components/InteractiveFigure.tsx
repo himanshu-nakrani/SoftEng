@@ -823,8 +823,11 @@ function FigureBody<L>({
           />
         </div>
       )}
-
-      {/* Parameter Inputs and Playback Transport */}
+      {/* Parameter inputs are instrumentation; the transport is NARRATIVE —
+          it is how a reading-mode reader plays, pauses and replays the story
+          the captions tell. Hiding it left two dead ends: a dismissed
+          checkpoint froze the stage with no way back, and a reduced-motion
+          reader (no scroll-autoplay) got a still image with no play button. */}
       <div className="calibration-secondary">
         <ControlPanel
           specs={sim.params}
@@ -832,8 +835,8 @@ function FigureBody<L>({
           onChange={applyParam}
           onPress={pressScenario}
         />
-        <Clock sim={sim} simulation={simulation} controls={uiControls} />
       </div>
+      <Clock sim={sim} simulation={simulation} controls={uiControls} />
     </figure>
   );
 }

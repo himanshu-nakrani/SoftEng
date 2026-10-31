@@ -143,7 +143,11 @@ export function TranscriptPanel({
                 </span>
                 <span
                   className={cn(
-                    "font-mono text-xs leading-snug",
+                    /* Captions are sentences, not labels: mono is the
+                       technical-voice face (stamps, units, code), and a
+                       column of 12px mono prose is the one place the
+                       transcript fought its own reader. */
+                    "text-xs leading-snug",
                     isCurrent ? "text-fg" : "text-fg-muted",
                   )}
                 >

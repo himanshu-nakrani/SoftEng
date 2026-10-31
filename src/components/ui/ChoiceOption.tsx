@@ -16,6 +16,11 @@ interface ChoiceOptionProps extends ButtonHTMLAttributes<HTMLButtonElement> {
  * One prediction option. Used by the in-sim checkpoint and the review deck
  * so the two cannot drift: reserved mark slot (no layout shift on reveal),
  * plate radius, chrome hover (not a hue wash), green/red only as verdict.
+ *
+ * The mark is a CIRCLE, not a square: a prediction is single-select, and a
+ * square that fills with a tick on commit is the checkbox grammar — it
+ * invites a second tick. Radio geometry says "one of these" before any
+ * instruction does.
  */
 export const ChoiceOption = forwardRef<HTMLButtonElement, ChoiceOptionProps>(
   function ChoiceOption(
@@ -61,7 +66,7 @@ export const ChoiceOption = forwardRef<HTMLButtonElement, ChoiceOptionProps>(
         <span
           aria-hidden
           className={cn(
-            "flex size-4 shrink-0 items-center justify-center rounded-[3px] border transition-colors duration-150",
+            "flex size-4 shrink-0 items-center justify-center rounded-full border transition-colors duration-150",
             !revealed && "border-border-bright bg-bg/50",
             revealed && correct && "border-glow-green/70 bg-glow-green-dim",
             revealed &&
