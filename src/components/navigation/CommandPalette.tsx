@@ -312,9 +312,6 @@ export function CommandPalette() {
                   "placeholder:text-fg-faint",
                 )}
               />
-              <span className="hidden shrink-0 sm:inline-flex">
-                <Kbd>esc</Kbd>
-              </span>
             </div>
 
             {/* Result count, announced politely; also a visible header row. */}
@@ -382,6 +379,25 @@ export function CommandPalette() {
                 })
               )}
             </ul>
+            {/* Keyboard contract, stated where the keyboard is being used.
+                The input row used to carry a lone `esc` chip — the one hint
+                nobody needs (every dialog closes) — while the hints that
+                make the list usable without a mouse were nowhere. */}
+            <div className="flex items-center gap-4 border-t border-border px-3.5 py-2 font-mono text-[9px] tracking-widest text-fg-faint uppercase">
+              <span className="flex items-center gap-1.5">
+                <Kbd>↑</Kbd>
+                <Kbd>↓</Kbd>
+                navigate
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Kbd>↵</Kbd>
+                open
+              </span>
+              <span className="ml-auto flex items-center gap-1.5">
+                <Kbd>esc</Kbd>
+                close
+              </span>
+            </div>
           </div>
           </div>,
           document.body,

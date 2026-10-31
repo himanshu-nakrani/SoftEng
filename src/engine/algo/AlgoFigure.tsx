@@ -55,7 +55,12 @@ export function AlgoFigure<S, I>({
       <div className="relative grid bg-bg/40 lg:grid-cols-[1fr_240px]">
         <div className="relative flex flex-col">
           <CornerTicks />
-          <PlateLabel className="absolute top-2.5 right-5">
+          {/* Views draw their own title plate at the stage's top-LEFT (the
+              policy, the phase). This marginalia stamp owns the top-RIGHT —
+              until the stage is narrow enough that a long def id reaches
+              across and prints over the view's title, which is exactly what
+              happened at phone widths. Marginalia yields first. */}
+          <PlateLabel className="absolute top-2.5 right-5 hidden sm:block">
             fig · {def.id} · seed {seed}
           </PlateLabel>
           <View state={current.state} />

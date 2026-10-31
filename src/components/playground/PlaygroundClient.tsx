@@ -12,12 +12,13 @@ import type { Accent } from "@/curriculum/types";
 import { accentCssVar } from "@/lib/accent";
 import { Check, Dices, Share2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
-
+import { Fragment, useMemo, useState } from "react";
 interface PlaygroundEntry {
   slug: string;
   title: string;
   accent: Accent;
+  /** The module the sim belongs to — the rail groups by it. */
+  moduleTitle: string;
   sim: LessonSim<unknown>;
 }
 
@@ -28,6 +29,7 @@ const playgroundSims: PlaygroundEntry[] = allLessons
     slug: l.slug,
     title: l.title,
     accent: accentOf(moduleOf(l)),
+    moduleTitle: moduleOf(l).title,
     sim: simBySlug[l.slug]!,
   }));
 
@@ -100,27 +102,68 @@ export function PlaygroundClient() {
     <div className="grid gap-8 lg:grid-cols-[220px_1fr]">
       <nav aria-label="Simulations" className="lg:sticky lg:top-8 lg:self-start">
         <p className="tech-label mb-3">simulations</p>
-        <ul className="flex flex-wrap gap-1 lg:flex-col">
-          {playgroundSims.map((e) => (
-            <li key={e.slug}>
-              <button
-                type="button"
-                onClick={() => pick(e.slug)}
-                className={cn(
-                  "flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5 text-left font-mono text-xs transition-[background-color,color,box-shadow] duration-150 ease-[var(--ease-out-soft)]",
-                  e.slug === slug
-                    ? "bg-raised text-fg shadow-[inset_2px_0_0_var(--color-accent)]"
-                    : "text-fg-muted hover:bg-surface hover:text-fg",
+        {/* Phones get a grouped <select>: thirty-one wrapped chips pushed the
+            actual simulation a full screen down, and a chip cloud cannot
+            carry the module grouping the column layout has. optgroup gives
+            the grouping to the native control for free. */}
+        <select
+          aria-label="Simulation"
+          value={slug}
+          onChange={(event) => pick(event.target.value)}
+          className="field mb-3 w-full cursor-pointer rounded-md border border-border bg-surface px-3 py-2 text-sm lg:hidden"
+        >
+          {playgroundSims.map((e, i) => {
+            const newGroup =
+              i === 0 || playgroundSims[i - 1].moduleTitle !== e.moduleTitle;
+            return (
+              <Fragment key={e.slug}>
+                {newGroup && <optgroup label={e.moduleTitle} />}
+                <option value={e.slug}>{e.title}</option>
+              </Fragment>
+            );
+          })}
+        </select>
+        <ul className="hidden gap-1 lg:flex lg:flex-col">
+          {playgroundSims.map((e, i) => {
+            const newGroup =
+              i === 0 || playgroundSims[i - 1].moduleTitle !== e.moduleTitle;
+            return (
+              <Fragment key={e.slug}>
+                {/* Module headers belong to the column layout only: below lg
+                    the picker is a grouped <select>, so a header li here
+                    would be a list item with no row under it. A real li
+                    keeps list semantics intact — `display: contents` on the
+                    row would drop its listitem role in some engines. */}
+                {newGroup && (
+                  <li
+                    aria-hidden
+                    className="tech-label hidden pt-2.5 pl-2.5 text-fg-faint lg:list-item"
+                  >
+                    {e.moduleTitle}
+                  </li>
                 )}
-              >
-                <span
-                  className="size-1.5 shrink-0 rounded-full"
-                  style={{ background: accentCssVar[e.accent] }}
-                />
-                {e.title}
-              </button>
-            </li>
-          ))}
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => pick(e.slug)}
+                    title={e.moduleTitle}
+                    className={cn(
+                      "flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5 text-left font-mono text-xs transition-[background-color,color,box-shadow] duration-150 ease-[var(--ease-out-soft)]",
+                      e.slug === slug
+                        ? "bg-raised text-fg shadow-[inset_2px_0_0_var(--color-accent)]"
+                        : "text-fg-muted hover:bg-surface hover:text-fg",
+                    )}
+                  >
+                    <span
+                      className="size-1.5 shrink-0 rounded-full"
+                      style={{ background: accentCssVar[e.accent] }}
+                    />
+                    {e.title}
+                  </button>
+                </li>
+              </Fragment>
+            );
+          })}
         </ul>
       </nav>
 
