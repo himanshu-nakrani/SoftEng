@@ -120,7 +120,11 @@ describe("MobileNav (rendering in jsdom)", () => {
       drawer.querySelectorAll<HTMLElement>(
         'a[href], button:not([disabled]), summary, [tabindex]:not([tabindex="-1"])'
       )
-    ).filter((el) => el.closest("details:not([open])") === null);
+    ).filter(
+      (el) =>
+        el.tagName === "SUMMARY" ||
+        el.closest("details:not([open])") === null,
+    );
     const first = focusables[0];
     const last = focusables[focusables.length - 1];
 
@@ -154,7 +158,11 @@ describe("MobileNav (rendering in jsdom)", () => {
       drawer.querySelectorAll<HTMLElement>(
         'a[href], button:not([disabled]), summary, [tabindex]:not([tabindex="-1"])'
       )
-    ).filter((el) => el.closest("details:not([open])") === null);
+    ).filter(
+      (el) =>
+        el.tagName === "SUMMARY" ||
+        el.closest("details:not([open])") === null,
+    );
     const first = focusables[0];
     const last = focusables[focusables.length - 1];
 

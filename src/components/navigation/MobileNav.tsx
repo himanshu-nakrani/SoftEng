@@ -88,11 +88,15 @@ export function MobileNav() {
 
     const focusables = () =>
       Array.from(panel?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []).filter(
-        // A closed <details> keeps its lesson links in the DOM but not in
-        // the tab order; trapping to an unrendered element drops focus on
-        // the floor, which is how Shift+Tab escaped an open drawer.
+        // A closed <details> hides its lesson links from the tab order but
+        // its summary stays focusable — it is the only way to open that
+        // branch. Filter out every descendant of a closed disclosure EXCEPT
+        // the summary itself; otherwise Shift+Tab from the wordmark has no
+        // visible last control to land on.
         // DOM-based, not layout-based: jsdom has no rectangles.
-        (el) => el.closest("details:not([open])") === null,
+        (el) =>
+          el.tagName === "SUMMARY" ||
+          el.closest("details:not([open])") === null,
       );
 
     // Move focus into the panel: its first link (the wordmark), so the very
