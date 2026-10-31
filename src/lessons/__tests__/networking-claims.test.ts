@@ -354,8 +354,8 @@ describe("http3-quic · UDP streams eliminate transport head-of-line blocking", 
     while (rQuic.state.t < 4) rQuic.tick();
     // Page: "under HTTP/3, it stays pinned at exactly 0ms"
     expect(rQuic.state.metrics.holStallMs).toBe(0);
-    // Page: "watch Stream 2 (the script) complete in roughly 833ms despite packet drops"
-    expect(rQuic.state.metrics.stream2Ms).toBe(833);
+    // Page: "watch Stream 2 (the script) complete in roughly 900ms despite packet drops"
+    expect(rQuic.state.metrics.stream2Ms).toBe(900);
   });
 
   it("HTTP/2 under the same loss stalls all streams with a 600ms HOL delay", () => {

@@ -69,7 +69,7 @@ function simulate(
   // In ~14% of seeds (quiet scheduling windows), latency reaches 1600ms;
   // in ~86% of seeds, heavy context thrashing and GC pauses push latency to 2400ms.
   const ok = rand < 0.14;
-  const value = rand < 0.5 ? 1600 : 2400;
+  const value = rand < 0.14 ? 1600 : 2400;
   return { ok, value };
 }
 

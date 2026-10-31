@@ -26,9 +26,11 @@ import { createPortal } from "react-dom";
 
 const DRAWER_ID = "mobile-nav-drawer";
 
-/** Tab-order members inside the panel. Kept in one place for the trap. */
+/** Tab-order members inside the panel. Kept in one place for the trap.
+    `summary` is included because a closed track disclosure's summary is the
+    ONLY focusable thing that branch offers. */
 const FOCUSABLE =
-  'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+  'a[href], button:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
 
 /** Tailwind's `md` — where the desktop sidebar takes over from the drawer. */
 const DESKTOP_QUERY = "(min-width: 48rem)";
@@ -85,7 +87,13 @@ export function MobileNav() {
     body.style.overflow = "hidden";
 
     const focusables = () =>
-      Array.from(panel?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []);
+      Array.from(panel?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []).filter(
+        // A closed <details> keeps its lesson links in the DOM but not in
+        // the tab order; trapping to an unrendered element drops focus on
+        // the floor, which is how Shift+Tab escaped an open drawer.
+        // DOM-based, not layout-based: jsdom has no rectangles.
+        (el) => el.closest("details:not([open])") === null,
+      );
 
     // Move focus into the panel: its first link (the wordmark), so the very
     // next Tab walks the tree.

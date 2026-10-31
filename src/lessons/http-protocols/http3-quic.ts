@@ -55,6 +55,7 @@ interface Http3QuicState {
   streamStalledUntil: Record<number, number>;
   tcpGlobalStalledUntil: number;
   pendingRetransmits: QuicPacket[];
+  lastIsQuic: boolean | null;
 }
 
 export const http3QuicSim: LessonSim<Http3QuicState> = {
@@ -105,12 +106,36 @@ export const http3QuicSim: LessonSim<Http3QuicState> = {
     streamStalledUntil: {},
     tcpGlobalStalledUntil: 0,
     pendingRetransmits: [],
+    /** Protocol in force last tick — a change orphans retransmits otherwise. */
+    lastIsQuic: null as boolean | null,
   }),
 
   step: (state, dt, params) => {
     const L = state.lesson;
     const isQuic = params.protocol !== "http2";
     const lossRate = Number(params.lossRate);
+
+    // A loss belongs to whichever protocol was in force when it happened, so
+    // switching mid-stall must not orphan the retransmit: under HTTP/2 the
+    // pending list is drained by the global timer, under QUIC by per-stream
+    // timers, and neither branch sees the other's bookkeeping. Without this
+    // hand-off a lost final packet ends its stream forever and the figure
+    // freezes with "packet loss" switched back off.
+    if (L.lastIsQuic !== isQuic) {
+      L.lastIsQuic = isQuic;
+      if (isQuic) {
+        // A new transport means a new HOL history: do not carry TCP's stall
+        // into QUIC's meter, which the lesson pins at exactly 0ms.
+        L.holStallMs = 0;
+        for (const p of L.pendingRetransmits) {
+          if ((L.streamStalledUntil[p.streamId] ?? 0) === 0) {
+            L.streamStalledUntil[p.streamId] = state.t + RTO_SEC;
+          }
+        }
+      } else if (L.pendingRetransmits.length > 0 && L.tcpGlobalStalledUntil === 0) {
+        L.tcpGlobalStalledUntil = state.t + RTO_SEC;
+      }
+    }
 
     // 1. Trigger new page load batch
     // Stream 1: CSS (3 pkts)
@@ -174,13 +199,23 @@ export const http3QuicSim: LessonSim<Http3QuicState> = {
       const inFlight = state.packets.filter((p) => p.edgeId === WIRE).length;
       if (inFlight < 2) {
         // Can we dispatch next packet?
-        const candidate = L.packetsToSend[0];
-        const isBlocked = isQuic
-          ? (L.streamStalledUntil[candidate.streamId] ?? 0) > state.t
-          : L.tcpGlobalStalledUntil > state.t;
+        // QUIC multiplexes independent streams: one stalled stream must not
+        // hold up the streams queued behind it, because that is exactly the
+        // head-of-line blocking this lesson exists to contrast — and the
+        // holStallMs meter would keep reporting zero while it happened.
+        // (Within a stream, order still holds: its own next packet waits.)
+        // TCP stays head-only: its stall is global, so every packet is
+        // blocked or none is.
+        const ci = isQuic
+          ? L.packetsToSend.findIndex(
+              (p) => (L.streamStalledUntil[p.streamId] ?? 0) <= state.t,
+            )
+          : L.tcpGlobalStalledUntil > state.t
+            ? -1
+            : 0;
 
-        if (!isBlocked) {
-          const pkt = L.packetsToSend.shift()!;
+        if (ci !== -1) {
+          const pkt = L.packetsToSend.splice(ci, 1)[0];
           // Seeded packet drop check
           const drop = lossRate > 0 && state.rng() * 100 < lossRate;
           if (drop) {
@@ -235,7 +270,7 @@ export const http3QuicSim: LessonSim<Http3QuicState> = {
     // Publish metrics
     state.metrics.pageMs = L.pageMs > 0 ? L.pageMs : L.lastPageMs;
     state.metrics.stream2Ms = L.stream2Ms > 0 ? L.stream2Ms : L.lastStream2Ms;
-    state.metrics.holStallMs = isQuic ? 0 : L.holStallMs;
+    state.metrics.holStallMs = L.holStallMs;
     state.metrics.packetsDelivered = L.packetsDelivered;
   },
 

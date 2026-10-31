@@ -407,15 +407,20 @@ function packageAriaLabel(state: PackageTableState): string {
 }
 
 function multiColumnAriaLabel(state: TableState<number | string>): string {
-  const pkgs = state.rows
+  /* Built from the columns THIS table declares: strangler-fig's routes and
+     traffic shares are not coupling metrics, and reading absent `ca`/`ce`
+     keys as zero announced a table nobody rendered. */
+  const cols = state.columns ?? [];
+  const header = cols.map((c) => c.label).join(", ");
+  const rowsTxt = state.rows
     .map((r) => {
-      const ca = r.values?.ca ?? 0;
-      const ce = r.values?.ce ?? 0;
-      const total = r.values?.total ?? r.committed;
-      return `${r.key}: Ca ${ca}, Ce ${ce}, Total ${total}`;
+      const vals = cols
+        .map((c) => `${c.label} ${r.values?.[c.key] ?? "—"}`)
+        .join(", ");
+      return `${r.key}: ${vals}`;
     })
     .join("; ");
-  return `Coupling Metrics Table: ${pkgs}. ${state.ranStatement ?? ""}`;
+  return `Table — ${header}. ${rowsTxt}. ${state.ranStatement ?? ""}`;
 }
 
 function TransactionTableView({ state }: { state: TableState<number | string> }) {

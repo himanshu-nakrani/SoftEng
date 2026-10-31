@@ -101,6 +101,10 @@ export function useAlgoPlayer<S, I>(
     controls: {
       play: () => {
         engage();
+        // Play at the end means replay: the interval stops again the instant
+        // it sees the last index, so without this rewind the enabled Play
+        // button at the end of a run is a no-op flicker.
+        setIndex((i) => (i >= steps.length - 1 ? 0 : i));
         setPlaying(true);
       },
       pause: () => setPlaying(false),

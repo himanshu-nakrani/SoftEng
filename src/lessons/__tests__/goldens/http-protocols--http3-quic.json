@@ -9,8 +9,8 @@
       "metrics": {
         "holStallMs": 0,
         "packetsDelivered": 42,
-        "pageMs": 1168,
-        "stream2Ms": 967
+        "pageMs": 1074,
+        "stream2Ms": 791
       },
       "packets": 0,
       "nextPacketId": 43,

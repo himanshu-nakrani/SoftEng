@@ -28,7 +28,7 @@ export default function Http3QuicPage() {
 
       <LessonSection id="independent-delivery">
         <TryThis>
-          <LI>Observe the baseline under HTTP/3 (QUIC) with 15% packet loss: watch Stream 2 (the script) complete in roughly <Strong>833ms</Strong> despite packet drops.</LI>
+          <LI>Observe the baseline under HTTP/3 (QUIC) with 15% packet loss: watch Stream 2 (the script) complete in roughly <Strong>900ms</Strong> despite packet drops.</LI>
           <LI>Notice the <Strong>transport HOL delay</Strong> meter: under HTTP/3, it stays pinned at exactly <Strong>0ms</Strong> because stream loss is completely isolated.</LI>
           <LI>Switch the protocol selector to <Strong>HTTP/2 (TCP transport)</Strong>: watch a single lost packet freeze all streams, introducing a <Strong>600ms</Strong> HOL stall and delaying Stream 2 to <Strong>1100ms</Strong> or more.</LI>
         </TryThis>
